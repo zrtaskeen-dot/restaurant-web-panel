@@ -1,0 +1,509 @@
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: white; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+    align-items: stretch; 
+}
+
+/* Sidebar */
+.sidebar { 
+    width: 220px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    height: 100%; 
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+
+.sidebar nav a.logout-btn {
+    margin-top: auto; 
+    background-color: #800000;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.sidebar nav a.logout-btn:hover {
+    background-color: #5c0000;
+}
+
+.main-content { 
+    flex: 1; 
+    padding: 25px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 15px; 
+    font-weight: bold;
+}
+/* Buttons */
+.add-new-btn { 
+    background-color: #7a1c00; 
+    color: white; 
+    border: none; 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-bottom: 20px;
+}
+/* Tabs */
+.tabs { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 20px; 
+}
+
+.tab { 
+    padding: 6px 14px; 
+    border: 1px solid #ccc; 
+    background: white; 
+    cursor: pointer; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    font-size: 12px;
+}
+
+.tab.active { 
+    background-color: #f9a03f; 
+    border-color: black; 
+}
+
+/* Table Grid */
+.table-header, .row { 
+    display: grid; 
+    grid-template-columns: 60px 150px 1fr 100px 130px; 
+    gap: 15px; 
+    padding: 12px 15px; 
+    align-items: center; 
+    font-size: 13px;
+}
+
+.table-header { 
+    background-color: #b52a00; 
+    color: white; 
+    border-radius: 8px 8px 0 0; 
+    font-weight: bold; 
+    border: 1px solid #b52a00;
+}
+.table-header span:nth-child(4) {
+    
+    padding-right: 30px;
+}
+
+.row { 
+    background: white; 
+    margin-top: 0; 
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+
+.row:last-child {
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+.row img { 
+    width: 45px; 
+    height: 45px; 
+    border-radius: 5px; 
+    object-fit: cover;
+}
+
+.row span:nth-child(3) {
+    color: #333 !important; 
+    font-weight: 400;
+}
+
+.col-actions { 
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn-edit { 
+    background-color: #1a4a5e!important;
+    color: white !important; 
+    border: 1px solid #ccc !important; 
+    padding: 5px 12px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-delete { 
+    background-color: #b52a00 !important; 
+    color: white !important; 
+    border: none !important; 
+    padding: 5px 12px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-edit:hover { background-color: #122f3b !important; }
+.btn-delete:hover { background-color: #8e2100 !important; }
+
+.modal-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.6); 
+    z-index: 999; 
+    cursor: pointer;
+}
+
+.modal { 
+    display: none; 
+    position: fixed; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); 
+    background-color: #ffffff;
+    padding: 25px; 
+    border-radius: 35px; 
+    width: 360px; 
+    z-index: 1000; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+#modalTitle { 
+    color: #b52a00; 
+    text-align: center; 
+    margin-top: 0; 
+    font-size: 24px; 
+    font-weight: bold;
+}
+
+.modal-body label { 
+    display: block; 
+    font-weight: bold; 
+    font-size: 14px; 
+    margin-top: 15px; 
+    margin-bottom: 5px; 
+    margin-left: 10px;
+}
+
+/* Input Fields */
+.modal-body .rounded-input, 
+.modal-body .rounded-textarea { 
+    width: 100%; 
+    padding: 12px 15px; 
+    border-radius: 25px; 
+    border: 1px solid #ddd; 
+    background-color: #fff9eb; 
+    box-sizing: border-box; 
+    font-size: 14px;
+    color: #000000; 
+    font-weight: 500; 
+}
+
+/* Focus State */
+.modal-body .rounded-input:focus, 
+.modal-body .rounded-textarea:focus {
+    outline: none;
+    border: 2px solid #b52a00;
+    background-color: #fffdf5;
+    color: #000000; 
+}
+
+/* Placeholder Styling */
+.modal-body .rounded-input::placeholder, 
+.modal-body .rounded-textarea::placeholder {
+    color: #888; 
+    font-weight: normal;
+}
+
+.size-container .orange-price-input { 
+    width: 100%; 
+    background-color: #f9a03f; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 6px; 
+    color: #000000;
+    text-align: center; 
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* Size Container */
+.size-container { 
+    background-color: #7a1c00;
+    padding: 15px; 
+    border-radius: 25px; 
+    margin-top: 15px; 
+    color: white;
+}
+
+.size-header { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    font-weight: bold; 
+    font-size: 14px; 
+    margin-bottom: 10px; 
+    padding: 0 10px; 
+}
+
+.size-container .size-row { 
+    display: grid; 
+    grid-template-columns: 140px 1fr;
+    gap: 10px; 
+    align-items: center; 
+    margin-bottom: 8px; 
+}
+
+.size-container .size-row label {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 !important;
+    color: white;
+    white-space: nowrap;
+}
+
+.size-container .size-row input[type="checkbox"] {
+    width: 16px; 
+    height: 16px;
+    cursor: pointer;
+}
+
+/*  Price Inputs */
+.orange-price-input { 
+    width: 100%;
+    background-color: #f9a03f; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 8px 12px; 
+    color: #000000;
+    text-align: center; 
+    font-weight: bold;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.file-input {
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+.modal-actions { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+    margin-top: 25px; 
+}
+
+.action-btn-save, .action-btn-cancel { 
+    background-color: #f9a03f; 
+    color: black; 
+    border: none; 
+    padding: 10px 30px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.action-btn-save:hover, .action-btn-cancel:hover {
+    background-color: #e68d2b;
+}
+
+/* Toppings Table Styling */
+#toppingsSection {
+    margin-top: 40px;
+}
+
+#toppingsTable .row {
+    background-color: #fff9eb;
+}
+
+.package-title {
+    color: #b52a00; 
+    font-size: 18px; 
+    font-weight: 700; 
+    margin-bottom: 15px;
+    letter-spacing: 0.3px;
+}
+
+.mini-tab {
+    padding: 6px 14px; 
+    background: #fdfdfd; 
+    border: 1px solid #e2e8f0; 
+    color: black; 
+    border-radius: 20px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    font-size: 11px; 
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.mini-tab:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+}
+.mini-tab.active {
+    background-color: #b52a00 !important; 
+    color: #ffffff !important; 
+    border-color: #b52a00 !important;
+    box-shadow: 0 2px 4px rgba(181, 42, 0, 0.2);
+}
+
+/*  Selection Grid Cards  */
+.selection-item-card {
+    background: white; 
+    padding: 12px; 
+    margin-bottom: 10px; 
+    border-radius: 8px; 
+    border: 1.5px solid #ccc;
+    border-left: 4px solid #b52a00; 
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    transition: transform 0.15s ease;
+}
+.selection-item-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.saved-pkg-row {
+    display: grid; 
+    grid-template-columns: 2fr 3fr 1.5fr 1fr; 
+    padding: 14px 12px; 
+    border-bottom: 1.5px solid #bbb; 
+    align-items: center; 
+    font-size: 13px; 
+    background: #ffffff;
+    transition: background 0.2s ease;
+}
+.saved-pkg-row:hover {
+    background: #fffdfa;
+}
+
+/* Checkbox Size Rows inside Grid */
+.size-row {
+    margin: 6px 0; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+}
+.size-row span {
+    color: #2d3748;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.soft-drink-box {
+    background: #812003;
+    border-radius: 10px;
+    padding: 6px 10px;
+    margin-top: 4px;
+}
+
+.soft-drink-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    color: white;
+    font-weight: bold;
+    font-size: 13px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 4px;
+    padding-right: 8px;
+    text-align: left;
+}
+
+.soft-drink-header span:last-child {
+    text-align: right;      
+    padding-right: 4px;
+}
+
+.soft-drink-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    margin-bottom: 0px;
+    gap: 2px;
+}
+
+.soft-drink-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+    font-size: 11px;       
+}
+
+.soft-drink-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #f9a03f;
+}
+
+.soft-drink-price {
+    padding: 6px 10px;
+    border-radius: 20px;
+    border: none;
+    background: #f9a03f;
+    color: black;
+    font-size: 12px;       
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.soft-drink-price::placeholder {
+    color: rgba(46, 45, 45, 0.8);
+}
