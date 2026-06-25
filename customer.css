@@ -1,0 +1,177 @@
+/* --- Global Styles --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: white; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+    align-items: stretch; /* Both sidebar and content stay aligned */
+}
+
+/* --- Sidebar --- */
+.sidebar { 
+    width: 220px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+    
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    
+    /* 🟢 Sidebar ki position ko screen par fix karne ke liye */
+    height: 100vh;
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav {
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Nav ko full available space dega */
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+
+/* 🟢 Logout Button - Bilkul Bottom par Shift karega */
+.sidebar nav a.logout-btn {
+    margin-top: auto; /* Clean push to bottom */
+    background-color: #800000;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease;
+}
+
+.sidebar nav a.logout-btn:hover {
+    background-color: #5c0000;
+}
+
+/* --- Main Content --- */
+.main-content { 
+    flex: 1; 
+    padding: 30px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+/* --- Table Container --- */
+.customer-table-container {
+    background: white;
+    border: 1px solid #e0e0e0;              
+    border-radius: 16px;
+    box-shadow: 0 6px 24px rgba(224, 224, 224, 0.1); /* ✅ shadow thora strong kiya */
+    overflow: hidden;
+}
+
+/* --- Table Header --- */
+.customer-header {
+    background-color: #b52a00;
+    color: white;
+    display: grid;
+    grid-template-columns: 1.4fr 2.4fr 2fr 1.5fr;
+    gap: 15px;
+    padding: 16px 20px;
+    font-weight: bold;
+    font-size: 13px;
+    align-items: center;
+}
+
+/* --- Customer Row --- */
+.customer-row {
+    display: grid;
+    grid-template-columns: 1.4fr 2.4fr 2fr 1.5fr;
+    gap: 15px;
+    padding: 14px 20px;
+    align-items: center;
+    border-bottom: 1.5px solid #bbb;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.customer-row:hover {
+    background: #f0edec;
+}
+
+.customer-row:last-child {
+    border-bottom: none;
+}
+
+/* --- Blocked Row --- */
+.blocked-row {
+    background-color: #fff3e0 !important;
+}
+
+/* --- Actions Cell --- */
+.actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* --- Block Button --- */
+.block-btn {
+    background-color: #7a1c00;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.block-btn:hover { opacity: 0.85; }
+
+/* --- Unblock Button --- */
+.customer-row .block-btn[onclick*="true"] {
+    background-color: #28a745;
+}
+
+/* --- Delete Button --- */
+.delete-btn {
+    background-color: #b52a00;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.delete-btn:hover { opacity: 0.85; }
