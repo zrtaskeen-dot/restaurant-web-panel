@@ -36,24 +36,10 @@
                     <h2 id="displayBranchName" class="branch-main-title">Loading Branch Name...</h2>
                     <div class="branch-meta-row">
                         <span><strong> Timing:</strong> <span id="displayBranchTiming">--:--</span></span>
-                        <span><strong> Address:</strong> <span id="displayBranchAddress">Loading address...</span></span>
                         <span><strong> Delivery Charge:</strong> <span id="displayDeliveryCharge">Not Set</span></span>
                     </div>
                 </div>
                 <button class="btn-edit-branch" onclick="openBranchModal()">Edit Details</button>
-            </div>
-
-            <!-- 2. Payment Accounts Card  -->
-            <div class="branch-info-header-card" style="margin-top: 15px;">
-                <div class="branch-details-view">
-                    <h2 class="branch-main-title" style="font-size: 16px; margin-bottom: 8px;"> Payment Accounts Details</h2>
-                    <div class="branch-meta-row">
-                        <span><strong>EasyPaisa:</strong> <span id="displayEasyPaisa" style="color:rgb(77, 72, 72); font-size: 13px;">Loading...</span></span>
-                       
-                        <span><strong>JazzCash:</strong> <span id="displayJazzCash" style="color: rgb(77, 72, 72); font-size: 13px;">Loading...</span></span>
-                    </div>
-                </div>
-                <button class="btn-edit-branch" onclick="openPaymentModal()">Edit Numbers</button>
             </div>
 
             <h2 class="page-title" style="margin-top: 25px;">Dashboard Overview</h2>
@@ -131,10 +117,6 @@
             <input type="text" id="inputBranchTiming" placeholder="e.g., 12:00 PM - 12:00 AM">
         </div>
         <div class="branch-input-group">
-            <label>Branch Address:</label>
-            <textarea id="inputBranchAddress" rows="3" placeholder="Enter complete branch address..."></textarea>
-        </div>
-        <div class="branch-input-group">
             <label>Delivery Charge (Rs.):</label>
             <input type="number" id="inputDeliveryCharge" placeholder="e.g., 100" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         </div>
@@ -143,25 +125,6 @@
             <button id="btnSaveBranch" class="btn-branch-save" onclick="saveBranchDetails()">Save Updates</button>
         </div>
     </div>
-
-    
-    <!-- Payment Accounts Edit Modal -->
-<div id="paymentModalOverlay" class="branch-modal-overlay"></div>
-<div id="paymentEditModal" class="branch-card-modal">
-    <h3>Update Payment Numbers</h3>
-    <div class="branch-input-group">
-        <label style="color: black;"> EasyPaisa Number:</label>
-        <input type="text" id="modalEasyPaisa" maxlength="11" placeholder="e.g., 03001234567" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </div>
-    <div class="branch-input-group">
-        <label style="color:black"> JazzCash Number:</label>
-        <input type="text" id="modalJazzCash" maxlength="11" placeholder="e.g., 03007654321" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </div>
-    <div class="branch-modal-actions">
-        <button class="btn-branch-cancel" onclick="closePaymentModal()">Cancel</button>
-        <button id="btnSavePayment" class="btn-branch-save" onclick="savePaymentNumbers()">Save Updates</button>
-    </div>
-</div>
 
     <script src="alert.js"></script>
     <script src="dashboard.js"></script>

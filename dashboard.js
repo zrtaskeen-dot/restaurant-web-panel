@@ -31,7 +31,7 @@ function getOrderStatus(data) {
     return data.order_status || data.orderStatus || data.status || '';
 }
 
-// 1. Branch Details & Payment Numbers Listener
+// 1. Branch Details Listener
 function listenToBranchDetails() {
     if (!BRANCH_DOC_ID) return;
     
@@ -41,47 +41,22 @@ function listenToBranchDetails() {
             const data = doc.data();
             const bName = document.getElementById('displayBranchName');
             const bTiming = document.getElementById('displayBranchTiming');
-            const bAddr = document.getElementById('displayBranchAddress');
             const bDelivery = document.getElementById('displayDeliveryCharge'); // 🟢 naya
 
             if (bName) bName.innerText = data.branchName || "Setup Your Branch Name";
             if (bTiming) bTiming.innerText = data.timing || "--:--";
-            if (bAddr) bAddr.innerText = data.address || "Enter Address";
             if (bDelivery) bDelivery.innerText = data.deliveryCharge ? `Rs. ${data.deliveryCharge}` : "Not Set"; // 🟢 naya
 
             const inName = document.getElementById('inputBranchName');
             const inTiming = document.getElementById('inputBranchTiming');
-            const inAddr = document.getElementById('inputBranchAddress');
             const inDelivery = document.getElementById('inputDeliveryCharge'); // 🟢 naya
 
             if (inName) inName.value = data.branchName || "";
             if (inTiming) inTiming.value = data.timing || "";
-            if (inAddr) inAddr.value = data.address || "";
             if (inDelivery) inDelivery.value = data.deliveryCharge || ""; // 🟢 naya
         } else {
             const bName = document.getElementById('displayBranchName');
             if (bName) bName.innerText = "Branch Profile Setup Needed";
-        }
-    });
-
-    // 🟢 Payment Accounts Listener (Updates Header View & Modal Inputs)
-    db.collection("branches").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
-        if (doc.exists) {
-            const data = doc.data();
-            const ep = data.easyPaisaNumber || "Not Set";
-            const jc = data.jazzCashNumber  || "Not Set";
-
-            // Header UI update
-            const epEl = document.getElementById("displayEasyPaisa");
-            const jcEl = document.getElementById("displayJazzCash");
-            if (epEl) epEl.innerText = ep;
-            if (jcEl) jcEl.innerText = jc;
-
-            // Modal inputs pre-fill
-            const epModalInput = document.getElementById("modalEasyPaisa");
-            const jcModalInput = document.getElementById("modalJazzCash");
-            if (epModalInput) epModalInput.value = data.easyPaisaNumber || "";
-            if (jcModalInput) jcModalInput.value = data.jazzCashNumber  || "";
         }
     });
 }
@@ -90,10 +65,9 @@ function listenToBranchDetails() {
 window.saveBranchDetails = async function() {
     const name    = document.getElementById('inputBranchName').value.trim();
     const timing  = document.getElementById('inputBranchTiming').value.trim();
-    const address = document.getElementById('inputBranchAddress').value.trim();
     const delivery = document.getElementById('inputDeliveryCharge').value.trim(); // 🟢 naya
     
-    if (!name || !timing || !address || !delivery) {  // 🟢 delivery bhi required
+    if (!name || !timing || !delivery) {  // 🟢 delivery bhi required
         alert("Please fill all branch details!"); 
         return; 
     }
@@ -108,7 +82,6 @@ window.saveBranchDetails = async function() {
         await db.collection("restaurant_info").doc(BRANCH_DOC_ID).set({
             branchName: name, 
             timing: timing, 
-            address: address, 
             deliveryCharge: delivery,  // 🟢 naya
             updatedAt: Date.now()
         }, { merge: true });
@@ -121,46 +94,6 @@ window.saveBranchDetails = async function() {
         if (saveBtn) {
             saveBtn.innerText = "Save Updates";
             saveBtn.disabled  = false;
-        }
-    }
-};
-
-
-/// 🟢 Save Payment Account Numbers (Exact 11 Digits Validation)
-window.savePaymentNumbers = async function() {
-    if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
-
-    const epVal = document.getElementById("modalEasyPaisa")?.value.trim() || "";
-    const jcVal = document.getElementById("modalJazzCash")?.value.trim() || "";
-    const btn   = document.getElementById("btnSavePayment");
-    const phoneRegex = /^\d{11}$/;
-    if (epVal && !phoneRegex.test(epVal)) {
-        alert("Invalid Number");
-        return;
-    }
-    if (jcVal && !phoneRegex.test(jcVal)) {
-        alert("Invalid Number");
-        return;
-    }
-    if (btn) {
-        btn.innerText = "Saving...";
-        btn.disabled  = true;
-    }
-    try {
-        await db.collection("branches").doc(BRANCH_DOC_ID).set({
-            easyPaisaNumber: epVal,
-            jazzCashNumber:  jcVal
-        }, { merge: true });
-        
-        closePaymentModal();
-        alert("Payment account numbers updated successfully!");
-    } catch (e) {
-        console.error("Error saving payment numbers:", e);
-        alert("Failed to update payment numbers: " + e.message);
-    } finally {
-        if (btn) {
-            btn.innerText = "Save Updates";
-            btn.disabled  = false;
         }
     }
 };
@@ -181,25 +114,6 @@ window.closeBranchModal = function() {
     if (overlay && modal) { 
         overlay.style.display = 'none'; 
         modal.style.display   = 'none'; 
-    }
-};
-
-// 🟢 Modal Controls for Payment Modal
-window.openPaymentModal = function() {
-    const overlay = document.getElementById('paymentModalOverlay');
-    const modal   = document.getElementById('paymentEditModal');
-    if (overlay && modal) {
-        overlay.style.display = 'block';
-        modal.style.display   = 'block';
-    }
-};
-
-window.closePaymentModal = function() {
-    const overlay = document.getElementById('paymentModalOverlay');
-    const modal   = document.getElementById('paymentEditModal');
-    if (overlay && modal) {
-        overlay.style.display = 'none';
-        modal.style.display   = 'none';
     }
 };
 
@@ -422,14 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (branchOverlay) {
         branchOverlay.addEventListener('click', function(e) {
             if (e.target === branchOverlay) closeBranchModal();
-        });
-    }
-
-    // Close payment modal on backdrop click
-    const paymentOverlay = document.getElementById('paymentModalOverlay');
-    if (paymentOverlay) {
-        paymentOverlay.addEventListener('click', function(e) {
-            if (e.target === paymentOverlay) closePaymentModal();
         });
     }
 });
