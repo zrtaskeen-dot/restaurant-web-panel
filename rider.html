@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="alert.css">
+    <link rel="stylesheet" href="rider.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Admin Panel</h2>
+            <nav>
+                <a href="admin.html"> Dashboard Overview</a>
+                <a href="rider.html" class="active">Manage Riders</a>
+                <a href="manager.html">Manage Managers</a>
+                <a href="owner.html">Manage owner</a>
+                <a href="customer.html">Manage Customers</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h1 class="page-title">Rider Management</h1>
+            <button class="btn-add-rider" onclick="openModal()">Add Rider</button>
+
+            <div class="rider-table-container">
+                <div class="rider-header">
+                    <span>Name</span>
+                    <span>Email</span>
+                    <span>Password</span>
+                    <span>Phone no</span>
+                    <span>CNIC</span>
+                    <span>Branch</span>
+                    <span>Actions</span>
+                </div>
+                <div id="rider-list"> 
+                    <p style="padding: 20px; text-align: center;">Loading Riders...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="riderModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-header">Add Rider</h2>
+            <form id="riderForm">
+                <div class="input-group">
+                    <label>Name:</label>
+                    <input type="text" id="riderName" required>
+                </div>
+                <div class="input-group">
+                    <label>Email:</label>
+                    <input type="email" id="riderEmail" required>
+                </div>
+               <div class="input-group">
+    <label>Password:</label>
+    <div style="position:relative;">
+        <input type="password" id="riderPassword" required style="width:100%; padding:10px; padding-right:40px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
+        <i class="fa-regular fa-eye" onclick="togglePass('riderPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
+    </div>
+</div>
+                <!-- 🟢 Phone: 11 digits required -->
+                <div class="input-group">
+                    <label>Phone no:</label>
+                    <input type="text" id="riderPhone" 
+                        placeholder="03XXXXXXXXX" 
+                        maxlength="11" 
+                        pattern="\d{11}"
+                        title="Phone number must be exactly 11 digits"
+                        required>
+                </div>
+                <!-- 🟢 CNIC field -->
+                <div class="input-group">
+                    <label>CNIC:</label>
+                    <input type="text" id="riderCnic" 
+                        placeholder="XXXXX-XXXXXXX-X"
+                        maxlength="15"
+                        pattern="\d{5}-\d{7}-\d{1}"
+                        title="CNIC format: XXXXX-XXXXXXX-X"
+                        required>
+                </div>
+                <div class="input-group">
+                    <label>Select Branch:</label>
+                    <select id="riderBranchSelect" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background-color: #fff; font-size: 14px; outline: none;">
+                    </select>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn-save">Save</button>
+                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="rider.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="alert.js"></script>
+    <script src="admin logout.js"></script>
+</body>
+</html>

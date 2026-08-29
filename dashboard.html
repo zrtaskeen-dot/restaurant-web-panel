@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="alert.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        
+        <div class="sidebar">
+            <h2 class="sidebar-title">Manager Panel</h2>
+            <nav>
+                <a href="dashboard.html" class="active">Dashboard</a>
+                <a href="menu.html">Menu</a>
+                <a href="orders.html">Orders</a>
+                <a href="special deal.html">Special Offers</a>
+                <a href="manage rider.html">Riders</a>
+                <a href="review.html">Reviews</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            
+            <div class="branch-info-header-card">
+                <div class="branch-details-view">
+                    <h2 id="displayBranchName" class="branch-main-title">Loading Branch Name...</h2>
+                    <div class="branch-meta-row">
+                        <span><strong>🕒 Timing:</strong> <span id="displayBranchTiming">--:--</span></span>
+                        <span><strong>📍 Address:</strong> <span id="displayBranchAddress">Loading address...</span></span>
+                    </div>
+                </div>
+                <button class="btn-edit-branch" onclick="openBranchModal()">Edit Details</button>
+            </div>
+
+            <h2 class="page-title">Dashboard Overview</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Menu Items</p>
+                        <h3 id="count-menu">0</h3>
+                    </div>
+                    <img src="https://img.icons8.com/color/48/french-fries.png" alt="icon">
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Total Orders</p>
+                        <h3 id="count-orders">0</h3>
+                    </div>
+                    <img src="https://img.icons8.com/color/48/food-receiver.png" alt="icon">
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Total Customer</p>
+                        <h3 id="count-customers">0</h3>
+                    </div>
+                    <img src="https://img.icons8.com/color/48/group-foreground-selected.png" alt="icon">
+                </div>
+   <div class="stat-card">
+    <div class="stat-info">
+        <p>Total Rider</p>
+        <h3 id="count-riders">0</h3>
+    </div>
+   <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" alt="icon">
+</div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Pending</p>
+                        <h3 id="count-pending">0</h3>
+                    </div>
+                    <img src="https://img.icons8.com/color/48/clock.png" alt="icon">
+                </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Delivered</p>
+                        <h3 id="count-delivered">0</h3>
+                    </div>
+                    <img src="https://img.icons8.com/color/48/package.png" alt="icon">
+                </div>
+            </div>
+
+            <div class="revenue-section">
+                <div class="revenue-header">
+                    <div>
+                        <p>Total Revenue</p>
+                        <h2 id="total-revenue">PKR 0</h2>
+                    </div>
+                    <div class="chart-labels">
+                        <span><span class="dot yellow"></span> Deliver Now</span>
+                        <span><span class="dot blue"></span> Deliver Later</span>
+                    </div>
+                </div>
+                <canvas id="revenueChart" style="max-height: 300px;"></canvas>
+            </div>
+
+        </div> </div> <div id="branchModalOverlay" class="branch-modal-overlay"></div>
+    <div id="branchEditModal" class="branch-card-modal">
+        <h3>Update Branch Settings</h3>
+        <div class="branch-input-group">
+            <label>Branch Name:</label>
+            <input type="text" id="inputBranchName" placeholder="e.g., Main Boulevard Branch">
+        </div>
+        <div class="branch-input-group">
+            <label>Branch Timing:</label>
+            <input type="text" id="inputBranchTiming" placeholder="e.g., 12:00 PM - 12:00 AM">
+        </div>
+        <div class="branch-input-group">
+            <label>Branch Address:</label>
+            <textarea id="inputBranchAddress" rows="3" placeholder="Enter complete branch address..."></textarea>
+        </div>
+        <div class="branch-modal-actions">
+            <button class="btn-branch-cancel" onclick="closeBranchModal()">Cancel</button>
+            <button id="btnSaveBranch" class="btn-branch-save" onclick="saveBranchDetails()">Save Updates</button>
+        </div>
+    </div>
+
+    <script src="alert.js"></script>
+    <script src="dashboard.js"></script>
+<script src="manager logout.js"></script>
+
+</body>
+</html>

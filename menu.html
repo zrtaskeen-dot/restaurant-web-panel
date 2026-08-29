@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu Management</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="alert.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Manager Panel</h2>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="menu.html" class="active">Menu</a>
+                <a href="orders.html">Orders</a>
+                <a href="special deal.html">Special Offers</a>
+                <a href="manage rider.html">Riders</a>
+                <a href="review.html">Reviews</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h1 class="page-title">Menu Management</h1>
+
+            <button class="add-new-btn" id="addItemBtn" onclick="openModal(false)">+ Add Item</button>
+
+            <div class="tabs">
+                <button class="tab active" onclick="filterCategory(event, 'PIZZA')">PIZZA</button>
+                <button class="tab" onclick="filterCategory(event, 'BURGER')">BURGER</button>
+                <button class="tab" onclick="filterCategory(event, 'WINGS')">WINGS</button>
+                <button class="tab" onclick="filterCategory(event, 'SOFT DRINK')">SOFT DRINK</button>
+                <button class="tab" onclick="filterCategory(event, 'Sandwiches & Pasta')">Sandwiches & Pasta</button>
+                <button class="tab" onclick="filterCategory(event, 'PARATHA ROLL')">PARATHA ROLL</button>
+                <button class="tab" onclick="filterCategory(event, 'FRIES')">FRIES</button>
+                <button class="tab" onclick="filterCategory(event, 'DEALS')">DEALS</button>
+                <button class="tab" onclick="filterCategory(event, 'COMBO')">COMBO</button>
+            </div>
+
+            <div id="standardMenuTableSection">
+                <div class="table-container">
+                    <div class="table-header">
+                        <span>Image</span>
+                        <span>Name</span>
+                        <span>Ingredients</span>
+                        <span>Price</span>
+                        <span style="text-align: right;">Actions</span>
+                    </div>
+                    <div id="menuTable"></div>
+                </div>
+            </div>
+
+            <div id="packageCreationSection" style="display: none; margin-top: 20px;">
+                <h2 id="packagePageTitle" class="package-title">Create New Package</h2>
+                
+                <div class="deal-layout" style="display: flex; gap: 25px; flex-wrap: wrap; align-items: flex-start;">
+                    <form id="menuPackageForm" onsubmit="savePackage(event)" style="flex: 1; min-width: 300px; max-width: 420px; background: #fff8ee; padding: 20px; border-radius: 12px; border: 1px solid #f3e5d3; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Package Name:</label>
+                            <input type="text" id="menuPackageName" placeholder="e.g., Midnight Special Deal" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Package Price (Rs):</label>
+                            <input type="number" id="menuPackagePrice" placeholder="e.g., 1499" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Items Detail:</label>
+                            <textarea id="menuPackageDesc" rows="4" placeholder="Ticked items will appear here automatically. You can also edit this text manually!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; line-height:1.4; font-family:inherit; resize:none; box-sizing: border-box;" required></textarea>
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Add Package Picture:</label>
+                            <input type="file" id="dealImageInput" accept="image/*" style="width:100%; padding:5px; font-size:13px; box-sizing: border-box;">
+                        </div>
+                        <div id="dealImagePreviewContainer" style="margin-top: 10px; margin-bottom: 15px; text-align: center;">
+                            <p style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: bold;">Package Image Preview:</p>
+                            <img id="dealImagePreview" src="https://via.placeholder.com/120" alt="Deal Preview" style="width: 120px; height: 120px; border-radius: 10px; object-fit: cover; border: 2px dashed #b52a00; padding: 3px; background: #fff;">
+                        </div>
+
+                        <div style="text-align: center;">
+                            <button type="submit" id="savePackageBtn" style="padding: 10px 24px; background:#b52a00; color:#fff; border:none; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer; transition: background 0.2s; display: inline-block;">Create & Save Package</button>
+                        </div>
+                    </form>
+
+                    <div class="menu-selection-box" style="flex: 1.3; min-width: 350px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                        <h3 style="color:#b52a00; margin-bottom:12px; font-size:16px; font-weight:bold;">Select Items & Sizes for this Package</h3>
+                        
+                        <div class="mini-tabs" style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
+                            <button type="button" class="mini-tab active" onclick="filterPackageGrid(event, 'PIZZA')">PIZZA</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'BURGER')">BURGER</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'WINGS')">WINGS</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'SOFT DRINK')">SOFT DRINK</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'Sandwiches & Pasta')">Sandwiches & Pasta</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'PARATHA ROLL')">PARATHA ROLL</button>
+                            <button type="button" class="mini-tab" onclick="filterPackageGrid(event, 'FRIES')">FRIES</button>
+                        </div>
+
+                        <p style="font-size:12px; color:#666; margin-bottom:10px; font-weight:500;">Tick items to add to the package description:</p>
+                        
+                        <div id="package-items-selection-grid" style="max-height: 300px; overflow-y: auto; border: 1px solid #f1f1f1; padding: 10px; border-radius: 8px; background: #fafafa;">
+                            <p style="text-align:center; color:#999; font-size:13px; padding:20px;">Select a category above to view items...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px;">
+                    <h3 id="savedPackagesHeading" style="color: #b52a00; font-size: 18px; font-weight: bold; margin-bottom: 15px;">Active Created Packages</h3>
+                    <div class="table-container">
+                        <div class="table-header" style="display: grid; grid-template-columns: 2fr 3fr 1.5fr 1.5fr; align-items: center;">
+                            <span>Package Name</span>
+                            <span>Included Items Summary</span>
+                            <span>Price</span>
+                            <span style="text-align: center;">Actions</span>
+                        </div>
+                        <div id="savedPackagesTableBody"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="toppingsSection" style="display: none; margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="font-size: 20px;">Toppings</h2>
+                    <button class="add-new-btn" onclick="openToppingModal()" style="margin-bottom: 0;">Add Toppings</button>
+                </div>
+                <div class="table-header" style="grid-template-columns: 1fr 1fr 100px;">
+                    <span>Topping Name</span>
+                    <span>Price</span>
+                    <span>Actions</span>
+                </div>
+                <div id="toppingsTable"></div>
+            </div>
+
+            <div id="modalOverlay" class="modal-overlay" onclick="closeModal(); closeToppingModal();"></div>
+            <div id="addModal" class="modal">
+                <h2 id="modalTitle">Add Item</h2>
+                <div id="mainModalBody" class="modal-body">
+                    <label>Item Name:</label>
+                    <input type="text" id="itemName" placeholder="e.g. Margherita" class="rounded-input">
+                    <div class="size-container" id="standardSizesSection">
+                        <div class="size-header"><span>Size</span><span>Price (Rs.)</span></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-small"> Small</label><input type="number" id="price-small" placeholder="0" class="orange-price-input"></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-medium"> Medium</label><input type="number" id="price-medium" placeholder="0" class="orange-price-input"></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-large"> Large</label><input type="number" id="price-large" placeholder="0" class="orange-price-input"></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-xlarge"> XLarge</label><input type="number" id="price-xlarge" placeholder="0" class="orange-price-input"></div>
+                    </div>
+                    <div class="size-container" id="wingsPiecesSection" style="display: none;">
+                        <div class="size-header"><span>Pieces</span><span>Price (Rs.)</span></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-6pcs"> 6 pcs</label><input type="number" id="price-6pcs" placeholder="0" class="orange-price-input"></div>
+                        <div class="size-row"><label><input type="checkbox" id="size-12pcs"> 12 pcs</label><input type="number" id="price-12pcs" placeholder="0" class="orange-price-input"></div>
+                    </div>
+                   <div id="softDrinksSection" style="display:none;">
+    <p style="font-weight:bold; color:#b52a00;">Sizes:</p>
+    <div class="soft-drink-box">
+        <div class="soft-drink-header">
+            <span>Size</span><span>Price</span>
+        </div>
+        <div class="soft-drink-row">
+            <div class="soft-drink-label">
+                <input type="checkbox" id="size-05l">
+                <label>0.5 litre</label>
+            </div>
+            <input type="number" id="price-05l" placeholder="Price" class="soft-drink-price">
+        </div>
+        <div class="soft-drink-row">
+            <div class="soft-drink-label">
+                <input type="checkbox" id="size-1l">
+                <label>1 litre</label>
+            </div>
+            <input type="number" id="price-1l" placeholder="Price" class="soft-drink-price">
+        </div>
+        <div class="soft-drink-row">
+            <div class="soft-drink-label">
+                <input type="checkbox" id="size-15l">
+                <label>1.5 litre</label>
+            </div>
+            <input type="number" id="price-15l" placeholder="Price" class="soft-drink-price">
+        </div>
+        <div class="soft-drink-row">
+            <div class="soft-drink-label">
+                <input type="checkbox" id="size-2l">
+                <label>2 litre</label>
+            </div>
+            <input type="number" id="price-2l" placeholder="Price" class="soft-drink-price">
+        </div>
+    </div>
+</div>
+                    <div class="size-container" id="simplePriceSection" style="display: none;">
+                        <div class="size-header"><span>Price (Rs.)</span></div>
+                        <div class="size-row"><input type="number" id="price-simple" placeholder="Enter Price" class="orange-price-input"></div>
+                    </div>
+                    <label id="ingredientsLabel" style="margin-top:15px; display:block;">Ingredients:</label>
+                    <textarea id="itemDesc" placeholder="Enter ingredients..." class="rounded-textarea"></textarea>
+                    <label style="margin-top:15px; display:block;">Add Picture:</label>
+                    <input type="file" id="itemImage" class="file-input" onchange="previewImage(event)">
+                    <div id="imagePreviewContainer" style="margin-top: 10px; text-align: center; display: none;">
+                        <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Image Preview:</p>
+                        <img id="imagePreview" src="#" alt="Preview" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid #b52a00; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    </div>
+                    <div class="modal-actions">
+                        <button id="saveBtn" onclick="saveItem()" class="action-btn-save">Save</button>
+                        <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="toppingModal" class="modal" style="width: 320px; display: none;">
+                <h2 style="color: #b52a00; text-align: center; font-size: 20px;">Add Topping</h2>
+                <div class="modal-body">
+                    <label>Topping Name:</label>
+                    <input type="text" id="topName" placeholder="e.g. Extra Cheese" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb; margin-bottom: 10px;">
+                    <label>Price (Rs.):</label>
+                    <input type="number" id="topPrice" placeholder="0" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb;">
+                </div>
+                <div class="modal-actions" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                    <button onclick="saveTopping()" style="background-color: #f9a03f; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Save</button>
+                    <button onclick="closeToppingModal()" style="background-color: #ccc; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="menu.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="alert.js"></script>
+<script src="manager logout.js"></script>
+</body>
+</body>
+</html>

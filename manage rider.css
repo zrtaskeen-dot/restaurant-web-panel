@@ -1,0 +1,92 @@
+/* --- Basic Reset --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: #fdf6e3; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+/* --- Sidebar --- */
+.sidebar { 
+    width: 200px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+
+/* --- Main Content Area --- */
+.main-content { 
+    flex: 1; 
+    padding: 25px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 15px; 
+    font-weight: bold;
+}
+
+/* 🟢 Manager Table Design: Fixed for 5 columns only (No Actions) */
+.rider-header {
+    background-color: #b52a00;
+    color: white;
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1.2fr 1.5fr 1.5fr 1.5fr; /* 6 columns: Name, Email, Password, Phone, CNIC, Branch */
+    gap: 15px; 
+    padding: 20px;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 12px;
+    text-align: center;
+    align-items: center;
+}
+
+.rider-row {
+    display: grid;
+    grid-template-columns: 1.5fr 2fr 1.2fr 1.5fr 1.5fr 1.5fr;
+    gap: 15px; 
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+    align-items: center;
+    font-size: 13px;
+    color: #333;
+}
+
+/* Branch Text highlight color code */
+.rider-branch-text {
+    font-weight: bold;
+    color: #0b3d59; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

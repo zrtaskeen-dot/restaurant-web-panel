@@ -1,0 +1,130 @@
+/* ── Alert ── */
+#customAlertOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 999999;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+    animation: alertFadeIn 0.2s ease;
+}
+
+#customAlertBox {
+    background: #f3e7b3;
+    border-radius: 12px;
+    padding: 24px 28px;
+    min-width: 280px;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    animation: alertSlideIn 0.2s ease;
+}
+
+#customAlertMessage {
+    font-size: 14px;
+    color: #a70000;
+    line-height: 1.6;
+    white-space: pre-line;
+    margin-bottom: 20px;
+}
+
+#customAlertOk {
+    background: #a70000;
+    color: white;
+    border: none;
+    padding: 9px 32px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: block;
+    margin-left: auto;
+    transition: background 0.2s;
+    letter-spacing: 0.5px;
+}
+
+#customAlertOk:hover {
+    background: #e08800;
+}
+
+/* ── Confirm ── */
+#customConfirmOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 999999;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+    animation: alertFadeIn 0.2s ease;
+}
+
+#customConfirmBox {
+    background: #f3e7b3;
+    border-radius: 12px;
+    padding: 24px 28px;
+    min-width: 280px;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    font-family: 'Segoe UI', Arial, sans-serif;
+    animation: alertSlideIn 0.2s ease;
+}
+
+#customConfirmMessage {
+    font-size: 14px;
+    color: #a70000;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.confirm-btns {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.confirm-ok {
+    background: #a70000;
+    color: white;
+    border: none;
+    padding: 9px 28px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.confirm-ok:hover {
+    background: #e08800;
+}
+
+.confirm-cancel {
+    background: #e7e6e6;
+    color: #a70000;
+    border: none;
+    padding: 9px 28px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.confirm-cancel:hover {
+    background: #dddbdb;
+}
+
+/* ── Animations ── */
+@keyframes alertFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes alertSlideIn {
+    from { transform: translateY(-16px); opacity: 0; }
+    to   { transform: translateY(0);     opacity: 1; }
+}

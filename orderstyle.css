@@ -1,0 +1,212 @@
+/* --- Basic Reset --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: #fdf6e3; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+/* --- Sidebar --- */
+.sidebar { 
+    width: 200px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+
+/* --- Main Content Area --- */
+.main-content { 
+    flex: 1; 
+    padding: 30px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 20px; 
+    font-weight: bold;
+    color: #1a1a1a;
+}
+
+/* --- Table Container --- */
+.table-container {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+/* --- Order Grid --- */
+.order-grid {
+    display: grid;
+    grid-template-columns: 110px 1fr 160px 280px;
+    align-items: center;
+    padding: 14px 20px;
+    gap: 10px;
+}
+
+/* --- Table Header --- */
+.table-header {
+    background-color: #b52a00; 
+    color: white; 
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* --- Rows --- */
+.row { 
+    background: white; 
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 13px;
+    transition: background 0.15s;
+}
+
+.row:hover {
+    background: #fffaf5;
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+/* --- Action Buttons --- */
+.btn-action {
+    border: none; 
+    padding: 7px 16px; 
+    border-radius: 20px; 
+    color: white; 
+    font-weight: bold; 
+    font-size: 11px; 
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-action:hover { opacity: 0.85; }
+
+.view-btn { background-color: #122f3b; }
+.update-btn { background-color: #f9a03f; color: black; }
+.delete-btn { background-color: #8e2100; }
+/* --- Modal & Overlay --- */
+.modal-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.5); 
+    z-index: 999; 
+}
+
+.modal { 
+    display: none; 
+    position: fixed; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); 
+    background: #fdf6e3; 
+    padding: 30px; 
+    border-radius: 20px; 
+    width: 420px; 
+    z-index: 1000;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal h2 {
+    color: #b52a00;
+    margin-top: 0;
+    font-size: 18px;
+}
+
+.modal-body p {
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.modal-body hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 12px 0;
+}
+
+.modal-body ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.modal-body ul li {
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.action-btn-cancel { 
+    background-color: #b52a00; 
+    color: white;
+    border: none; 
+    padding: 10px 28px; 
+    border-radius: 10px; 
+    cursor: pointer; 
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.action-btn-cancel:hover {
+    opacity: 0.9;
+}
+/* Filter Tabs */
+.filter-tab {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid #ddd;
+    background: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555;
+    transition: all 0.2s;
+}
+
+.filter-tab:hover {
+    border-color: #b52a00;
+    color: #b52a00;
+}
+
+.active-tab {
+    background: #b52a00 !important;
+    color: white !important;
+    border-color: #b52a00 !important;
+}

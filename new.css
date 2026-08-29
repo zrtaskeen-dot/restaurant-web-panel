@@ -1,0 +1,343 @@
+/* --- Basic Reset --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: #fdf6e3; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+/* --- Sidebar --- */
+.sidebar { 
+    width: 200px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+
+/* --- Main Content Area --- */
+.main-content { 
+    flex: 1; 
+    padding: 25px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 15px; 
+    font-weight: bold;
+}
+
+/* --- Buttons --- */
+.add-new-btn { 
+    background-color: #7a1c00; 
+    color: white; 
+    border: none; 
+    padding: 8px 16px; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 13px; 
+    font-weight: bold; 
+    margin-bottom: 20px;
+}
+
+/* --- Tabs --- */
+.tabs { 
+    display: flex; 
+    gap: 8px; 
+    margin-bottom: 20px; 
+}
+
+.tab { 
+    padding: 6px 14px; 
+    border: 1px solid #ccc; 
+    background: white; 
+    cursor: pointer; 
+    border-radius: 6px; 
+    font-weight: bold; 
+    font-size: 12px;
+}
+
+.tab.active { 
+    background-color: #f9a03f; 
+    border-color: black; 
+}
+
+/* --- Table Grid (Screenshot match) --- */
+.table-header, .row { 
+    display: grid; 
+    /* Col sizes: Img(60), Name(140), Ingredients(1fr), Price(100), Actions(130) */
+    grid-template-columns: 60px 150px 1fr 100px 130px; 
+    gap: 15px; 
+    padding: 12px 15px; 
+    align-items: center; 
+    font-size: 13px;
+}
+
+.table-header { 
+    background-color: #b52a00; 
+    color: white; 
+    border-radius: 8px 8px 0 0; 
+    font-weight: bold; 
+}
+
+.row { 
+    background: white; 
+    margin-top: 2px; 
+    border-bottom: 1px solid #eee;
+}
+
+.row img { 
+    width: 45px; 
+    height: 45px; 
+    border-radius: 5px; 
+    object-fit: cover;
+}
+
+/* Ingredients Text - Darker for readability */
+.row span:nth-child(3) {
+    color: #333 !important; /* Pure light white ke bajaye dark grey/black */
+    font-weight: 400;
+}
+
+/* --- Action Buttons (Fixed Colors) --- */
+.col-actions { 
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* Edit Button: White background with grey border */
+.btn-edit { 
+    background-color: #1a4a5e!important;
+    color: white !important; 
+    border: 1px solid #ccc !important; 
+    padding: 5px 12px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* Delete Button: Red background from your theme */
+.btn-delete { 
+    background-color: #b52a00 !important; 
+    color: white !important; 
+    border: none !important; 
+    padding: 5px 12px; 
+    border-radius: 4px; 
+    font-weight: bold; 
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-edit:hover { background-color: #122f3b !important; }
+.btn-delete:hover { background-color: #8e2100 !important; }
+/* --- Modal Background Overlay --- */
+.modal-overlay { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.6); /* Slightly darker for focus */
+    z-index: 999; 
+    cursor: pointer;
+}
+
+/* --- Main Modal Box (Like image_7.png) --- */
+.modal { 
+    display: none; 
+    position: fixed; 
+    top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); 
+    background-color: #fdf6e3; /* Light Yellowish background from main site */
+    padding: 30px; 
+    border-radius: 35px; /* Extra rounded corners like image_7 */
+    width: 400px; 
+    z-index: 1000; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
+    max-height: 90vh; /* Handle long forms on mobile */
+    overflow-y: auto;
+}
+
+#modalTitle { 
+    color: #b52a00; /* Dark Red Title */
+    text-align: center; 
+    margin-top: 0; 
+    font-size: 24px; 
+    font-weight: bold;
+}
+
+.modal-body label { 
+    display: block; 
+    font-weight: bold; 
+    font-size: 14px; 
+    margin-top: 15px; 
+    margin-bottom: 5px; 
+    margin-left: 10px;
+}
+
+/* Input Fields (Rounded & Light Yellow BG) */
+.modal-body .rounded-input, 
+.modal-body .rounded-textarea { 
+    width: 100%; 
+    padding: 12px 15px; 
+    border-radius: 25px; 
+    border: 1px solid #ddd; 
+    background-color: #fff9eb; 
+    box-sizing: border-box; 
+    font-size: 14px;
+    
+    /* Pure Black Text without !important */
+    color: #000000; 
+    font-weight: 500; 
+}
+
+/* Focus State */
+.modal-body .rounded-input:focus, 
+.modal-body .rounded-textarea:focus {
+    outline: none;
+    border: 2px solid #b52a00;
+    background-color: #fffdf5;
+    color: #000000; /* Ensuring text stays black */
+}
+
+/* Placeholder Styling */
+.modal-body .rounded-input::placeholder, 
+.modal-body .rounded-textarea::placeholder {
+    color: #888; 
+    font-weight: normal;
+}
+
+/* Orange boxes ke andar wala price text */
+.size-container .orange-price-input { 
+    width: 100%; 
+    background-color: #f9a03f; 
+    border: none; 
+    border-radius: 12px; 
+    padding: 6px; 
+    color: #000000; /* Pure Black Price Text */
+    text-align: center; 
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* --- Size Container (Main Orange Box from image_7) --- */
+.size-container { 
+    background-color: #7a1c00; /* Darker red-brown box from image_7 */
+    padding: 15px; 
+    border-radius: 25px; 
+    margin-top: 15px; 
+    color: white; /* Header and labels will be white */
+}
+
+.size-header { 
+    display: grid; 
+    grid-template-columns: 1fr 100px; 
+    font-weight: bold; 
+    font-size: 14px; 
+    margin-bottom: 10px; 
+    padding: 0 10px; 
+}
+
+.size-row { 
+    display: grid; 
+    grid-template-columns: 1fr 100px; 
+    gap: 10px; 
+    align-items: center; 
+    margin-bottom: 8px; 
+}
+
+.size-row label { 
+    font-size: 13px; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin: 0 !important; /* Overriding default label margin */
+    color: white;
+}
+
+/* Simple Styling for standard Checkboxes */
+.size-row input[type="checkbox"] {
+    width: 16px; height: 16px;
+    cursor: pointer;
+}
+
+/* --- Price Inputs (Inside Orange Boxes) --- */
+.orange-price-input { 
+    width: 100%; 
+    background-color: #f9a03f; /* Orange background request from add it.png */
+    border: none; 
+    border-radius: 12px; 
+    padding: 6px; 
+    color: white; /* Text will be white */
+    text-align: center; 
+    font-weight: bold;
+    font-size: 12px;
+}
+
+/* --- File Input & Buttons styling from screenshot 7 --- */
+.file-input {
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+.modal-actions { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+    margin-top: 25px; 
+}
+
+/* Common button style from screenshot 7 */
+.action-btn-save, .action-btn-cancel { 
+    background-color: #f9a03f; /* Orange buttons */
+    color: black; 
+    border: none; 
+    padding: 10px 30px; 
+    border-radius: 8px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.action-btn-save:hover, .action-btn-cancel:hover {
+    background-color: #e68d2b;
+}
+
+/* Toppings Table Styling */
+#toppingsSection {
+    margin-top: 40px;
+}
+
+#toppingsTable .row {
+    background-color: #fff9eb;
+}

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="new.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Admin Panel</h2>
+            <nav>
+               <a href="dashboard.html">Dashboard</a>
+                <a href="menu.html" class="active">Menu</a>
+                <a href="orders.html">Orders</a>
+        <a href="customer.html">Customer</a>
+        <a href="riders.html">Riders</a>
+        <a href="deals.html">Deals</a>
+        <a href="notification.html">Notification</a>
+        <a href="logout.html">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h1 class="page-title">Menu Management</h1>
+
+            <button class="add-new-btn" onclick="openModal(false)">+ Add Item</button>
+
+<div class="tabs">
+    <button class="tab active" onclick="filterCategory(event, 'PIZZA')">PIZZA</button>
+    <button class="tab" onclick="filterCategory(event, 'BURGER')">BURGER</button>
+    <button class="tab" onclick="filterCategory(event, 'WINGS')">WINGS</button>
+    <button class="tab" onclick="filterCategory(event, 'SOFT DRINK')">SOFT DRINK</button>
+    <button class="tab" onclick="filterCategory(event, 'Sandwiches & Pasta')">Sandwiches & Pasta</button>
+    <button class="tab" onclick="filterCategory(event, 'PARATHA ROLL')">PARATHA ROLL</button>
+    <button class="tab" onclick="filterCategory(event, 'FRIES')">FRIES</button>
+</div>
+            <div class="table-container">
+                <div class="table-header">
+                    <span>Image</span>
+                    <span>Name</span>
+                    <span>Ingredients</span>
+                    <span>Price</span>
+                    <span style="text-align: right;">Actions</span>
+                </div>
+                <div id="menuTable"></div>
+            </div>
+
+            <div id="toppingsSection" style="display: none; margin-top: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h2 style="font-size: 20px;">Toppings</h2>
+                    <button class="add-new-btn" onclick="openToppingModal()" style="margin-bottom: 0;">Add Toppings</button>
+                </div>
+                <div class="table-header" style="grid-template-columns: 1fr 1fr 100px;">
+                    <span>Topping Name</span>
+                    <span>Price</span>
+                    <span>Actions</span>
+                </div>
+                <div id="toppingsTable"></div>
+            </div>
+
+            <div id="modalOverlay" class="modal-overlay" onclick="closeModal(); closeToppingModal();"></div>
+
+            <div id="addModal" class="modal">
+                <h2 id="modalTitle">Add Item</h2>
+                <div id="mainModalBody" class="modal-body">
+                    <label>Item Name:</label>
+                    <input type="text" id="itemName" placeholder="e.g. Margherita" class="rounded-input">
+
+                    <div class="size-container" id="standardSizesSection">
+                        <div class="size-header">
+                            <span>Size</span>
+                            <span>Price (Rs.)</span>
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-small"> Small</label>
+                            <input type="number" id="price-small" placeholder="0" class="orange-price-input">
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-medium"> Medium</label>
+                            <input type="number" id="price-medium" placeholder="0" class="orange-price-input">
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-large"> Large</label>
+                            <input type="number" id="price-large" placeholder="0" class="orange-price-input">
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-xlarge"> XLarge</label>
+                            <input type="number" id="price-xlarge" placeholder="0" class="orange-price-input">
+                        </div>
+                    </div>
+
+                    <div class="size-container" id="wingsPiecesSection" style="display: none;">
+                        <div class="size-header">
+                            <span>Pieces</span>
+                            <span>Price (Rs.)</span>
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-6pcs"> 6 pcs</label>
+                            <input type="number" id="price-6pcs" placeholder="0" class="orange-price-input">
+                        </div>
+                        <div class="size-row">
+                            <label><input type="checkbox" id="size-12pcs"> 12 pcs</label>
+                            <input type="number" id="price-12pcs" placeholder="0" class="orange-price-input">
+                        </div>
+                    </div>
+
+                    <div class="size-container" id="simplePriceSection" style="display: none;">
+                        <div class="size-header">
+                            <span>Price (Rs.)</span>
+                        </div>
+                        <div class="size-row">
+                            <input type="number" id="price-simple" placeholder="Enter Price" class="orange-price-input">
+                        </div>
+                    </div>
+
+                    <label style="margin-top:15px; display:block;">Ingredients:</label>
+                    <textarea id="itemDesc" placeholder="Enter ingredients..." class="rounded-textarea"></textarea>
+
+                   <!-- Picture Section Starts -->
+<label style="margin-top:15px; display:block;">Add Picture:</label>
+
+<input type="file" id="itemImage" class="file-input" onchange="previewImage(event)">
+
+
+<div id="imagePreviewContainer" style="margin-top: 10px; text-align: center; display: none;">
+    <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Image Preview:</p>
+    <img id="imagePreview" src="#" alt="Preview" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid #b52a00; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+</div>
+<!-- Picture Section Ends -->
+                    
+                    <div class="modal-actions">
+                        <button id="saveBtn" onclick="saveItem()" class="action-btn-save">Save</button>
+                        <button class="cancel-btn" onclick="closeModal()" class="action-btn-cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="toppingModal" class="modal" style="width: 320px; display: none;">
+                <h2 style="color: #b52a00; text-align: center; font-size: 20px;">Add Topping</h2>
+                <div class="modal-body">
+                    <label>Topping Name:</label>
+                    <input type="text" id="topName" placeholder="e.g. Extra Cheese" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb; margin-bottom: 10px;">
+                    
+                    <label>Price (Rs.):</label>
+                    <input type="number" id="topPrice" placeholder="0" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb;">
+                </div>
+                <div class="modal-actions" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
+                    <button onclick="saveTopping()" style="background-color: #f9a03f; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Save</button>
+                    <button onclick="closeToppingModal()" style="background-color: #ccc; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Cancel</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+<div class="col-actions">
+    <button class="edit-link">Edit</button>
+    <button class="delete-link">Delete</button>
+</div>
+    <script src="new.js"></script>
+</body>
+</html>

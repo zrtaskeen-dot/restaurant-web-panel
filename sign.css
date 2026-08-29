@@ -1,0 +1,154 @@
+body {
+  background: url("image/org..png") no-repeat center center/cover;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.signup-box {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 350px;
+  text-align: center;
+}
+
+.signup-box h2 {
+  color: #2e8b57;
+  margin-bottom: 10px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.input-group input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 10px 10px 35px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.input-group i {
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  color: #888;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  background: #2e8b57;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #256b45;
+}
+
+p {
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+p a {
+  color: #2e8b57;
+  text-decoration: none;
+}
+
+p a:hover {
+  text-decoration: underline;
+}
+
+/* Modal Body Styling */
+.modal {
+    background-color: #fff9eb; /* Light cream background from screenshot */
+    border-radius: 30px;
+    padding: 25px;
+    color: #4a1a00;
+}
+
+#modalTitle {
+    color: #b52a00; /* Dark Red/Orange title */
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Rounded Inputs */
+.rounded-input, .rounded-textarea {
+    width: 100%;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin-bottom: 15px;
+    background: white;
+}
+
+/* Size Container Styling (The Dark Box) */
+.size-container {
+    background-color: #7a1c00; /* Dark Chocolate/Red background */
+    border-radius: 20px;
+    padding: 15px;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.size-header {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #9c4b36;
+    padding-bottom: 5px;
+}
+
+.size-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+/* Orange Input Inside Dark Box */
+.orange-price-input {
+    background-color: #f9a03f !important; /* Bright orange */
+    border: none;
+    border-radius: 10px;
+    padding: 8px;
+    width: 100px;
+    text-align: center;
+    color: black;
+    font-weight: bold;
+}
+
+/* Action Buttons */
+.action-btn-save {
+    background-color: #f9a03f !important;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 40px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.cancel-btn {
+    background-color: #e0e0e0 !important;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 30px;
+    font-weight: bold;
+    cursor: pointer;
+}

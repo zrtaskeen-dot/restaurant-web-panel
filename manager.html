@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="alert.css">
+    <link rel="stylesheet" href="manager.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Admin Panel</h2>
+            <nav>
+                <a href="admin.html">Dashboard Overview</a>
+                <a href="rider.html">Manage Riders</a>
+                <a href="manager.html" class="active">Manage Managers</a>
+                <a href="owner.html">Manage owner</a>
+                <a href="customer.html">Manage Customers</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h1 class="page-title">Manager Management</h1>
+            
+            <button class="btn-add-manager" onclick="openManagerModal()">Add Manager</button>
+
+            <div class="manager-table-container">
+                <div class="table-header">
+                    <span>Name</span>
+                    <span>Email</span>
+                    <span>Password</span>
+                    <span>Phone no</span>
+                    <span>CNIC</span>
+                    <span>Branch</span>
+                    <span style="text-align: center;">Actions</span>
+                </div>
+                <div id="manager-list">
+                    <p style="padding: 20px; text-align: center;">Loading managers...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="managerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Add Manager</div>
+            <form id="managerForm">
+                <div class="input-group">
+                    <label>Name:</label>
+                    <input type="text" id="managerName" required placeholder="Enter name">
+                </div>
+                <div class="input-group">
+                    <label>Email:</label>
+                    <input type="email" id="managerEmail" required placeholder="Enter email">
+                </div>
+                <div class="input-group">
+    <label>Password:</label>
+    <div style="position:relative;">
+        <input type="password" id="managerPassword" required placeholder="Enter password" style="width:100%; padding:10px; padding-right:40px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
+        <i class="fa-regular fa-eye" onclick="togglePass('managerPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
+    </div>
+</div>
+                <div class="input-group">
+                    <label>Phone no: <small style="color:#888;">(11 digits)</small></label>
+                    <input type="text" id="managerPhone" required placeholder="03001234567"
+                           maxlength="11" pattern="\d{11}"
+                           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+                <div class="input-group">
+                    <label>CNIC: <small style="color:#888;">(xxxxx-xxxxxxx-x)</small></label>
+                    <input type="text" id="managerCnic" required placeholder="00000-0000000-0"
+                           maxlength="15"
+                           oninput="formatCnic(this)">
+                </div>
+                <div class="input-group">
+                    <label>Assign Branch Name:</label>
+                    <input type="text" id="managerBranch" placeholder="e.g. Aslam Market, DHA Branch" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" id="regBtn" class="btn-save">Register Manager</button>
+                    <button type="button" class="btn-cancel" onclick="closeManagerModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // CNIC auto-format: 00000-0000000-0
+        function formatCnic(input) {
+            let v = input.value.replace(/[^0-9]/g, '');
+            if (v.length > 5 && v.length <= 12) {
+                v = v.slice(0,5) + '-' + v.slice(5);
+            } else if (v.length > 12) {
+                v = v.slice(0,5) + '-' + v.slice(5,12) + '-' + v.slice(12,13);
+            }
+            input.value = v;
+        }
+    </script>
+    <script src="manager.js"></script>
+     <script src="alert.js"></script>
+    <script src="admin logout.js"></script>
+</body>
+</html>

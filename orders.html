@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Orders Management</title>
+    <link rel="stylesheet" href="orderstyle.css">
+    <link rel="stylesheet" href="alert.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Manager Panel</h2>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="menu.html">Menu</a>
+                <a href="orders.html" class="active">Orders</a>
+                <a href="special deal.html">Special Offers</a>
+                <a href="manage rider.html">Riders</a>
+                <a href="review.html">Reviews</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <h2 class="page-title">Orders Management</h2>
+
+            <!-- ✅ Filter Tabs -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                <button onclick="setFilter('all')" id="filter-all" class="filter-tab active-tab">
+                    🧾 All Orders
+                </button>
+                <button onclick="setFilter('scheduled')" id="filter-scheduled" class="filter-tab">
+                    🗓️ Scheduled
+                </button>
+                <button onclick="setFilter('online')" id="filter-online" class="filter-tab">
+                    💳 Online Payment
+                </button>
+                <button onclick="setFilter('cod')" id="filter-cod" class="filter-tab">
+                    💵 COD
+                </button>
+            </div>
+
+            <!-- ✅ Order count -->
+            <div id="orderCount" style="font-size:13px; color:#888; margin-bottom:10px; font-weight:500;"></div>
+
+            <div class="table-container">
+                <div class="table-header order-grid">
+                    <span>Order ID</span>
+                    <span>Customer</span>
+                    <span>Status</span>
+                    <span style="text-align: center;">Actions</span>
+                </div>
+                <div id="ordersTableBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order View Modal -->
+    <div id="orderViewModal" class="modal">
+        <h2 id="modalTitle">Order Details</h2>
+        <div class="modal-body" id="orderInfo"></div>
+        <div class="modal-actions">
+            <button class="action-btn-cancel" onclick="closeOrderView()">Close</button>
+        </div>
+    </div>
+    <div id="orderOverlay" class="modal-overlay" onclick="closeOrderView()"></div>
+
+    <!-- Assign Rider Modal -->
+    <div id="assignRiderModal" class="modal">
+        <h2 id="assignModalTitle">Assign Rider</h2>
+        <div class="modal-body" id="riderAssignList">
+            <p style="text-align:center; padding:20px; color:#666;">Loading available riders...</p>
+        </div>
+        <div class="modal-actions">
+            <button class="action-btn-cancel" onclick="closeAssignModal()">Close</button>
+        </div>
+    </div>
+    <div id="assignRiderOverlay" class="modal-overlay" onclick="closeAssignModal()"></div>
+
+    <script src="orders.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="alert.js"></script>
+<script src="manager logout.js"></script>
+
+</body>
+</html>

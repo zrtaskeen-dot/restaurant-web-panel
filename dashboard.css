@@ -1,0 +1,280 @@
+/* --- Global Styles & Typography --- */
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: #fdf6e3; 
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+/* --- Sidebar --- */
+.sidebar { 
+    width: 200px; 
+    background-color: #b52a00; 
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f; 
+    color: black; 
+    font-weight: bold; 
+}
+/* --- Main Content Area --- */
+.main-content { 
+    flex: 1; 
+    padding: 25px; 
+}
+
+.page-title { 
+    font-size: 22px; 
+    margin-top: 0; 
+    margin-bottom: 15px; 
+    font-weight: bold;
+}
+
+/* --- Stats Grid (WhatsApp Image Match) --- */
+.stats-grid { 
+    display: grid; 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 25px; 
+    margin-bottom: 40px; 
+}
+
+.stat-card { 
+    background: white; 
+    padding: 25px; 
+    border-radius: 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-info p { 
+    margin: 0; 
+    font-size: 13px; 
+    color: #555; 
+    font-weight: 700; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-info h3 { 
+    margin: 8px 0 0; 
+    font-size: 25px; /* Large Prominent Numbers */
+    font-weight: 800; 
+    color: #000; 
+}
+
+.stat-card img {
+    width: 55px;
+    height: 55px;
+    object-fit: contain;
+}
+
+/* --- Revenue Section --- */
+.revenue-section { 
+    background: white; 
+    padding: 30px; 
+    border-radius: 25px; 
+    box-shadow: 0 6px 15px rgba(0,0,0,0.05); 
+}
+
+.revenue-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-start;
+    margin-bottom: 25px; 
+}
+
+.revenue-header p {
+    font-size: 14px;
+    font-weight: 700;
+    color: #666;
+    margin: 0;
+}
+
+.revenue-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #000;
+    margin-top: 5px;
+}
+
+/* Chart Labels */
+.chart-labels {
+    display: flex;
+    gap: 20px;
+}
+
+.chart-labels span {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dot { 
+    height: 12px; 
+    width: 12px; 
+    border-radius: 50%; 
+    display: inline-block; 
+    margin-right: 8px; 
+}
+
+.yellow { background-color: #f9a03f; } /* Deliver Now */
+.blue { background-color: #2a00e6; }   /* Deliver Later */
+
+/* Responsive Fix */
+@media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 800px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .sidebar { width: 80px; padding: 15px 5px; }
+    .sidebar-title, .sidebar nav a span { display: none; }
+    .main-content { margin-left: 80px; }
+}
+
+/* --- Branch Header Card Design --- */
+.branch-info-header-card {
+    background-color: white;
+    padding: 15px 25px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    border-left: 6px solid #b52a00; /* Dark Red Identity */
+}
+
+.branch-main-title {
+    margin: 0 0 6px 0;
+    font-size: 16px;
+    color: #b52a00;
+    font-weight: bold;
+}
+
+.branch-meta-row {
+    display: flex;
+    gap: 25px;
+    font-size: 13px;
+    color: #444;
+}
+
+.btn-edit-branch {
+    background-color: #b52a00;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-edit-branch:hover {
+    opacity: 0.9;
+}
+
+/* --- Branch Modal Layouts --- */
+.branch-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 999;
+}
+
+.branch-card-modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 1000;
+    width: 90%;
+    max-width: 400px;
+}
+
+.branch-card-modal h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #b52a00;
+    font-size: 15px;
+}
+
+.branch-input-group {
+    margin-bottom: 12px;
+}
+
+.branch-input-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.branch-input-group input, .branch-input-group textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 13px;
+    background-color: #fdf6e3;
+    box-sizing: border-box;
+    resize: none;
+}
+
+.branch-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-branch-cancel {
+    background-color: #ccc;
+    border: none; padding: 8px 15px; border-radius: 8px;
+    font-size: 12px; font-weight: bold; cursor: pointer;
+}
+
+.btn-branch-save {
+    background-color: #b52a00; color: white;
+    border: none; padding: 8px 15px; border-radius: 8px;
+    font-size: 12px; font-weight: bold; cursor: pointer;
+}

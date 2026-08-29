@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews</title>
+    <link rel="stylesheet" href="review.css">
+    <link rel="stylesheet" href="alert.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <h2 class="sidebar-title">Manager Panel</h2>
+            <nav>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="menu.html">Menu</a>
+                <a href="orders.html">Orders</a>
+                <a href="special deal.html">Special Offers</a>
+                <a href="manage rider.html">Riders</a>
+                <a href="reviews.html" class="active">Reviews</a>
+                <a href="#" class="logout-btn">Logout</a>
+            </nav>
+        </div>
+
+        <div class="main-content">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Customer Reviews</h1>
+                    <p class="page-sub">All reviews from your branch customers</p>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <span id="totalReviews">0</span>
+                        <label>Total Reviews</label>
+                    </div>
+                    <div class="stat-box">
+                        <span id="avgRating">0.0</span>
+                        <label>Avg Rating</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-row">
+                <button class="filter-btn active" onclick="filterReviews('all', this)">All</button>
+                <button class="filter-btn" onclick="filterReviews(5, this)">⭐ 5</button>
+                <button class="filter-btn" onclick="filterReviews(4, this)">⭐ 4</button>
+                <button class="filter-btn" onclick="filterReviews(3, this)">⭐ 3</button>
+                <button class="filter-btn" onclick="filterReviews(2, this)">⭐ 2</button>
+                <button class="filter-btn" onclick="filterReviews(1, this)">⭐ 1</button>
+            </div>
+
+            <div id="reviewsList">
+                <p style="padding: 30px; text-align:center; color:#888;">Loading reviews...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="review.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="alert.js"></script>
+<script src="manager logout.js"></script>
+
+</body>
+</html>

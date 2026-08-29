@@ -1,0 +1,338 @@
+
+body { 
+    margin: 0; 
+    font-family: 'Segoe UI', Arial, sans-serif; 
+    background-color: #fdf6e3;
+    color: black;
+}
+
+.admin-container { 
+    display: flex; 
+    min-height: 100vh; 
+}
+
+.sidebar { 
+    width: 200px; 
+    background-color: #b52a00;
+    color: white; 
+    padding: 20px; 
+    font-size: 14px;
+}
+
+.sidebar-title { 
+    font-size: 20px; 
+    font-weight: bold; 
+    margin-bottom: 25px; 
+    margin-top: 0;
+}
+
+.sidebar nav a { 
+    display: block; 
+    color: white; 
+    text-decoration: none; 
+    padding: 10px 12px; 
+    margin-bottom: 5px; 
+    border-radius: 8px; 
+}
+
+.sidebar nav a.active { 
+    background-color: #f9a03f;
+    color: black; 
+    font-weight: bold; 
+}
+
+.main-content { 
+    flex: 1; 
+    padding: 25px; 
+}
+
+
+/* --- Top Bar --- */
+.top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid #e0d5c5;
+}
+
+.top-bar-left h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a0a00;
+    margin: 0 0 4px;
+}
+
+.top-bar-left p {
+    font-size: 13px;
+    color: #999;
+    margin: 0;
+}
+
+.top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-badge {
+    background: #fff;
+    border: 1px solid #e0d5c5;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 12px;
+    color: #666;
+    font-weight: 500;
+}
+
+.clock-badge {
+    background: #fff;
+    border: 1.5px solid #b52a00;
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-size: 13px;
+    color: #b52a00;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* --- Stats Grid --- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.stat-card {
+    border-radius: 12px;
+    padding: 22px 24px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+}
+
+.stat-card.riders    { background: #b52a00; }
+.stat-card.customers { background: #1a4d66; }
+.stat-card.managers  { background: #2d6a4f; }
+.stat-card.branches  { background: #5c4033; }
+
+.stat-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.stat-card-icon svg {
+    stroke: rgba(255,255,255,0.9);
+}
+
+.stat-label {
+    font-size: 11px;
+    color: rgba(255,255,255,0.65);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.stat-number {
+    font-size: 36px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.stat-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+}
+
+/* --- Panel --- */
+.panel {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e8e0d5;
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0ece4;
+}
+
+.panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a0a00;
+    letter-spacing: 0.2px;
+}
+
+.panel-badge {
+    font-size: 10px;
+    background: #fff3e0;
+    color: #b52a00;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+/* --- Activity Log --- */
+#activityLog {
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+#activityLog::-webkit-scrollbar { width: 3px; }
+#activityLog::-webkit-scrollbar-track { background: transparent; }
+#activityLog::-webkit-scrollbar-thumb { background: #ddd; border-radius: 10px; }
+
+.activity-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 13px 20px;
+    border-bottom: 1px solid #f5f2ee;
+    transition: background 0.12s;
+}
+
+.activity-entry:hover { background: #fdfaf7; }
+.activity-entry:last-child { border-bottom: none; }
+
+.activity-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    margin-top: 6px;
+    min-width: 7px;
+    flex-shrink: 0;
+}
+
+.activity-body { flex: 1; }
+
+.activity-action {
+    font-weight: 600;
+    font-size: 13px;
+    color: #1a0a00;
+    margin-bottom: 3px;
+}
+
+.activity-details {
+    font-size: 12px;
+    color: #777;
+    line-height: 1.5;
+    margin-bottom: 5px;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.activity-meta span {
+    font-size: 11px;
+    color: #aaa;
+}
+
+.activity-meta strong {
+    color: #555;
+    font-weight: 600;
+}
+
+.activity-time {
+    color: #999 !important;
+    font-weight: 500 !important;
+}
+
+/* --- Logout Modal --- */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active { display: flex; }
+
+.logout-modal {
+    background: #fff;
+    border-radius: 14px;
+    padding: 32px 36px;
+    text-align: center;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.logout-modal h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1a0a00;
+    margin: 0 0 8px;
+}
+
+.logout-modal p {
+    font-size: 13px;
+    color: #888;
+    margin: 0 0 22px;
+    line-height: 1.5;
+}
+
+.modal-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-cancel-modal {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #555;
+}
+
+.btn-cancel-modal:hover { background: #f5f5f5; }
+
+.btn-logout-confirm {
+    padding: 9px 22px;
+    border-radius: 8px;
+    border: none;
+    background: #b52a00;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-logout-confirm:hover { background: #8a1f00; }

@@ -1,0 +1,261 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-image: url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+/* ── PAGE WRAPPER ── */
+.page-wrapper {
+    display: flex;
+    width: 880px;
+    min-height: 520px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* ── LEFT PANEL ── */
+.left-panel {
+    width: 340px;
+    background: #a70000;
+    padding: 50px 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex-shrink: 0;
+    backdrop-filter: blur(10px);
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.brand-icon {
+    font-size: 44px;
+    line-height: 1;
+}
+
+.brand h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.3;
+}
+
+.brand p {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.7;
+}
+
+.brand::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 3px;
+    background: #b52a00;
+    border-radius: 2px;
+}
+
+.left-footer {
+    font-size: 11px;
+    color: #555;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+    flex: 1;
+    background:#fcf8dd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 48px;
+    backdrop-filter: blur(10px);
+}
+
+.form-box {
+    width: 100%;
+    max-width: 340px;
+}
+
+/* ── FORM HEADER ── */
+.form-header {
+    margin-bottom: 32px;
+}
+
+.form-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 6px;
+}
+
+.form-header p {
+    font-size: 13px;
+    color: #999;
+}
+
+/* ── FIELDS ── */
+.field {
+    margin-bottom: 20px;
+}
+
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #444;
+    margin-bottom: 8px;
+    letter-spacing: 0.4px;
+}
+
+.field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #e8e8e8;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #222;
+    background: #fafafa;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field input:focus {
+    border-color: #b52a00;
+    box-shadow: 0 0 0 3px rgba(181, 42, 0, 0.07);
+    background: #fff;
+}
+
+/* ── PASSWORD WRAP ── */
+.pass-wrap {
+    position: relative;
+}
+
+.pass-wrap input {
+    padding-right: 44px;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #aaa;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.eye-btn:hover {
+    color: #b52a00;
+}
+
+/* ── LOGIN BUTTON ── */
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    background: #b52a00;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.btn-login:hover {
+    background: #9a2200;
+    transform: translateY(-1px);
+}
+
+.btn-login:active {
+    transform: translateY(0);
+}
+
+.btn-login:disabled {
+    background: #b52a00;
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── TOAST ── */
+.toast {
+    margin-top: 16px;
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.toast.hidden {
+    display: none;
+}
+
+.toast.success {
+    background: #edf7f0;
+    color: #b52a00;
+    border: 1px solid #c3e6cb;
+}
+
+.toast.error {
+    background: #fdf0f0;
+    color: #b52a00;
+    border: 1px solid #f5c6cb;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+    .page-wrapper {
+        flex-direction: column;
+        width: 95%;
+        min-height: unset;
+    }
+    .left-panel {
+        width: 100%;
+        padding: 30px;
+        min-height: 160px;
+    }
+    .right-panel {
+        padding: 30px 24px;
+    }
+}
+/* Forgot Password Link */
+.forgot-link {
+    text-align: right;
+    margin-bottom: 16px;
+    margin-top: -8px;
+}
+
+.forgot-link a {
+    font-size: 13px;
+    color: #b52a00;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-link a:hover {
+    text-decoration: underline;
+}
