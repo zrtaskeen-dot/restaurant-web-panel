@@ -19,31 +19,60 @@ let revenueChart = null;
 // ✅ Helper: Check if scheduled order
 function checkIsScheduled(data) {
     const raw = (data.delivery_time || '').toString().trim().toLowerCase();
-    // Sirf comparison ke liye lowercase — "now", empty, asap exclude karo
     if (raw === '' || raw === 'now' || raw === 'as soon as possible' || raw === 'asap') return false;
-    // ✅ Original value se parse karo (lowercase nahi)
     const original = (data.delivery_time || '').toString().trim();
     const cleaned  = original.replace(" at ", " ");
     const parsed   = new Date(cleaned);
     return !isNaN(parsed.getTime());
 }
 
-// 1. Branch Details
+// 1. Branch Details & Payment Numbers Listener
 function listenToBranchDetails() {
     if (!BRANCH_DOC_ID) return;
+    
+    // Branch Info Listener
     db.collection("restaurant_info").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
-            document.getElementById('displayBranchName').innerText   = data.branchName || "Setup Your Branch Name";
-            document.getElementById('displayBranchTiming').innerText  = data.timing    || "--:--";
-            document.getElementById('displayBranchAddress').innerText = data.address   || "Enter Address";
-            document.getElementById('inputBranchName').value    = data.branchName || "";
-            document.getElementById('inputBranchTiming').value  = data.timing     || "";
-            document.getElementById('inputBranchAddress').value = data.address    || "";
+            const bName = document.getElementById('displayBranchName');
+            const bTiming = document.getElementById('displayBranchTiming');
+            const bAddr = document.getElementById('displayBranchAddress');
+            
+            if (bName) bName.innerText = data.branchName || "Setup Your Branch Name";
+            if (bTiming) bTiming.innerText = data.timing || "--:--";
+            if (bAddr) bAddr.innerText = data.address || "Enter Address";
+
+            const inName = document.getElementById('inputBranchName');
+            const inTiming = document.getElementById('inputBranchTiming');
+            const inAddr = document.getElementById('inputBranchAddress');
+
+            if (inName) inName.value = data.branchName || "";
+            if (inTiming) inTiming.value = data.timing || "";
+            if (inAddr) inAddr.value = data.address || "";
         } else {
-            document.getElementById('displayBranchName').innerText   = "Branch Profile Setup Needed";
-            document.getElementById('displayBranchTiming').innerText = "--:--";
-            document.getElementById('displayBranchAddress').innerText = "--";
+            const bName = document.getElementById('displayBranchName');
+            if (bName) bName.innerText = "Branch Profile Setup Needed";
+        }
+    });
+
+    // 🟢 Payment Accounts Listener (Updates Header View & Modal Inputs)
+    db.collection("branches").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
+        if (doc.exists) {
+            const data = doc.data();
+            const ep = data.easyPaisaNumber || "Not Set";
+            const jc = data.jazzCashNumber  || "Not Set";
+
+            // Header UI update
+            const epEl = document.getElementById("displayEasyPaisa");
+            const jcEl = document.getElementById("displayJazzCash");
+            if (epEl) epEl.innerText = ep;
+            if (jcEl) jcEl.innerText = jc;
+
+            // Modal inputs pre-fill
+            const epModalInput = document.getElementById("modalEasyPaisa");
+            const jcModalInput = document.getElementById("modalJazzCash");
+            if (epModalInput) epModalInput.value = data.easyPaisaNumber || "";
+            if (jcModalInput) jcModalInput.value = data.jazzCashNumber  || "";
         }
     });
 }
@@ -53,21 +82,118 @@ window.saveBranchDetails = async function() {
     const name    = document.getElementById('inputBranchName').value.trim();
     const timing  = document.getElementById('inputBranchTiming').value.trim();
     const address = document.getElementById('inputBranchAddress').value.trim();
-    if (!name || !timing || !address) { alert("Please fill all branch details!"); return; }
+    
+    if (!name || !timing || !address) { 
+        alert("Please fill all branch details!"); 
+        return; 
+    }
+    
     const saveBtn = document.getElementById('btnSaveBranch');
-    saveBtn.innerText = "Saving...";
-    saveBtn.disabled  = true;
+    if (saveBtn) {
+        saveBtn.innerText = "Saving...";
+        saveBtn.disabled  = true;
+    }
+
     try {
         await db.collection("restaurant_info").doc(BRANCH_DOC_ID).set({
-            branchName: name, timing, address, updatedAt: Date.now()
+            branchName: name, 
+            timing: timing, 
+            address: address, 
+            updatedAt: Date.now()
         }, { merge: true });
+        
         closeBranchModal();
         alert("Branch Details Updated Successfully!");
     } catch (error) {
         alert("Error saving data: " + error.message);
     } finally {
-        saveBtn.innerText = "Save Updates";
-        saveBtn.disabled  = false;
+        if (saveBtn) {
+            saveBtn.innerText = "Save Updates";
+            saveBtn.disabled  = false;
+        }
+    }
+};
+
+
+/// 🟢 Save Payment Account Numbers (Exact 11 Digits Validation)
+window.savePaymentNumbers = async function() {
+    if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
+
+    const epVal = document.getElementById("modalEasyPaisa")?.value.trim() || "";
+    const jcVal = document.getElementById("modalJazzCash")?.value.trim() || "";
+    const btn   = document.getElementById("btnSavePayment");
+
+    const phoneRegex = /^\d{11}$/;
+
+    if (epVal && !phoneRegex.test(epVal)) {
+        alert("Invalid Number");
+        return;
+    }
+
+    if (jcVal && !phoneRegex.test(jcVal)) {
+        alert("Invalid Number");
+        return;
+    }
+
+    if (btn) {
+        btn.innerText = "Saving...";
+        btn.disabled  = true;
+    }
+
+    try {
+        await db.collection("branches").doc(BRANCH_DOC_ID).set({
+            easyPaisaNumber: epVal,
+            jazzCashNumber:  jcVal
+        }, { merge: true });
+
+        closePaymentModal();
+        alert("Payment account numbers updated successfully!");
+    } catch (e) {
+        console.error("Error saving payment numbers:", e);
+        alert("Failed to update payment numbers: " + e.message);
+    } finally {
+        if (btn) {
+            btn.innerText = "Save Updates";
+            btn.disabled  = false;
+        }
+    }
+};
+
+// 🟢 Modal Controls for Branch Modal
+window.openBranchModal = function() {
+    const overlay = document.getElementById('branchModalOverlay');
+    const modal   = document.getElementById('branchEditModal');
+    if (overlay && modal) { 
+        overlay.style.display = 'block'; 
+        modal.style.display   = 'block'; 
+    }
+};
+
+window.closeBranchModal = function() {
+    const overlay = document.getElementById('branchModalOverlay');
+    const modal   = document.getElementById('branchEditModal');
+    if (overlay && modal) { 
+        overlay.style.display = 'none'; 
+        modal.style.display   = 'none'; 
+    }
+};
+
+// 🟢 Modal Controls for Payment Modal
+window.openPaymentModal = function() {
+    const overlay = document.getElementById('paymentModalOverlay');
+    const modal   = document.getElementById('paymentEditModal');
+    if (overlay && modal) {
+        overlay.style.display = 'block';
+        modal.style.display   = 'block';
+    }
+};
+
+window.closePaymentModal = function() {
+    const overlay = document.getElementById('paymentModalOverlay');
+    const modal   = document.getElementById('paymentEditModal');
+    if (overlay && modal) {
+        overlay.style.display = 'none';
+        modal.style.display   = 'none';
     }
 };
 
@@ -81,7 +207,7 @@ function initDashboard() {
         if (el) el.innerText = snap.size;
     });
 
-    // Orders
+    // Orders & Revenue
     db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).onSnapshot(snap => {
         let revenue         = 0;
         let pending         = 0;
@@ -93,27 +219,28 @@ function initDashboard() {
 
         snap.forEach(doc => {
             const data   = doc.data();
+            const status = (data.order_status || data.status || '').toLowerCase();
             const amount = Number(data.total_bill || data.totalAmount || 0);
+
+            if (status === 'pending') pending++;
+            if (status === 'completed' || status === 'delivered') delivered++;
+
+            if (status !== 'delivered' && status !== 'completed') return;
+
             revenue += amount;
 
-            // ✅ delivery_time se scheduled check karo
             if (checkIsScheduled(data)) {
                 deliverLaterRev += amount;
             } else {
                 deliverNowRev += amount;
             }
 
-            // ✅ Payment method breakdown
             const pm = (data.payment_method || data.paymentMethod || 'cod').toLowerCase();
             if (pm === 'cod' || pm === 'cash' || pm === 'cash on delivery') {
                 codRevenue += amount;
             } else {
                 onlineRevenue += amount;
             }
-
-            const status = (data.order_status || data.status || '').toLowerCase();
-            if (status === 'pending')                              pending++;
-            if (status === 'completed' || status === 'delivered') delivered++;
         });
 
         const cOrders    = document.getElementById('count-orders');
@@ -142,24 +269,24 @@ function initDashboard() {
     });
 
     // Riders count
-db.collection("users")
-    .where("role",          "==", "rider")
-    .where("branchId",      "==", BRANCH_DOC_ID)
-    .where("emailVerified", "==", true)        // ✅ sirf verified riders count
-    .onSnapshot(snap => {
-        const el = document.getElementById('count-riders');
-        if (el) el.innerText = snap.size;
-    });
+    db.collection("users")
+        .where("role",          "==", "rider")
+        .where("branchId",      "==", BRANCH_DOC_ID)
+        .where("emailVerified", "==", true)
+        .onSnapshot(snap => {
+            const el = document.getElementById('count-riders');
+            if (el) el.innerText = snap.size;
+        });
 }
 
-// 4. ✅ Revenue Chart — 4 bars
+// 4. Revenue Chart
 function updateRevenueChart(nowRevenue, laterRevenue, codRevenue, onlineRevenue) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
 
     const labels = ['Deliver Now', 'Scheduled', 'COD', 'Online Payment'];
     const data   = [nowRevenue, laterRevenue, codRevenue, onlineRevenue];
-   const colors = ['#ca880d', '#f9643f', '#c92929', '#e07000'];
+    const colors = ['#2C3E50', '#7F8C8D', '#B52A00', '#5D4037'];
 
     if (revenueChart) {
         revenueChart.data.datasets[0].data = data;
@@ -205,7 +332,7 @@ function updateRevenueChart(nowRevenue, laterRevenue, codRevenue, onlineRevenue)
     }
 }
 
-// ✅ Sidebar Badge
+// Sidebar Badges
 function updateOrdersBadge() {
     if (!BRANCH_DOC_ID) return;
     db.collection("orders")
@@ -233,6 +360,44 @@ function updateOrdersBadge() {
         });
 }
 
+function updateReviewsBadge() {
+    if (!BRANCH_DOC_ID) return;
+
+    db.collection("orders")
+        .where("branchId", "==", BRANCH_DOC_ID)
+        .onSnapshot(ordersSnap => {
+            const branchOrderIds = new Set();
+            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+
+            db.collection("reviews")
+                .where("isRead", "==", false)
+                .onSnapshot(reviewsSnap => {
+                    let unreadCount = 0;
+                    reviewsSnap.forEach(doc => {
+                        if (branchOrderIds.has(doc.data().orderId)) {
+                            unreadCount++;
+                        }
+                    });
+
+                    const links = document.querySelectorAll('.sidebar nav a');
+                    links.forEach(link => {
+                        if (link.textContent.trim().toLowerCase().includes('review')) {
+                            let badge = document.getElementById('reviews-badge');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'reviews-badge';
+                                badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
+                                link.appendChild(badge);
+                            }
+                            badge.innerText = unreadCount;
+                            badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    });
+                });
+        });
+}
+
+// UI Event Listeners
 document.querySelectorAll('.sidebar nav a').forEach(link => {
     link.addEventListener('click', function() {
         document.querySelectorAll('.sidebar nav a').forEach(nav => nav.classList.remove('active'));
@@ -244,25 +409,21 @@ document.addEventListener('DOMContentLoaded', () => {
     listenToBranchDetails();
     initDashboard();
     updateOrdersBadge();
-});
+    updateReviewsBadge();
 
-window.openBranchModal = function() {
-    const overlay = document.getElementById('branchModalOverlay');
-    const modal   = document.getElementById('branchEditModal');
-    if (overlay && modal) { overlay.style.display = 'block'; modal.style.display = 'block'; }
-};
+    // Close branch modal on backdrop click
+    const branchOverlay = document.getElementById('branchModalOverlay');
+    if (branchOverlay) {
+        branchOverlay.addEventListener('click', function(e) {
+            if (e.target === branchOverlay) closeBranchModal();
+        });
+    }
 
-window.closeBranchModal = function() {
-    const overlay = document.getElementById('branchModalOverlay');
-    const modal   = document.getElementById('branchEditModal');
-    if (overlay && modal) { overlay.style.display = 'none'; modal.style.display = 'none'; }
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-    const overlay = document.getElementById('branchModalOverlay');
-    if (overlay) {
-        overlay.addEventListener('click', function(e) {
-            if (e.target === overlay) closeBranchModal();
+    // Close payment modal on backdrop click
+    const paymentOverlay = document.getElementById('paymentModalOverlay');
+    if (paymentOverlay) {
+        paymentOverlay.addEventListener('click', function(e) {
+            if (e.target === paymentOverlay) closePaymentModal();
         });
     }
 });

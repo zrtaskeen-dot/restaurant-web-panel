@@ -16,20 +16,19 @@ const db = firebase.firestore();
 let editManagerId = null; 
 
 // --- ACTIVITY LOG HELPER ---
-// NOTE: performedBy is picked from localStorage first (adjust the key name below
-// to whatever your login flow actually stores, e.g. 'admin_name' / 'user_name'),
-// falling back to the signed-in auth email, then to a generic "Admin" label.
 function logActivity(action, details) {
     try {
-        db.collection("system_log").add({
+        const logData = {
             action,
-            role: "Admin",
-            branch:       "",
+            role:       "Admin",
+            branch:     "",
             details,
             created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch((err) => console.error("System log write failed:", err));
+        };
+        db.collection("system_log").add(logData).catch(err => console.error("system_log error:", err));
+        db.collection("activity_logs").add(logData).catch(err => console.error("activity_logs error:", err));
     } catch (err) {
-        console.error("System log error:", err);
+        console.error("Log error:", err);
     }
 }
 
@@ -67,15 +66,20 @@ db.collection("users")
         const verifiedBadge = m.emailVerified
             ? `<span style="color:#28a745; font-size:11px; font-weight:bold;">✔ Verified</span>`
             : `<span style="color:#b52a00; font-size:11px; font-weight:bold;">✘ Not Verified</span>`;
-        
+
+               // 🟢 Payment info phone ke sath
+        const paymentInfo = m.paymentType
+            ? `<br><span style="font-size:11px;color:#b52a00;font-weight:bold;">${m.paymentType}:</span> <span style="font-size:11px;">${m.paymentNumber || '-'}</span>`
+            : '';
+
         listContainer.innerHTML += `
             <div class="manager-row">
                 <span>${m.name || '-'}</span>
                 <span>${m.email || '-'}<br>${verifiedBadge}</span>
-                <span>********</span> 
-                <span>${m.phone || '-'}</span>
+                <span>********</span>
+                <span>${m.phone || '-'}${paymentInfo}</span>
                 <span>${m.cnic || '-'}</span>
-                <span style="font-weight: bold; color: #b52a00;">${m.branch || 'Not Assigned'}</span> 
+                <span style="font-weight: bold; color: #b52a00;">${m.branch || 'Not Assigned'}</span>
                 <div class="manager-actions">
                     <button class="btn-edit-t" onclick="editManager('${id}')">Edit</button>
                     <button class="btn-delete-t" onclick="deleteManager('${id}')">Delete</button>
@@ -91,16 +95,46 @@ db.collection("users")
 document.getElementById('managerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    const mName     = document.getElementById('managerName').value;
-    const mEmail    = document.getElementById('managerEmail').value.trim();
-    const mPassword = document.getElementById('managerPassword').value;
-    const mPhone    = document.getElementById('managerPhone').value;
-    const mCnic     = document.getElementById('managerCnic').value.trim();
-    const mBranch   = document.getElementById('managerBranch').value.trim(); 
+    const mName          = document.getElementById('managerName').value.trim();
+    const mEmail         = document.getElementById('managerEmail').value.trim();
+    const mPassword      = document.getElementById('managerPassword').value;
+    const mPhone         = document.getElementById('managerPhone').value.trim();
+    const mCnic          = document.getElementById('managerCnic').value.trim();
+    const mBranch        = document.getElementById('managerBranch').value.trim();
+    // 🟢 Payment fields
+    const mPaymentType   = document.getElementById('managerPaymentType')   ? document.getElementById('managerPaymentType').value   : '';
+    const mPaymentNumber = document.getElementById('managerPaymentNumber') ? document.getElementById('managerPaymentNumber').value.trim() : '';
+
+    // 🟢 Name check
+    if (!mName || mName.length < 2) {
+        alert("Please enter a valid name (at least 2 characters).");
+        return;
+    }
+
+    // 🟢 Email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
+        alert("Please enter a valid email address.\nExample: user@example.com");
+        return;
+    }
+
+    // 🟢 Password strength check
+    if (!editManagerId || mPassword) {
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
+        if (!passRegex.test(mPassword)) {
+            alert("Password must be at least 8 characters and include:\n• One uppercase letter (A-Z)\n• One lowercase letter (a-z)\n• One number (0-9)\n• One special character (@$!%*?&_#^)");
+            return;
+        }
+    }
 
     // 🟢 Phone 11 digit check
-    if (mPhone.length !== 11) {
+    if (!/^\d{11}$/.test(mPhone)) {
         alert("Phone number must be exactly 11 digits!");
+        return;
+    }
+
+    // 🟢 CNIC format check
+    if (!/^\d{5}-\d{7}-\d{1}$/.test(mCnic)) {
+        alert("CNIC format must be: XXXXX-XXXXXXX-X");
         return;
     }
 
@@ -109,27 +143,56 @@ document.getElementById('managerForm').addEventListener('submit', async function
         return;
     }
 
+    // 🟢 Payment number 11 digits check (agar type select kiya ho)
+       // 🟢 Payment number required + 11 digits check
+    if (mPaymentType && !mPaymentNumber) {
+        alert("Please enter the payment account number!");
+        return;
+    }
+    if (mPaymentType && mPaymentNumber && !/^\d{11}$/.test(mPaymentNumber)) {
+        alert("Payment account number must be exactly 11 digits!");
+        return;
+    }
+
     const regBtn = document.getElementById('regBtn');
     if(regBtn) { regBtn.innerText = "Processing..."; regBtn.disabled = true; }
 
-    // Capture the admin's identity BEFORE any auth-state switching happens below
-    // (creating the manager's auth account temporarily swaps auth.currentUser).
     const adminPerformer = localStorage.getItem('admin_name')
         || localStorage.getItem('user_name')
         || (auth.currentUser ? auth.currentUser.email : null)
         || 'Admin';
 
     try {
+        // 🟢 Phone uniqueness check
+        const phoneSnap = await db.collection("users").where("phone", "==", mPhone).get();
+        const phoneDuplicate = phoneSnap.docs.some(doc => doc.id !== editManagerId);
+        if (phoneDuplicate) {
+            alert("This phone number is already registered. Each manager must have a unique phone number.");
+            if(regBtn) { regBtn.innerText = "Register Manager"; regBtn.disabled = false; }
+            return;
+        }
+
+        // 🟢 CNIC uniqueness check
+        const cnicSnap = await db.collection("users").where("cnic", "==", mCnic).get();
+        const cnicDuplicate = cnicSnap.docs.some(doc => doc.id !== editManagerId);
+        if (cnicDuplicate) {
+            alert("This CNIC is already registered. Each manager must have a unique CNIC.");
+            if(regBtn) { regBtn.innerText = "Register Manager"; regBtn.disabled = false; }
+            return;
+        }
+
         if (editManagerId) {
             // --- EDIT MODE ---
             const updatedData = {
-                name: mName,
-                email: mEmail,
-                password: mPassword,
-                phone: mPhone,
-                cnic: mCnic,
-                branch: mBranch,
-                updatedAt: Date.now()
+                name:          mName,
+                email:         mEmail,
+                password:      mPassword,
+                phone:         mPhone,
+                cnic:          mCnic,
+                branch:        mBranch,
+                paymentType:   mPaymentType   || "",
+                paymentNumber: mPaymentNumber || "",
+                updatedAt:     Date.now()
             };
             await db.collection("users").doc(editManagerId).update(updatedData);
             alert("Manager Records Updated Successfully!");
@@ -139,7 +202,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
         } else {
             // --- NEW ENTRY MODE ---
 
-            // 🟢 STEP 1: Check karo ke ye branch already kisi manager ko assign to nahi
+            // Branch duplicate check
             const branchCheck = await db.collection("users")
                 .where("role", "==", "manager")
                 .where("branch", "==", mBranch)
@@ -151,15 +214,15 @@ document.getElementById('managerForm').addEventListener('submit', async function
                 return;
             }
 
-            // Step 2: Firebase Auth mein account banao
+            // Firebase Auth account banao
             const userCredential = await auth.createUserWithEmailAndPassword(mEmail, mPassword);
             const newUser = userCredential.user;
             const userUid = newUser.uid;
 
-            // Step 3: Verification email bhejo
+            // Verification email bhejo
             await newUser.sendEmailVerification();
 
-            // Step 4: restaurant_info mein check karo ke same branch already exist to nahi karti
+            // Branch check/create
             const existingBranch = await db.collection("restaurant_info")
                 .where("branchName", "==", mBranch)
                 .get();
@@ -171,36 +234,36 @@ document.getElementById('managerForm').addEventListener('submit', async function
             } else {
                 const branchDocRef = await db.collection("restaurant_info").add({
                     branchName: mBranch,
-                    createdAt: Date.now()
+                    createdAt:  Date.now()
                 });
                 automaticBranchId = branchDocRef.id;
-                branchWasCreated = true;
+                branchWasCreated  = true;
             }
 
-            // Step 5: Firestore mein manager data save karo
+            // Firestore mein manager data save karo
             const managerData = {
-                uid: userUid,
-                name: mName,
-                email: mEmail,
-                password: mPassword,
-                phone: mPhone,
-                cnic: mCnic,
-                branch: mBranch,              
-                branchId: automaticBranchId,  
-                role: "manager",
-                roleId: "R003",
+                uid:           userUid,
+                name:          mName,
+                email:         mEmail,
+                password:      mPassword,
+                phone:         mPhone,
+                cnic:          mCnic,
+                branch:        mBranch,
+                branchId:      automaticBranchId,
+                role:          "manager",
+                roleId:        "R003",
                 emailVerified: false,
-                createdAt: Date.now()
+                paymentType:   mPaymentType   || "",
+                paymentNumber: mPaymentNumber || "",
+                createdAt:     Date.now()
             };
             await db.collection("users").doc(userUid).set(managerData);
 
-            // Log the branch creation (if any) and the manager registration
             if (branchWasCreated) {
                 logActivity("Branch Added", `New branch "${mBranch}" created`, adminPerformer);
             }
             logActivity("Manager Added", `New manager "${mName}" registered for branch "${mBranch}"`, adminPerformer);
 
-            // Step 6: Admin ka session logout karo
             await auth.signOut();
 
             alert(`Manager registered successfully!\n\nVerification email sent to:\n${mEmail}`);
@@ -227,7 +290,13 @@ window.editManager = function(id) {
                 document.getElementById('managerPassword').value = m.password || '';
                 document.getElementById('managerPhone').value    = m.phone    || '';
                 document.getElementById('managerCnic').value     = m.cnic     || '';
-                document.getElementById('managerBranch').value   = m.branch   || ''; 
+                document.getElementById('managerBranch').value   = m.branch   || '';
+
+                // 🟢 Payment fields load karo
+                const payTypeEl = document.getElementById('managerPaymentType');
+                const payNumEl  = document.getElementById('managerPaymentNumber');
+                if (payTypeEl) payTypeEl.value = m.paymentType   || '';
+                if (payNumEl)  payNumEl.value  = m.paymentNumber || '';
 
                 document.querySelector('.modal-header').innerText = "Update Manager Details";
                 document.getElementById('managerModal').style.display = 'block';
@@ -239,19 +308,18 @@ window.editManager = function(id) {
 };
 
 // --- DELETE FUNCTION ---
-window.deleteManager = function(id) {
-    if(confirm("Are you sure you want to remove this manager?")) {
-        db.collection("users").doc(id).get()
-            .then((doc) => {
-                const mData = doc.exists ? doc.data() : {};
-                return db.collection("users").doc(id).delete().then(() => {
-                    alert("Manager Removed Successfully!");
-                    logActivity("Manager Removed", `Manager "${mData.name || id}" (branch: ${mData.branch || '-'}) removed`);
-                });
-            })
-            .catch((error) => {
-                alert("Error removing data: " + error.message);
-            });
+window.deleteManager = async function(id) {
+    const agreed = await confirm("Are you sure you want to remove this manager?");
+    if (agreed) {
+        try {
+            const doc = await db.collection("users").doc(id).get();
+            const mData = doc.exists ? doc.data() : {};
+            await db.collection("users").doc(id).delete();
+            alert("Manager Removed Successfully!");
+            logActivity("Manager Removed", `Manager "${mData.name || id}" (branch: ${mData.branch || '-'}) removed`);
+        } catch (error) {
+            alert("Error removing data: " + error.message);
+        }
     }
 };
 

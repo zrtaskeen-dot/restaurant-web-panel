@@ -16,15 +16,12 @@ const db = firebase.firestore();
 let editOwnerId = null;
 
 // --- ACTIVITY LOG HELPER ---
-// NOTE: performedBy is picked from localStorage first (adjust the key name below
-// to whatever your login flow actually stores, e.g. 'admin_name' / 'user_name'),
-// falling back to the signed-in auth email, then to a generic "Admin" label.
 function logActivity(action, details) {
     try {
         db.collection("system_log").add({
             action,
             role: "Admin",
-            branch:       "",
+            branch: "",
             details,
             created_at: firebase.firestore.FieldValue.serverTimestamp()
         }).catch((err) => console.error("System log write failed:", err));
@@ -49,7 +46,7 @@ window.closeownerModal = function() {
 
 // --- READ / REAL-TIME FETCH DATA ---
 db.collection("users")
-    .where("role", "==", "owner")       // ✅ users collection, role filter
+    .where("role", "==", "owner")
     .onSnapshot((snapshot) => {
     const listContainer = document.getElementById('owner-list');
     if (!listContainer) return;
@@ -89,28 +86,56 @@ db.collection("users")
 document.getElementById('ownerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const oName     = document.getElementById('ownerName').value;
+    const oName     = document.getElementById('ownerName').value.trim();
     const oEmail    = document.getElementById('ownerEmail').value.trim();
     const oPassword = document.getElementById('ownerPassword').value;
-    const oPhone    = document.getElementById('ownerPhone').value;
+    const oPhone    = document.getElementById('ownerPhone').value.trim();
 
-    // ✅ Phone 11 digit check
-   if (!/^\d{11}$/.test(oPhone)) {
-    alert("Phone number must be exactly 11 digits!");
-    return;
-}
+    // 🟢 Name check
+    if (!oName || oName.length < 2) {
+        alert("Please enter a valid name (at least 2 characters).");
+        return;
+    }
+
+    // 🟢 Email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(oEmail)) {
+        alert("Please enter a valid email address.\nExample: user@example.com");
+        return;
+    }
+
+    // 🟢 Password strength check (skip in edit mode if empty)
+    if (!editOwnerId || oPassword) {
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
+        if (!passRegex.test(oPassword)) {
+            alert("Password must be at least 8 characters and include:\n• One uppercase letter (A-Z)\n• One lowercase letter (a-z)\n• One number (0-9)\n• One special character (@$!%*?&_#^)");
+            return;
+        }
+    }
+
+    // 🟢 Phone 11 digit check
+    if (!/^\d{11}$/.test(oPhone)) {
+        alert("Phone number must be exactly 11 digits!");
+        return;
+    }
 
     const regBtn = document.getElementById('ownerRegBtn');
     if (regBtn) { regBtn.innerText = "Processing..."; regBtn.disabled = true; }
 
-    // Capture the admin's identity BEFORE any auth-state switching happens below
-    // (creating the owner's auth account temporarily swaps auth.currentUser).
     const adminPerformer = localStorage.getItem('admin_name')
         || localStorage.getItem('user_name')
         || (auth.currentUser ? auth.currentUser.email : null)
         || 'Admin';
 
     try {
+        // 🟢 Phone uniqueness check
+        const phoneSnap = await db.collection("users").where("phone", "==", oPhone).get();
+        const phoneDuplicate = phoneSnap.docs.some(doc => doc.id !== editOwnerId);
+        if (phoneDuplicate) {
+            alert("This phone number is already registered. Each owner must have a unique phone number.");
+            if (regBtn) { regBtn.innerText = "Register Owner"; regBtn.disabled = false; }
+            return;
+        }
+
         if (editOwnerId) {
             // --- EDIT MODE ---
             await db.collection("users").doc(editOwnerId).update({
@@ -135,14 +160,14 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
             // Step 2: Verification email bhejo
             await newUser.sendEmailVerification();
 
-            // Step 3: Firestore "users" collection mein save karo
+            // Step 3: Firestore mein save karo
             await db.collection("users").doc(userUid).set({
                 uid: userUid,
                 name: oName,
                 email: oEmail,
                 password: oPassword,
                 phone: oPhone,
-                role: "owner",          // ✅ Flutter app checks this
+                role: "owner",
                 roleId: "R004",
                 emailVerified: false,
                 createdAt: Date.now()
@@ -186,9 +211,10 @@ window.editOwner = async (id) => {
     }
 };
 
-// --- DELETE FUNCTION ---
+// --- DELETE FUNCTION --- 🟢 async confirm fix
 window.deleteOwner = async (id) => {
-    if (confirm("Are you sure you want to remove this owner?")) {
+    const agreed = await confirm("Are you sure you want to remove this owner?");
+    if (agreed) {
         try {
             const doc = await db.collection("users").doc(id).get();
             const oData = doc.exists ? doc.data() : {};
@@ -201,7 +227,7 @@ window.deleteOwner = async (id) => {
     }
 };
 
-// ✅ Close modal on outside click
+// Close modal on outside click
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('ownerModal');
     if (e.target === modal) closeownerModal();

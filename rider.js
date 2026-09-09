@@ -23,15 +23,24 @@ let editId = null;
 // to fall back on here — localStorage is the only source.)
 function logActivity(action, details) {
     try {
-        db.collection("system_log").add({
+        const logData = {
             action,
-            role: "Admin",
+            role:         "Admin",
             branch:       "",
             details,
             created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch((err) => console.error("System log write failed:", err));
+        };
+
+        // ✅ System log — admin dashboard ke liye
+        db.collection("system_log").add(logData)
+            .catch(err => console.error("system_log error:", err));
+
+        // ✅ Activity log — owner app ke liye
+        db.collection("activity_logs").add(logData)
+            .catch(err => console.error("activity_logs error:", err));
+
     } catch (err) {
-        console.error("System log error:", err);
+        console.error("Log error:", err);
     }
 }
 
@@ -121,6 +130,22 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     const branchName     = selectedOption ? selectedOption.getAttribute('data-name') : "";
 
     // 🟢 Phone validation — exactly 11 digits
+        // 🟢 Email format check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        alert("Please enter a valid email address.\nExample: user@gmail.com");
+        return;
+    }
+
+    // 🟢 Password strength (skip in edit mode if empty)
+    if (!editId || password) {
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
+        if (!passRegex.test(password)) {
+            alert("Password must be at least 8 characters and include:\n• One uppercase letter (A-Z)\n• One lowercase letter (a-z)\n• One number (0-9)\n• One special character (@$!%*?&_#^)");
+            return;
+        }
+    }
+
+    // 🟢 Phone validation — exactly 11 digits
     if (!/^\d{11}$/.test(phone)) {
         alert("Phone number must be exactly 11 digits!");
         return;
@@ -138,6 +163,24 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     if (saveBtn) { saveBtn.innerText = "Saving..."; saveBtn.disabled = true; }
 
     try {
+        // 🟢 Phone uniqueness check
+        const phoneSnap = await db.collection("users").where("phone", "==", phone).get();
+        const phoneDuplicate = phoneSnap.docs.some(doc => doc.id !== editId);
+        if (phoneDuplicate) {
+            alert("This phone number is already registered. Each rider must have a unique phone number.");
+            if (saveBtn) { saveBtn.innerText = "Save"; saveBtn.disabled = false; }
+            return;
+        }
+
+        // 🟢 CNIC uniqueness check
+        const cnicSnap = await db.collection("users").where("cnic", "==", cnic).get();
+        const cnicDuplicate = cnicSnap.docs.some(doc => doc.id !== editId);
+        if (cnicDuplicate) {
+            alert("This CNIC is already registered. Each rider must have a unique CNIC.");
+            if (saveBtn) { saveBtn.innerText = "Save"; saveBtn.disabled = false; }
+            return;
+        }
+
         if (editId) {
             // --- EDIT MODE ---
             const updateData = {
@@ -149,7 +192,6 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
 
             await db.collection("users").doc(editId).update(updateData);
             alert("Rider Updated Successfully!");
-            logActivity("Rider Updated", `Updated details for rider "${name}" (branch: ${branchName || '-'})`);
 
         } else {
             // --- ADD MODE ---
@@ -257,7 +299,8 @@ window.editRider = async (id) => {
 
 // --- DELETE RIDER ---
 window.deleteRider = async (id) => {
-    if (confirm("Are you sure you want to delete this rider?")) {
+    const agreed = await confirm("Are you sure you want to delete this rider?");
+    if (agreed) {
         try {
             const doc = await db.collection("users").doc(id).get();
             const rData = doc.exists ? doc.data() : {};

@@ -31,46 +31,77 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    align-items: center;
+    text-align: center;
     flex-shrink: 0;
 }
 
 .brand {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    align-items: center;
+    gap: 15px;
 }
 
-.brand-icon {
-    font-size: 44px;
-    line-height: 1;
+/* 🟢 Circular Logo Frame Fix */
+.logo-wrapper {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid #f9a03f;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 🟢 Logo Image Fit inside Frame */
+.brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    font-size: 0; 
+}
+
+
+.brand-side h2 {
+    color: #ffffff; 
+    font-size: 22px;
+    font-weight: bold;
+    line-height: 1.2;
+    text-align: center;
 }
 
 .brand h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     color: #ffffff;
-    line-height: 1.3;
+    line-height: 1.2;
 }
 
 .brand p {
     font-size: 13px;
-    color: #888;
-    line-height: 1.7;
+    color: #ffcccb;
+    line-height: 1.5;
 }
 
-/* ── Accent bar under brand ── */
+/* Accent bar under brand */
 .brand::after {
     content: '';
     display: block;
     width: 40px;
     height: 3px;
-    background: #b52a00;
+    background: #f9a03f;
     border-radius: 2px;
+    margin-top: 5px;
 }
 
 .left-footer {
     font-size: 11px;
-    color: #555;
+    color: #ffaaaa;
 }
 
 /* ── RIGHT PANEL ── */
@@ -165,6 +196,24 @@ body {
     color: #b52a00;
 }
 
+/* Forgot Password Link */
+.forgot-link {
+    text-align: right;
+    margin-bottom: 16px;
+    margin-top: -8px;
+}
+
+.forgot-link a {
+    font-size: 13px;
+    color: #b52a00;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.forgot-link a:hover {
+    text-decoration: underline;
+}
+
 /* ── LOGIN BUTTON ── */
 .btn-login {
     width: 100%;
@@ -196,7 +245,6 @@ body {
     cursor: not-allowed;
     transform: none;
 }
-
 
 /* ── TOAST ── */
 .toast {
@@ -239,21 +287,4 @@ body {
     .right-panel {
         padding: 30px 24px;
     }
-}
-/* Forgot Password Link */
-.forgot-link {
-    text-align: right;
-    margin-bottom: 16px;
-    margin-top: -8px;
-}
-
-.forgot-link a {
-    font-size: 13px;
-    color: #b52a00;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.forgot-link a:hover {
-    text-decoration: underline;
 }

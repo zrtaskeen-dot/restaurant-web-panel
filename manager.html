@@ -37,7 +37,7 @@
                     <span>Email</span>
                     <span>Password</span>
                     <span>Phone no</span>
-                    <span>CNIC</span>
+                     <span>CNIC</span>
                     <span>Branch</span>
                     <span style="text-align: center;">Actions</span>
                 </div>
@@ -68,10 +68,27 @@
         <i class="fa-regular fa-eye" onclick="togglePass('managerPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
     </div>
 </div>
-                <div class="input-group">
+                               <div class="input-group">
                     <label>Phone no: <small style="color:#888;">(11 digits)</small></label>
                     <input type="text" id="managerPhone" required placeholder="03001234567"
                            maxlength="11" pattern="\d{11}"
+                           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                </div>
+
+                               <div class="input-group">
+                    <label>Payment Service: <small style="color:#888;">(optional — EasyPaisa/JazzCash)</small></label>
+                    <select id="managerPaymentType" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-size:14px;">
+                        <option value="">-- None --</option>
+                        <option value="EasyPaisa">EasyPaisa</option>
+                        <option value="JazzCash">JazzCash</option>
+                        
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Payment Account Number: <small style="color:#888;">(ye phone no se alag ho sakta hai)</small></label>
+                    <input type="text" id="managerPaymentNumber" placeholder="EasyPaisa/JazzCash number"
+                           maxlength="11"
                            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                 </div>
                 <div class="input-group">

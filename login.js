@@ -195,13 +195,25 @@ if (dynamicBranchId) {
     });
 
     localStorage.setItem("active_branch_id",  dynamicBranchId);
-    localStorage.setItem("managerBranchId",   dynamicBranchId);
-    localStorage.setItem("managerBranchName", dynamicBranchName);
-    localStorage.setItem("manager_name",      managerName);   // ✅ ab sahi kaam karega
-    localStorage.setItem("user_role",         "Manager");
-    
-                    showToast("Login Successful!", 'success');
-                    setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
+localStorage.setItem("managerBranchId",   dynamicBranchId);
+localStorage.setItem("managerBranchName", dynamicBranchName);
+localStorage.setItem("manager_name",      managerName);
+localStorage.setItem("user_role",         "Manager");
+
+// ✅ Login log karo
+const loginLog = {
+    action:       "Manager Login",
+    performed_by: managerName,
+    role:         "Manager",
+    branch:       dynamicBranchName,
+    details:      `Manager "${managerName}" logged in to branch "${dynamicBranchName}"`,
+    created_at:   firebase.firestore.FieldValue.serverTimestamp()
+};
+db.collection("system_log").add(loginLog).catch(err => console.error(err));
+db.collection("activity_logs").add(loginLog).catch(err => console.error(err));
+
+showToast("Login Successful!", 'success');
+setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
                 } else {
                     await auth.signOut();
                     showToast("No branch linked to this account. Please contact admin.");

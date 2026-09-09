@@ -230,9 +230,10 @@ function updateOrdersBadge() {
     });
 }
 
+
 // --- START ---
-document.addEventListener("DOMContentLoaded", () => {
-    loadMenuItems();
-    loadActiveDeals();
+document.addEventListener('DOMContentLoaded', () => {
     updateOrdersBadge();
+    loadMenuItems();   
+    loadActiveDeals();  
 });

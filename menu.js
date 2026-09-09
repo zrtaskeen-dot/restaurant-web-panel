@@ -40,23 +40,29 @@ let dealBase64Image = "";
 // 'user_name'), falling back to the signed-in auth email, then a generic label.
 function logActivity(action, details) {
     try {
-        const performedBy = localStorage.getItem('manager_name')
-            || localStorage.getItem('user_name')
-            || (firebase.auth().currentUser ? firebase.auth().currentUser.email : null)
-            || 'Manager';
-        const role   = localStorage.getItem('user_role')        || 'Manager';
-        const branch = localStorage.getItem('managerBranchName') || '';
+        const performedBy = localStorage.getItem('manager_name') || 'Manager';
+        const role        = localStorage.getItem('user_role')    || 'Manager';
+        const branch      = localStorage.getItem('managerBranchName') || '';
 
-       db.collection("system_log").add({
-    action,
-    performed_by: performedBy,
-    role,                    // ✅ role add karo
-    branch,
-    details,
-    created_at: firebase.firestore.FieldValue.serverTimestamp()
-}).catch((err) => console.error("System log write failed:", err));
+        const logData = {
+            action,
+            performed_by: performedBy,
+            role,
+            branch,
+            details,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        // ✅ System log — admin dashboard
+        db.collection("system_log").add(logData)
+            .catch(err => console.error("system_log error:", err));
+
+        // ✅ Activity log — owner app
+        db.collection("activity_logs").add(logData)
+            .catch(err => console.error("activity_logs error:", err));
+
     } catch (err) {
-        console.error("System log error:", err);
+        console.error("Log error:", err);
     }
 }
 

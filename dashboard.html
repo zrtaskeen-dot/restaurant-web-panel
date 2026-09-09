@@ -30,18 +30,32 @@
 
         <div class="main-content">
             
+            <!-- 1. Top Branch Info Header Card -->
             <div class="branch-info-header-card">
                 <div class="branch-details-view">
                     <h2 id="displayBranchName" class="branch-main-title">Loading Branch Name...</h2>
                     <div class="branch-meta-row">
-                        <span><strong>🕒 Timing:</strong> <span id="displayBranchTiming">--:--</span></span>
-                        <span><strong>📍 Address:</strong> <span id="displayBranchAddress">Loading address...</span></span>
+                        <span><strong> Timing:</strong> <span id="displayBranchTiming">--:--</span></span>
+                        <span><strong> Address:</strong> <span id="displayBranchAddress">Loading address...</span></span>
                     </div>
                 </div>
                 <button class="btn-edit-branch" onclick="openBranchModal()">Edit Details</button>
             </div>
 
-            <h2 class="page-title">Dashboard Overview</h2>
+            <!-- 2. Payment Accounts Card (Same Header Design Style) -->
+            <div class="branch-info-header-card" style="margin-top: 15px;">
+                <div class="branch-details-view">
+                    <h2 class="branch-main-title" style="font-size: 16px; margin-bottom: 8px;"> Payment Accounts Details</h2>
+                    <div class="branch-meta-row">
+                        <span><strong>EasyPaisa:</strong> <span id="displayEasyPaisa" style="color:rgb(77, 72, 72); font-size: 13px;">Loading...</span></span>
+                       
+                        <span><strong>JazzCash:</strong> <span id="displayJazzCash" style="color: rgb(77, 72, 72); font-size: 13px;">Loading...</span></span>
+                    </div>
+                </div>
+                <button class="btn-edit-branch" onclick="openPaymentModal()">Edit Numbers</button>
+            </div>
+
+            <h2 class="page-title" style="margin-top: 25px;">Dashboard Overview</h2>
             
             <div class="stats-grid">
                 <div class="stat-card">
@@ -65,13 +79,13 @@
                     </div>
                     <img src="https://img.icons8.com/color/48/group-foreground-selected.png" alt="icon">
                 </div>
-   <div class="stat-card">
-    <div class="stat-info">
-        <p>Total Rider</p>
-        <h3 id="count-riders">0</h3>
-    </div>
-   <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" alt="icon">
-</div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <p>Total Rider</p>
+                        <h3 id="count-riders">0</h3>
+                    </div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/3063/3063822.png" alt="icon">
+                </div>
                 <div class="stat-card">
                     <div class="stat-info">
                         <p>Pending</p>
@@ -95,14 +109,16 @@
                         <h2 id="total-revenue">PKR 0</h2>
                     </div>
                     <div class="chart-labels">
-                        <span><span class="dot yellow"></span> Deliver Now</span>
-                        <span><span class="dot blue"></span> Deliver Later</span>
                     </div>
                 </div>
                 <canvas id="revenueChart" style="max-height: 300px;"></canvas>
             </div>
 
-        </div> </div> <div id="branchModalOverlay" class="branch-modal-overlay"></div>
+        </div> 
+    </div> 
+
+    <!-- Branch Edit Modal -->
+    <div id="branchModalOverlay" class="branch-modal-overlay"></div>
     <div id="branchEditModal" class="branch-card-modal">
         <h3>Update Branch Settings</h3>
         <div class="branch-input-group">
@@ -123,9 +139,28 @@
         </div>
     </div>
 
+    
+    <!-- Payment Accounts Edit Modal -->
+<div id="paymentModalOverlay" class="branch-modal-overlay"></div>
+<div id="paymentEditModal" class="branch-card-modal">
+    <h3>Update Payment Numbers</h3>
+    <div class="branch-input-group">
+        <label style="color: black;"> EasyPaisa Number:</label>
+        <input type="text" id="modalEasyPaisa" maxlength="11" placeholder="e.g., 03001234567" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    </div>
+    <div class="branch-input-group">
+        <label style="color:black"> JazzCash Number:</label>
+        <input type="text" id="modalJazzCash" maxlength="11" placeholder="e.g., 03007654321" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+    </div>
+    <div class="branch-modal-actions">
+        <button class="btn-branch-cancel" onclick="closePaymentModal()">Cancel</button>
+        <button id="btnSavePayment" class="btn-branch-save" onclick="savePaymentNumbers()">Save Updates</button>
+    </div>
+</div>
+
     <script src="alert.js"></script>
     <script src="dashboard.js"></script>
-<script src="manager logout.js"></script>
+    <script src="manager logout.js"></script>
 
 </body>
 </html>

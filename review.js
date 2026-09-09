@@ -118,6 +118,16 @@ function updateOrdersBadge() {
         });
 }
 
+// ✅ Mark reviews as read
+async function markReviewsAsRead(reviewIds) {
+    if (reviewIds.length === 0) return;
+    const batch = db.batch();
+    reviewIds.forEach(id => {
+        batch.update(db.collection("reviews").doc(id), { isRead: true });
+    });
+    await batch.commit();
+}
+
 // --- LOAD REVIEWS ---
 async function loadReviews() {
     const container = document.getElementById('reviewsList');
@@ -150,13 +160,16 @@ async function loadReviews() {
         // Step 2: Reviews fetch karo
         const reviewsSnap = await db.collection("reviews").get();
 
-        allReviews = [];
-        reviewsSnap.forEach(doc => {
-            const r = doc.data();
-            if (branchOrderIds.has(r.orderId)) {
-                allReviews.push({ id: doc.id, ...r });
-            }
-        });
+       allReviews = [];
+const unreadIds = [];
+reviewsSnap.forEach(doc => {
+    const r = doc.data();
+    if (branchOrderIds.has(r.orderId)) {
+        allReviews.push({ id: doc.id, ...r });
+        if (!r.isRead) unreadIds.push(doc.id); // ✅ unread collect karo
+    }
+});
+await markReviewsAsRead(unreadIds); // ✅ sab read mark karo
 
         // Sort newest first
         allReviews.sort((a, b) => {

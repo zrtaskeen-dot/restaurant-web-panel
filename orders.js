@@ -147,7 +147,9 @@ function renderOrders() {
         const paymentMethod = data.payment_method || data.paymentMethod || 'COD';
         const isScheduled   = checkIsScheduled(data);
         const isPaidOnline  = isOnlinePayment(paymentMethod);
-        const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
+
+        // 🟢 FIX 1: showAssignBtn hamesha true
+                const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
 
         // Status colors
         let statusColor = '#f5f1f0', statusBg = '#a70000';
@@ -169,7 +171,7 @@ function renderOrders() {
             }
         }
 
-        // ✅ Cancel button — sirf online payment orders par jo cancel/delivered nahi
+        // Cancel button
         let cancelBtnHtml = '';
         if (isPaidOnline && ns !== 'cancelled' && ns !== 'canceled' && ns !== 'delivered' && ns !== 'completed') {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="background-color:#b52a00;color:white;white-space:nowrap;">Cancel Order</button>`;
@@ -233,18 +235,14 @@ function renderOrders() {
     startLiveTimers();
 }
 
-// ✅ Cancel Online Order — custom-alert.js ka confirm use karo
+// ✅ Cancel Online Order
 async function cancelOnlineOrder(event, orderId) {
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
-
-    const userConfirmed = await confirm(
-        "Are you sure you want to cancel this online paid order?"
-    );
+    const userConfirmed = await confirm("Are you sure you want to cancel this online paid order?");
     if (!userConfirmed) return;
-
     try {
         await db.collection("orders").doc(orderId).update({
             order_status:       "Cancelled",
@@ -278,7 +276,7 @@ function loadOrders() {
             snap.forEach(doc => {
                 const data = doc.data();
                 allOrdersCache.push({ id: doc.id, data });
-                const st = (data.order_status || data.status || '').toLowerCase();
+                               const st = (data.order_status || data.status || '').toLowerCase();
                 if (st === 'pending') pendingCount++;
             });
 
@@ -345,7 +343,7 @@ async function openOrderDetails(id) {
         const paymentHtml = `
             <p><strong>Payment:</strong>
                 <span style="background:${isPaidOnline ? '#d4edda' : '#f8f9fa'};color:${isPaidOnline ? '#155724' : '#333'};padding:2px 10px;border-radius:12px;font-size:12px;font-weight:bold;border:1px solid ${isPaidOnline ? '#28a745' : '#ddd'};">
-                    ${isPaidOnline ? '' : ''}${paymentMethod}
+                    ${paymentMethod}
                 </span>
             </p>
             ${isPaidOnline && receiptUrl ? `
@@ -370,7 +368,6 @@ async function openOrderDetails(id) {
         const riderInfoHtml = order.riderId
             ? `<p><strong>Assigned Rider:</strong> ${order.riderName || 'Rider Assigned'}</p>` : '';
 
-        // ✅ Cancelled info
         const cancelledHtml = (order.order_status === 'Cancelled') ? `
             <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
                 Order Cancelled by Manager
@@ -408,12 +405,12 @@ async function openAssignModal(orderId) {
     document.getElementById('assignRiderOverlay').style.display = 'block';
 
     try {
-       const ridersSnap = await db.collection("users")
-    .where("role",          "==", "rider")
-    .where("branchId",      "==", BRANCH_DOC_ID)
-    .where("isAvailable",   "==", true)
-    .where("emailVerified", "==", true)    // ✅ add karo
-    .get();
+        const ridersSnap = await db.collection("users")
+            .where("role",          "==", "rider")
+            .where("branchId",      "==", BRANCH_DOC_ID)
+            .where("isAvailable",   "==", true)
+            .where("emailVerified", "==", true)
+            .get();
 
         if (ridersSnap.empty) {
             listContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#b52a00;font-weight:bold;">No available riders found in your branch.</p>';
@@ -426,8 +423,8 @@ async function openAssignModal(orderId) {
             const riderId = riderDoc.id;
 
             const activeOrdersSnap = await db.collection("orders")
-                .where("riderId",       "==", riderId)
-                .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
+                .where("riderId",      "==", riderId)
+                .where("order_status", "in", ["Assigned", "Accepted", "assigned", "accepted"])
                 .get();
 
             const pendingCount = activeOrdersSnap.size;
@@ -463,30 +460,44 @@ window.closeAssignModal = function() {
     assignOrderId = null;
 };
 
+// 🟢 FIX 3: Rider ka pending counter bhi update karo
 async function assignRiderToOrder(riderId, riderName) {
     if (!assignOrderId) return;
     const orderRef = db.collection("orders").doc(assignOrderId);
+    const riderRef = db.collection("users").doc(riderId);
 
     try {
         const activeOrdersSnap = await db.collection("orders")
-            .where("riderId",       "==", riderId)
-            .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
+            .where("riderId",      "==", riderId)
+            .where("order_status", "in", ["Assigned", "Accepted", "assigned", "accepted"])
             .get();
 
         const currentActive = activeOrdersSnap.size;
-
         if (currentActive >= 5) {
             alert(`${riderName} already has ${currentActive} active orders. Cannot assign more.`);
             return;
         }
 
-        await orderRef.set({
+        const riderDoc  = await riderRef.get();
+        const riderData = riderDoc.exists ? riderDoc.data() : {};
+        const currentPending = typeof riderData.pending === 'number' ? riderData.pending : 0;
+
+        const batch = db.batch();
+        batch.set(orderRef, {
             riderId,
             riderName,
             order_status: "Assigned",
+            status:       "pending",
             assignedAt:   Date.now()
         }, { merge: true });
 
+        batch.update(riderRef, {
+            pending:         currentPending + 1,
+            totalOrders:     (riderData.totalOrders || 0) + 1,
+            statusUpdatedAt: Date.now()
+        });
+
+        await batch.commit();
         alert(`Order assigned to ${riderName} successfully!`);
         closeAssignModal();
 
