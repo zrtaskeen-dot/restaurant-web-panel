@@ -147,9 +147,7 @@ function renderOrders() {
         const paymentMethod = data.payment_method || data.paymentMethod || 'COD';
         const isScheduled   = checkIsScheduled(data);
         const isPaidOnline  = isOnlinePayment(paymentMethod);
-
-        // 🟢 FIX 1: showAssignBtn hamesha true
-                const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
+        const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
 
         // Status colors
         let statusColor = '#f5f1f0', statusBg = '#a70000';
@@ -171,7 +169,7 @@ function renderOrders() {
             }
         }
 
-        // Cancel button
+        // ✅ Cancel button — sirf online payment orders par jo cancel/delivered nahi
         let cancelBtnHtml = '';
         if (isPaidOnline && ns !== 'cancelled' && ns !== 'canceled' && ns !== 'delivered' && ns !== 'completed') {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="background-color:#b52a00;color:white;white-space:nowrap;">Cancel Order</button>`;
@@ -235,21 +233,45 @@ function renderOrders() {
     startLiveTimers();
 }
 
-// ✅ Cancel Online Order
+// ✅ Cancel Online Order — custom-alert.js ka confirm use karo
 async function cancelOnlineOrder(event, orderId) {
     if (event) {
         event.preventDefault();
         event.stopPropagation();
     }
-    const userConfirmed = await confirm("Are you sure you want to cancel this online paid order?");
+
+    const userConfirmed = await confirm(
+        "Are you sure you want to cancel this online paid order?"
+    );
     if (!userConfirmed) return;
+
     try {
+        // ✅ Order data pehle nikal lo — customer ka id chahiye notification ke liye
+        const orderDoc = await db.collection("orders").doc(orderId).get();
+        const orderData = orderDoc.data();
+
         await db.collection("orders").doc(orderId).update({
             order_status:       "Cancelled",
             cancelledBy:        "Manager",
             cancelledAt:        firebase.firestore.FieldValue.serverTimestamp(),
-            cancellationReason: "Cancelled by Manager"
+            cancellationReason: "Invalid receipt"
         });
+
+        // ✅ Customer ki screen pe notification bhejo
+        // orders collection mein field ka naam "customerId" hai, lekin
+        // notifications collection ka NotificationScreen "userId" field
+        // pe query karti hai (Dart app dekho) — isliye value copy karte
+        // waqt naam badal ke "userId" likhna hai.
+        if (orderData && orderData.customerId) {
+            await db.collection("notifications").add({
+                userId:    orderData.customerId,
+                title:     "Order Cancelled",
+                body:      "Your order was cancelled. Reason: Invalid receipt",
+                isRead:    false,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+
         alert("Order cancelled successfully!");
     } catch (e) {
         console.error("Error cancelling order:", e);
@@ -276,7 +298,7 @@ function loadOrders() {
             snap.forEach(doc => {
                 const data = doc.data();
                 allOrdersCache.push({ id: doc.id, data });
-                               const st = (data.order_status || data.status || '').toLowerCase();
+                const st = (data.order_status || data.status || '').toLowerCase();
                 if (st === 'pending') pendingCount++;
             });
 
@@ -343,7 +365,7 @@ async function openOrderDetails(id) {
         const paymentHtml = `
             <p><strong>Payment:</strong>
                 <span style="background:${isPaidOnline ? '#d4edda' : '#f8f9fa'};color:${isPaidOnline ? '#155724' : '#333'};padding:2px 10px;border-radius:12px;font-size:12px;font-weight:bold;border:1px solid ${isPaidOnline ? '#28a745' : '#ddd'};">
-                    ${paymentMethod}
+                    ${isPaidOnline ? '' : ''}${paymentMethod}
                 </span>
             </p>
             ${isPaidOnline && receiptUrl ? `
@@ -368,9 +390,10 @@ async function openOrderDetails(id) {
         const riderInfoHtml = order.riderId
             ? `<p><strong>Assigned Rider:</strong> ${order.riderName || 'Rider Assigned'}</p>` : '';
 
+        // ✅ Cancelled info
         const cancelledHtml = (order.order_status === 'Cancelled') ? `
             <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
-                Order Cancelled by Manager
+                Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
 
         document.getElementById('orderInfo').innerHTML = `
@@ -405,12 +428,12 @@ async function openAssignModal(orderId) {
     document.getElementById('assignRiderOverlay').style.display = 'block';
 
     try {
-        const ridersSnap = await db.collection("users")
-            .where("role",          "==", "rider")
-            .where("branchId",      "==", BRANCH_DOC_ID)
-            .where("isAvailable",   "==", true)
-            .where("emailVerified", "==", true)
-            .get();
+       const ridersSnap = await db.collection("users")
+    .where("role",          "==", "rider")
+    .where("branchId",      "==", BRANCH_DOC_ID)
+    .where("isAvailable",   "==", true)
+    .where("emailVerified", "==", true)    // ✅ add karo
+    .get();
 
         if (ridersSnap.empty) {
             listContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#b52a00;font-weight:bold;">No available riders found in your branch.</p>';
@@ -423,8 +446,8 @@ async function openAssignModal(orderId) {
             const riderId = riderDoc.id;
 
             const activeOrdersSnap = await db.collection("orders")
-                .where("riderId",      "==", riderId)
-                .where("order_status", "in", ["Assigned", "Accepted", "assigned", "accepted"])
+                .where("riderId",       "==", riderId)
+                .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
                 .get();
 
             const pendingCount = activeOrdersSnap.size;
@@ -460,44 +483,30 @@ window.closeAssignModal = function() {
     assignOrderId = null;
 };
 
-// 🟢 FIX 3: Rider ka pending counter bhi update karo
 async function assignRiderToOrder(riderId, riderName) {
     if (!assignOrderId) return;
     const orderRef = db.collection("orders").doc(assignOrderId);
-    const riderRef = db.collection("users").doc(riderId);
 
     try {
         const activeOrdersSnap = await db.collection("orders")
-            .where("riderId",      "==", riderId)
-            .where("order_status", "in", ["Assigned", "Accepted", "assigned", "accepted"])
+            .where("riderId",       "==", riderId)
+            .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
             .get();
 
         const currentActive = activeOrdersSnap.size;
+
         if (currentActive >= 5) {
             alert(`${riderName} already has ${currentActive} active orders. Cannot assign more.`);
             return;
         }
 
-        const riderDoc  = await riderRef.get();
-        const riderData = riderDoc.exists ? riderDoc.data() : {};
-        const currentPending = typeof riderData.pending === 'number' ? riderData.pending : 0;
-
-        const batch = db.batch();
-        batch.set(orderRef, {
+        await orderRef.set({
             riderId,
             riderName,
             order_status: "Assigned",
-            status:       "pending",
             assignedAt:   Date.now()
         }, { merge: true });
 
-        batch.update(riderRef, {
-            pending:         currentPending + 1,
-            totalOrders:     (riderData.totalOrders || 0) + 1,
-            statusUpdatedAt: Date.now()
-        });
-
-        await batch.commit();
         alert(`Order assigned to ${riderName} successfully!`);
         closeAssignModal();
 
@@ -552,5 +561,42 @@ function highlightOrderFromReview() {
 
     localStorage.removeItem("highlight_order_id");
 }
+// ✅ Sidebar Reviews Badge
+function updateReviewsBadge() {
+    if (!BRANCH_DOC_ID) return;
 
+    db.collection("orders")
+        .where("branchId", "==", BRANCH_DOC_ID)
+        .onSnapshot(ordersSnap => {
+            const branchOrderIds = new Set();
+            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+
+            db.collection("reviews")
+                .where("isRead", "==", false)
+                .onSnapshot(reviewsSnap => {
+                    let unreadCount = 0;
+                    reviewsSnap.forEach(doc => {
+                        if (branchOrderIds.has(doc.data().orderId)) {
+                            unreadCount++;
+                        }
+                    });
+
+                    const links = document.querySelectorAll('.sidebar nav a');
+                    links.forEach(link => {
+                        if (link.innerText.trim().toLowerCase().includes('review')) {
+                            let badge = document.getElementById('reviews-badge');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'reviews-badge';
+                                badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
+                                link.appendChild(badge);
+                            }
+                            badge.innerText = unreadCount;
+                            badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    });
+                });
+        });
+}
 loadOrders();
+updateReviewsBadge();   

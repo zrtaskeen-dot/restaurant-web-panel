@@ -21,7 +21,7 @@ if (!currentBranchId) {
     db.collection("users")
         .where("role",          "==", "rider")
         .where("branchId",      "==", currentBranchId)
-        .where("emailVerified", "==", true)          // ✅ sirf verified riders
+        .where("emailVerified", "==", true)         
         .onSnapshot((snapshot) => {
             const list = document.getElementById('rider-list');
             if (!list) return;
@@ -78,5 +78,52 @@ function updateOrdersBadge() {
             });
         });
 }
+// ✅ Sidebar Reviews Badge
+function updateReviewsBadge() {
+    if (!currentBranchId) return;
 
-document.addEventListener('DOMContentLoaded', updateOrdersBadge);
+    db.collection("orders")
+        .where("branchId", "==", currentBranchId)
+        .onSnapshot(ordersSnap => {
+            const branchOrderIds = new Set();
+            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+
+            db.collection("reviews")
+                .where("isRead", "==", false)
+                .onSnapshot(reviewsSnap => {
+                    let unreadCount = 0;
+                    reviewsSnap.forEach(doc => {
+                        if (branchOrderIds.has(doc.data().orderId)) {
+                            unreadCount++;
+                        }
+                    });
+
+                    const links = document.querySelectorAll('.sidebar nav a');
+                    links.forEach(link => {
+                        if (link.textContent.trim().toLowerCase().includes('review')) {
+                            let badge = document.getElementById('reviews-badge');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'reviews-badge';
+                                badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
+                                link.appendChild(badge);
+                            }
+                            badge.innerText = unreadCount;
+                            badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    });
+                });
+        });
+}
+// --- LOGOUT --- 🟢 async confirm fix
+window.confirmLogout = async function() {
+    const agreed = await confirm("Are you sure you want to logout?");
+    if (agreed) {
+        localStorage.clear();
+        window.location.href = "login.html";
+    }
+};
+document.addEventListener('DOMContentLoaded', () => {
+    updateOrdersBadge();
+    updateReviewsBadge();
+});

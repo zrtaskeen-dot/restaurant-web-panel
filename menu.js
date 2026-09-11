@@ -40,35 +40,45 @@ let dealBase64Image = "";
 // 'user_name'), falling back to the signed-in auth email, then a generic label.
 function logActivity(action, details) {
     try {
-        const performedBy = localStorage.getItem('manager_name') || 'Manager';
-        const role        = localStorage.getItem('user_role')    || 'Manager';
-        const branch      = localStorage.getItem('managerBranchName') || '';
+        const performedBy = localStorage.getItem('manager_name')
+            || localStorage.getItem('user_name')
+            || (firebase.auth().currentUser ? firebase.auth().currentUser.email : null)
+            || 'Manager';
+        const role   = localStorage.getItem('user_role')        || 'Manager';
+        const branch = localStorage.getItem('managerBranchName') || '';
 
-        const logData = {
-            action,
-            performed_by: performedBy,
-            role,
-            branch,
-            details,
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
-        };
-
-        // ✅ System log — admin dashboard
-        db.collection("system_log").add(logData)
-            .catch(err => console.error("system_log error:", err));
-
-        // ✅ Activity log — owner app
-        db.collection("activity_logs").add(logData)
-            .catch(err => console.error("activity_logs error:", err));
-
+       db.collection("system_log").add({
+    action,
+    performed_by: performedBy,
+    role,                    // ✅ role add karo
+    branch,
+    details,
+    created_at: firebase.firestore.FieldValue.serverTimestamp()
+}).catch((err) => console.error("System log write failed:", err));
     } catch (err) {
-        console.error("Log error:", err);
+        console.error("System log error:", err);
     }
 }
 
 function formatPricesForLog(prices) {
     if (!prices) return '';
     return Object.entries(prices).map(([k, v]) => `${k}: Rs.${v}`).join(', ');
+}
+
+// --- IN-APP CUSTOMER NOTIFICATION (no Cloud Functions) ---
+// Writes straight to the same `notifications` collection the Flutter app's
+// NotificationService.broadcastToAllCustomers() writes to (userId: 'ALL',
+// isRead: false, serverTimestamp). NotificationScreen already listens to
+// this collection live, so every customer sees it instantly — no backend
+// function needed.
+function broadcastToAllCustomers(title, body) {
+    db.collection("notifications").add({
+        userId: "ALL",
+        title,
+        body,
+        isRead: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(err => console.error("Broadcast notification failed:", err));
 }
 
 // ─────────────────────────────────────────────
@@ -168,6 +178,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     await db.collection("menu").add(packageData);
                     alert(`${currentCategory} Created Successfully inside Menu!`);
                     logActivity(`${currentCategory} Added`, `Created "${name}" - Rs. ${price}`);
+
+                    // Let every customer know about the new combo/deal.
+                    broadcastToAllCustomers(
+                        `New ${currentCategory} Alert! 🎉`,
+                        `${name} is now available for Rs. ${price}. Order now!`
+                    );
                 }
 
                 resetPackageFormState();
@@ -357,6 +373,12 @@ window.saveItem = async function () {
             await db.collection("menu").add(itemData);
             alert("Item Added Successfully!");
             logActivity("Menu Item Added", `Added "${name}" to ${currentCategory} (${formatPricesForLog(prices)})`);
+
+            // Let every customer know about the new menu item.
+            broadcastToAllCustomers(
+                "New Item Added! 🍽️",
+                `${name} is now available in ${currentCategory}. Order now!`
+            );
         }
         window.closeModal();
     } catch (e) {
@@ -955,5 +977,45 @@ function updateOrdersBadge() {
         });
     });
 }
+// 🟢 Sidebar Reviews Badge
+function updateReviewsBadge() {
+    if (!BRANCH_DOC_ID) return;
 
-document.addEventListener('DOMContentLoaded', updateOrdersBadge);
+    db.collection("orders")
+        .where("branchId", "==", BRANCH_DOC_ID)
+        .onSnapshot(ordersSnap => {
+            const branchOrderIds = new Set();
+            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+
+            db.collection("reviews")
+                .where("isRead", "==", false)
+                .onSnapshot(reviewsSnap => {
+                    let unreadCount = 0;
+                    reviewsSnap.forEach(doc => {
+                        if (branchOrderIds.has(doc.data().orderId)) {
+                            unreadCount++;
+                        }
+                    });
+
+                    const links = document.querySelectorAll('.sidebar nav a');
+                    links.forEach(link => {
+                        if (link.textContent.trim().toLowerCase().includes('review')) {
+                            let badge = document.getElementById('reviews-badge');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'reviews-badge';
+                                badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
+                                link.appendChild(badge);
+                            }
+                            badge.innerText = unreadCount;
+                            badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    });
+                });
+        });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateOrdersBadge();
+    updateReviewsBadge();
+});

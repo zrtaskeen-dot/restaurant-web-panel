@@ -49,65 +49,57 @@
     </div>
 
     <!-- Modal -->
-    <div id="managerModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">Add Manager</div>
-            <form id="managerForm">
-                <div class="input-group">
-                    <label>Name:</label>
-                    <input type="text" id="managerName" required placeholder="Enter name">
+   <div id="managerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="managerModalTitle">Add Manager</div>
+        <form id="managerForm">
+            <!-- Hidden Input for Tracking Edit ID -->
+            <input type="hidden" id="editManagerId">
+
+            <div class="input-group">
+                <label>Name:</label>
+                <input type="text" id="managerName" required placeholder="Enter name">
+            </div>
+
+            <div class="input-group">
+                <label>Email: <small class="edit-only-label" style="color:#888; display:none;">(Locked)</small></label>
+                <input type="email" id="managerEmail" required placeholder="Enter email">
+            </div>
+
+            <div class="input-group" id="passwordGroup">
+                <label>Password: <small class="edit-only-label" style="color:#888; display:none;">(Locked)</small></label>
+                <div style="position:relative;">
+                    <input type="password" id="managerPassword" required placeholder="Enter password" style="width:100%; padding:10px; padding-right:40px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
+                    <i class="fa-regular fa-eye" onclick="togglePass('managerPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
                 </div>
-                <div class="input-group">
-                    <label>Email:</label>
-                    <input type="email" id="managerEmail" required placeholder="Enter email">
-                </div>
-                <div class="input-group">
-    <label>Password:</label>
-    <div style="position:relative;">
-        <input type="password" id="managerPassword" required placeholder="Enter password" style="width:100%; padding:10px; padding-right:40px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box;">
-        <i class="fa-regular fa-eye" onclick="togglePass('managerPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
+            </div>
+
+            <div class="input-group">
+                <label>Phone no: <small style="color:#888;">(11 digits)</small></label>
+                <input type="text" id="managerPhone" required placeholder="03001234567"
+                       maxlength="11" pattern="\d{11}"
+                       oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+            </div>
+
+            <div class="input-group">
+                <label>CNIC: <small style="color:#888;">(xxxxx-xxxxxxx-x)</small></label>
+                <input type="text" id="managerCnic" required placeholder="00000-0000000-0"
+                       maxlength="15"
+                       oninput="formatCnic(this)">
+            </div>
+
+            <div class="input-group">
+                <label>Assign Branch Name:</label>
+                <input type="text" id="managerBranch" placeholder="e.g. Aslam Market, DHA Branch" required>
+            </div>
+
+            <div class="modal-actions">
+                <button type="submit" id="regBtn" class="btn-save">Register Manager</button>
+                <button type="button" class="btn-cancel" onclick="closeManagerModal()">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
-                               <div class="input-group">
-                    <label>Phone no: <small style="color:#888;">(11 digits)</small></label>
-                    <input type="text" id="managerPhone" required placeholder="03001234567"
-                           maxlength="11" pattern="\d{11}"
-                           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                </div>
-
-                               <div class="input-group">
-                    <label>Payment Service: <small style="color:#888;">(optional — EasyPaisa/JazzCash)</small></label>
-                    <select id="managerPaymentType" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px; box-sizing:border-box; font-size:14px;">
-                        <option value="">-- None --</option>
-                        <option value="EasyPaisa">EasyPaisa</option>
-                        <option value="JazzCash">JazzCash</option>
-                        
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Payment Account Number: <small style="color:#888;">(ye phone no se alag ho sakta hai)</small></label>
-                    <input type="text" id="managerPaymentNumber" placeholder="EasyPaisa/JazzCash number"
-                           maxlength="11"
-                           oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                </div>
-                <div class="input-group">
-                    <label>CNIC: <small style="color:#888;">(xxxxx-xxxxxxx-x)</small></label>
-                    <input type="text" id="managerCnic" required placeholder="00000-0000000-0"
-                           maxlength="15"
-                           oninput="formatCnic(this)">
-                </div>
-                <div class="input-group">
-                    <label>Assign Branch Name:</label>
-                    <input type="text" id="managerBranch" placeholder="e.g. Aslam Market, DHA Branch" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="submit" id="regBtn" class="btn-save">Register Manager</button>
-                    <button type="button" class="btn-cancel" onclick="closeManagerModal()">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <script>
         // CNIC auto-format: 00000-0000000-0

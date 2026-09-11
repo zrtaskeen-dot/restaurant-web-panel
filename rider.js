@@ -15,12 +15,6 @@ const FIREBASE_API_KEY = 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE';
 
 let editId = null;
 
-// --- ACTIVITY LOG HELPER ---
-// NOTE: performedBy is picked from localStorage first (adjust the key name below
-// to whatever your login flow actually stores, e.g. 'admin_name' / 'user_name'),
-// falling back to a generic "Admin" label. (This file uses the REST Identity
-// Toolkit API instead of the Firebase Auth SDK, so there's no auth.currentUser
-// to fall back on here — localStorage is the only source.)
 function logActivity(action, details) {
     try {
         const logData = {
@@ -112,6 +106,12 @@ window.closeModal = function () {
     document.getElementById('riderModal').style.display = 'none';
     document.getElementById('riderForm').reset();
     editId = null;
+
+    // 🟢 Fields wapas dikhao next Add Rider ke liye
+    const emailGroup    = document.getElementById('riderEmail').closest('.input-group');
+    const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
+    if (emailGroup)    emailGroup.style.display    = 'block';
+    if (passwordGroup) passwordGroup.style.display = 'block';
 };
 
 // --- SAVE / UPDATE RIDER ---
@@ -288,6 +288,12 @@ window.editRider = async (id) => {
             document.getElementById('riderCnic').value     = r.cnic     || "";
 
             await loadBranchDropdown(r.branchId);
+
+            // 🟢 Edit mode mein email aur password fields hide karo
+            const emailGroup    = document.getElementById('riderEmail').closest('.input-group');
+            const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
+            if (emailGroup)    emailGroup.style.display    = 'none';
+            if (passwordGroup) passwordGroup.style.display = 'none';
 
             document.querySelector('.modal-header').innerText = "Edit Rider";
             document.getElementById('riderModal').style.display = 'block';

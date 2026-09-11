@@ -59,7 +59,7 @@ async function loadCustomers() {
             const role = user.role || "";
 
             // Riders aur Managers skip karo
-            if (role === "rider" || role === "manager"|| role === "owner") return;
+            if (role === "rider" || role === "manager"|| role === "owner"|| role === "admin") return;
 
             count++;
             const id = doc.id;
@@ -98,23 +98,25 @@ async function loadCustomers() {
     });
 }
 
-// --- Toggle Block/Unblock ---
-async function toggleBlock(id, currentStatus) {
+// --- Toggle Block/Unblock --- 🟢 async confirm fix
+window.toggleBlock = async function(id, currentStatus) {
     const newStatus = currentStatus ? "active" : "blocked";
     const actionText = currentStatus ? "Unblock" : "Block";
 
-    if (confirm(`Are you sure you want to ${actionText} this customer?`)) {
+    const agreed = await confirm(`Are you sure you want to ${actionText} this customer?`);
+    if (agreed) {
         try {
             await db.collection("users").doc(id).update({ status: newStatus });
         } catch (e) {
             alert("Error: " + e.message);
         }
     }
-}
+};
 
-// --- Delete Customer ---
-async function deleteUser(id) {
-    if (confirm("Are you sure you want to delete this customer?")) {
+// --- Delete Customer --- 🟢 async confirm fix
+window.deleteUser = async function(id) {
+    const agreed = await confirm("Are you sure you want to delete this customer?");
+    if (agreed) {
         try {
             await db.collection("users").doc(id).delete();
             alert("Customer deleted successfully!");
@@ -122,6 +124,6 @@ async function deleteUser(id) {
             alert("Error deleting: " + e.message);
         }
     }
-}
+};
 
 document.addEventListener('DOMContentLoaded', loadCustomers);

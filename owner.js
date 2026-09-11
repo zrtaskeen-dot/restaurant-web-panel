@@ -42,6 +42,12 @@ window.closeownerModal = function() {
     document.getElementById('ownerModal').style.display = 'none';
     document.getElementById('ownerForm').reset();
     editOwnerId = null;
+
+    // 🟢 Fields wapas dikhao next Add Owner ke liye
+    const emailGroup    = document.getElementById('ownerEmail').closest('.input-group');
+    const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
+    if (emailGroup)    emailGroup.style.display    = 'block';
+    if (passwordGroup) passwordGroup.style.display = 'block';
 };
 
 // --- READ / REAL-TIME FETCH DATA ---
@@ -190,7 +196,6 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
     }
 });
 
-// --- EDIT FUNCTION ---
 window.editOwner = async (id) => {
     try {
         const doc = await db.collection("users").doc(id).get();
@@ -202,6 +207,12 @@ window.editOwner = async (id) => {
             document.getElementById('ownerEmail').value    = o.email    || '';
             document.getElementById('ownerPassword').value = o.password || '';
             document.getElementById('ownerPhone').value    = o.phone    || '';
+
+            // 🟢 Edit mode mein email aur password fields hide karo
+            const emailGroup    = document.getElementById('ownerEmail').closest('.input-group');
+            const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
+            if (emailGroup)    emailGroup.style.display    = 'none';
+            if (passwordGroup) passwordGroup.style.display = 'none';
 
             document.querySelector('.modal-header').innerText = "Update Owner Details";
             document.getElementById('ownerModal').style.display = 'block';

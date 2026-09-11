@@ -1,10 +1,12 @@
-// --- Admin Logout Function ---
+// --- Admin Logout Function --- 🟢 async confirm fix
 document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.querySelector('.logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
+        logoutBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            if (confirm("Are you sure you want to logout?")) {
+
+            const agreed = await confirm("Are you sure you want to logout?");
+            if (agreed) {
                 // Firebase Auth logout
                 if (typeof firebase !== 'undefined' && firebase.auth) {
                     firebase.auth().signOut().then(() => {

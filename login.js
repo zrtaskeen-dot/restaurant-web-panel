@@ -11,7 +11,7 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 
 // 🟢 Toast function
 function showToast(message, type = 'error') {
@@ -37,7 +37,6 @@ function showToast(message, type = 'error') {
         line-height: 1.5;
         animation: slideIn 0.3s ease;
     `;
-
     const style = document.createElement('style');
     style.textContent = `
         @keyframes slideIn {
@@ -46,10 +45,8 @@ function showToast(message, type = 'error') {
         }
     `;
     document.head.appendChild(style);
-
     toast.innerText = message;
     document.body.appendChild(toast);
-
     setTimeout(() => {
         toast.style.opacity = '0';
         toast.style.transition = 'opacity 0.4s';
@@ -57,11 +54,10 @@ function showToast(message, type = 'error') {
     }, 4000);
 }
 
-// ✅ Forgot Password Modal Controls
+// ✅ Forgot Password Modal
 window.openForgotModal = function() {
     document.getElementById('forgotEmail').value = '';
-    const modal = document.getElementById('forgotModal');
-    modal.style.display = 'flex';
+    document.getElementById('forgotModal').style.display = 'flex';
 };
 
 window.closeForgotModal = function() {
@@ -69,11 +65,15 @@ window.closeForgotModal = function() {
     document.getElementById('forgotEmail').value = '';
 };
 
-// ✅ Close modal on outside click
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('forgotModal');
     if (e.target === modal) closeForgotModal();
 });
+
+function resetLoginButton(button) {
+    button.innerText = "Login";
+    button.disabled  = false;
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     localStorage.clear();
@@ -87,7 +87,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ✅ Send Reset Link button
+    // ✅ Send Reset Link
     const sendResetBtn = document.getElementById('sendResetBtn');
     if (sendResetBtn) {
         sendResetBtn.addEventListener('click', async function() {
@@ -98,10 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✅ Check if this email exists in users collection as manager
             const managerCheck = await db.collection("users")
                 .where("email", "==", email)
-                .where("role", "==", "manager")
+                .where("role",  "==", "manager")
                 .get();
 
             if (managerCheck.empty) {
@@ -110,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             sendResetBtn.innerText = "Sending...";
-            sendResetBtn.disabled = true;
+            sendResetBtn.disabled  = true;
 
             try {
                 await auth.sendPasswordResetEmail(email);
@@ -118,13 +117,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 showToast("Password reset link sent! Please check your email inbox.", 'success');
             } catch (error) {
                 let msg = "Failed to send reset link. Please try again.";
-                if (error.code === 'auth/user-not-found')    msg = "No account found with this email address.";
-                if (error.code === 'auth/invalid-email')     msg = "Invalid email format. Please check and try again.";
+                if (error.code === 'auth/user-not-found')         msg = "No account found with this email address.";
+                if (error.code === 'auth/invalid-email')          msg = "Invalid email format.";
                 if (error.code === 'auth/network-request-failed') msg = "Network error. Please check your connection.";
                 showToast(msg);
             } finally {
                 sendResetBtn.innerText = "Send Reset Link";
-                sendResetBtn.disabled = false;
+                sendResetBtn.disabled  = false;
             }
         });
     }
@@ -133,9 +132,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const eyeBtn = document.getElementById('eyeBtn');
     if (eyeBtn) {
         eyeBtn.addEventListener('click', function() {
-            const input = document.getElementById('loginPassword');
+            const input    = document.getElementById('loginPassword');
             const isHidden = input.type === 'password';
-            input.type = isHidden ? 'text' : 'password';
+            input.type     = isHidden ? 'text' : 'password';
             document.getElementById('eyeIcon').innerHTML = isHidden
                 ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
@@ -159,6 +158,25 @@ document.addEventListener("DOMContentLoaded", () => {
         loginBtn.innerText = "Processing...";
         loginBtn.disabled  = true;
 
+        // ✅ Step 1: Pehle email Firestore mein check karo
+        try {
+            const emailCheck = await db.collection("users")
+                .where("email", "==", email)
+                .where("role",  "==", "manager")
+                .get();
+
+            if (emailCheck.empty) {
+                showToast("No manager account found with this email address.");
+                resetLoginButton(loginBtn);
+                return;
+            }
+        } catch (e) {
+            showToast("Network error. Please check your connection.");
+            resetLoginButton(loginBtn);
+            return;
+        }
+
+        // ✅ Step 2: Email sahi hai — Firebase Auth se login karo
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
@@ -172,48 +190,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const managerSnapshot = await db.collection("users")
                 .where("email", "==", user.email)
-                .where("role", "==", "manager")
+                .where("role",  "==", "manager")
                 .get();
 
             if (!managerSnapshot.empty) {
                 let dynamicBranchId   = "";
                 let dynamicBranchName = "";
                 let managerDocId      = "";
+                let managerName       = "";
 
-               let managerName = "";  // ✅ name store karne ke liye
+                managerSnapshot.forEach(doc => {
+                    managerDocId      = doc.id;
+                    dynamicBranchId   = doc.data().branchId;
+                    dynamicBranchName = doc.data().branch || doc.data().branchName || "Assigned Branch";
+                    managerName       = doc.data().name   || 'Manager';
+                });
 
-managerSnapshot.forEach(doc => {
-    managerDocId      = doc.id;
-    dynamicBranchId   = doc.data().branchId;
-    dynamicBranchName = doc.data().branch || doc.data().branchName || "Assigned Branch";
-    managerName       = doc.data().name || 'Manager';  // ✅ forEach ke andar save karo
-});
+                if (dynamicBranchId) {
+                    await db.collection("users").doc(managerDocId).update({
+                        emailVerified: true
+                    });
 
-if (dynamicBranchId) {
-    await db.collection("users").doc(managerDocId).update({
-        emailVerified: true
-    });
+                    localStorage.setItem("active_branch_id",  dynamicBranchId);
+                    localStorage.setItem("managerBranchId",   dynamicBranchId);
+                    localStorage.setItem("managerBranchName", dynamicBranchName);
+                    localStorage.setItem("manager_name",      managerName);
+                    localStorage.setItem("user_role",         "Manager");
 
-    localStorage.setItem("active_branch_id",  dynamicBranchId);
-localStorage.setItem("managerBranchId",   dynamicBranchId);
-localStorage.setItem("managerBranchName", dynamicBranchName);
-localStorage.setItem("manager_name",      managerName);
-localStorage.setItem("user_role",         "Manager");
+                    // ✅ Login log
+                    const loginLog = {
+                        action:       "Manager Login",
+                        performed_by: managerName,
+                        role:         "Manager",
+                        branch:       dynamicBranchName,
+                        details:      `Manager "${managerName}" logged in to branch "${dynamicBranchName}"`,
+                        created_at:   firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    db.collection("system_log").add(loginLog).catch(err => console.error(err));
+                    db.collection("activity_logs").add(loginLog).catch(err => console.error(err));
 
-// ✅ Login log karo
-const loginLog = {
-    action:       "Manager Login",
-    performed_by: managerName,
-    role:         "Manager",
-    branch:       dynamicBranchName,
-    details:      `Manager "${managerName}" logged in to branch "${dynamicBranchName}"`,
-    created_at:   firebase.firestore.FieldValue.serverTimestamp()
-};
-db.collection("system_log").add(loginLog).catch(err => console.error(err));
-db.collection("activity_logs").add(loginLog).catch(err => console.error(err));
+                    showToast("Login Successful!", 'success');
+                    setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
 
-showToast("Login Successful!", 'success');
-setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
                 } else {
                     await auth.signOut();
                     showToast("No branch linked to this account. Please contact admin.");
@@ -229,21 +247,20 @@ setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
         } catch (error) {
             console.error("Login Error:", error);
 
-            let msg = "Login failed. Please try again.";
-            if (error.code === 'auth/wrong-password')         msg = "Incorrect password. Please try again.";
-            if (error.code === 'auth/user-not-found')         msg = "No account found with this email.";
-            if (error.code === 'auth/invalid-email')          msg = "Invalid email format.";
-            if (error.code === 'auth/too-many-requests')      msg = "Too many attempts. Please wait and try again.";
-            if (error.code === 'auth/network-request-failed') msg = "Network error. Please check your connection.";
-            if (error.code === 'auth/invalid-credential')     msg = "Invalid email or password.";
+            let msg = "Incorrect password. Please try again.";
+
+            if (error.code === 'auth/invalid-email') {
+                msg = "Invalid email format.";
+            } else if (error.code === 'auth/too-many-requests') {
+                msg = "Too many attempts. Please wait and try again.";
+            } else if (error.code === 'auth/network-request-failed') {
+                msg = "Network error. Please check your connection.";
+            } else if (error.code === 'auth/user-disabled') {
+                msg = "This account has been disabled. Please contact admin.";
+            }
 
             showToast(msg);
             resetLoginButton(loginBtn);
         }
     });
 });
-
-function resetLoginButton(button) {
-    button.innerText = "Login";
-    button.disabled  = false;
-}

@@ -117,7 +117,48 @@ function updateOrdersBadge() {
             });
         });
 }
+// ✅ Sidebar Reviews Badge — Realtime Updates
+function updateReviewsBadge() {
+    if (!BRANCH_DOC_ID) return;
 
+    // Step 1: Pehle Branch ke valid order IDs listen karein
+    db.collection("orders")
+        .where("branchId", "==", BRANCH_DOC_ID)
+        .onSnapshot(async ordersSnap => {
+            const branchOrderIds = new Set();
+            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+
+            if (branchOrderIds.size === 0) return;
+
+            // Step 2: Unread reviews listen karein
+            db.collection("reviews")
+                .where("isRead", "==", false)
+                .onSnapshot(reviewsSnap => {
+                    let unreadCount = 0;
+                    reviewsSnap.forEach(doc => {
+                        if (branchOrderIds.has(doc.data().orderId)) {
+                            unreadCount++;
+                        }
+                    });
+
+                    // Sidebar navigation links check karke badge append karein
+                    const links = document.querySelectorAll('.sidebar nav a');
+                    links.forEach(link => {
+                        if (link.textContent.trim().toLowerCase().includes('review')) {
+                            let badge = document.getElementById('reviews-badge');
+                            if (!badge) {
+                                badge = document.createElement('span');
+                                badge.id = 'reviews-badge';
+                                badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
+                                link.appendChild(badge);
+                            }
+                            badge.innerText = unreadCount;
+                            badge.style.display = unreadCount > 0 ? 'inline' : 'none';
+                        }
+                    });
+                });
+        });
+}
 // ✅ Mark reviews as read
 async function markReviewsAsRead(reviewIds) {
     if (reviewIds.length === 0) return;
@@ -193,13 +234,15 @@ await markReviewsAsRead(unreadIds); // ✅ sab read mark karo
     }
 }
 
-// --- LOGOUT ---
-window.confirmLogout = function() {
-    if (confirm("Are you sure you want to logout?")) {
+// --- LOGOUT --- 🟢 async confirm fix
+window.confirmLogout = async function() {
+    const agreed = await confirm("Are you sure you want to logout?");
+    if (agreed) {
         localStorage.clear();
-        window.location.href = "manager-login.html";
+        window.location.href = "login.html";
     }
 };
 
 loadReviews();
 updateOrdersBadge();
+updateReviewsBadge();
