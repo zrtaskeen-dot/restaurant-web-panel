@@ -1,5 +1,4 @@
 // --- Firebase Configuration ---
-
 const firebaseConfig = {
 
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
@@ -364,53 +363,28 @@ document.getElementById('managerForm').addEventListener('submit', async function
             alert("Manager Records Updated Successfully!");
 
             logActivity("Manager Updated", `Updated details for manager "${mName}" (branch: ${mBranch})`, adminPerformer);
-
             closeManagerModal();
-
-
-
         } else {
 
-            // --- NEW ENTRY MODE ---
+           // ✅ Case-insensitive branch check
+const branchSnap = await db.collection("users")
+    .where("role", "==", "manager")
+    .get();
 
+const branchDuplicate = branchSnap.docs.some(doc => 
+    doc.data().branch?.toLowerCase().trim() === mBranch.toLowerCase().trim()
+);
 
-
-            // Branch duplicate check
-
-            const branchCheck = await db.collection("users")
-
-                .where("role", "==", "manager")
-
-                .where("branch", "==", mBranch)
-
-                .get();
-
-
-
-            if (!branchCheck.empty) {
-
-                alert(`Branch "${mBranch}" is already assigned to another manager.\n\nEach branch can only have one manager.`);
-
-                if(regBtn) { regBtn.innerText = "Register Manager"; regBtn.disabled = false; }
-
-                return;
-
-            }
-
-
-
+if (branchDuplicate) {
+    alert(`Branch "${mBranch}" is already assigned to another manager.`);
+    if(regBtn) { regBtn.innerText = "Register Manager"; regBtn.disabled = false; }
+    return;
+}
             // Firebase Auth account banao
-
             const userCredential = await auth.createUserWithEmailAndPassword(mEmail, mPassword);
-
             const newUser = userCredential.user;
-
             const userUid = newUser.uid;
-
-
-
             // Verification email bhejo
-
             await newUser.sendEmailVerification();
 
 

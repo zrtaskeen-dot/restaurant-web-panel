@@ -12,16 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     firebase.auth().signOut().then(() => {
                         localStorage.clear();
                         sessionStorage.clear();
-                        window.location.href = "admin login.html";
+                        window.location.href = "adminlogin.html";
                     }).catch(() => {
                         localStorage.clear();
                         sessionStorage.clear();
-                        window.location.href = "admin login.html";
+                        window.location.href = "adminlogin.html";
                     });
                 } else {
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location.href = "admin login.html";
+                    window.location.href = "adminlogin.html";
                 }
             }
         });

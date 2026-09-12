@@ -122,30 +122,25 @@ window.savePaymentNumbers = async function() {
     const epVal = document.getElementById("modalEasyPaisa")?.value.trim() || "";
     const jcVal = document.getElementById("modalJazzCash")?.value.trim() || "";
     const btn   = document.getElementById("btnSavePayment");
-
     const phoneRegex = /^\d{11}$/;
-
     if (epVal && !phoneRegex.test(epVal)) {
         alert("Invalid Number");
         return;
     }
-
     if (jcVal && !phoneRegex.test(jcVal)) {
         alert("Invalid Number");
         return;
     }
-
     if (btn) {
         btn.innerText = "Saving...";
         btn.disabled  = true;
     }
-
     try {
         await db.collection("branches").doc(BRANCH_DOC_ID).set({
             easyPaisaNumber: epVal,
             jazzCashNumber:  jcVal
         }, { merge: true });
-
+        
         closePaymentModal();
         alert("Payment account numbers updated successfully!");
     } catch (e) {

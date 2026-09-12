@@ -12,6 +12,9 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 let previousOrderCount = null;
+let isFirstLogLoad = true; // pehli load par notification skip karne ke liye
+
+const LAST_SEEN_KEY = 'admin_notif_last_seen'; // localStorage key
 
 // ── DATE BADGE ──
 function setDateBadge() {
@@ -62,10 +65,135 @@ function animateCount(elementId, target) {
     if (el) el.innerText = target;
 }
 
+// ══════════════════════════════════════════
+// 🔔 NOTIFICATION BELL SYSTEM
+// ══════════════════════════════════════════
+
+function getLastSeenTime() {
+    const val = localStorage.getItem(LAST_SEEN_KEY);
+    return val ? parseInt(val, 10) : 0;
+}
+
+function setLastSeenTime(ts) {
+    localStorage.setItem(LAST_SEEN_KEY, String(ts));
+}
+
+// Renders the dropdown list + badge count from the given logs array
+// logs = [{ id, action, details, role, branch, createdAtMs }]
+function renderNotifDropdown(logs) {
+    const listEl  = document.getElementById('notifDropdownList');
+    const badgeEl = document.getElementById('notifBadge');
+    if (!listEl || !badgeEl) return;
+
+    const lastSeen = getLastSeenTime();
+    // ✅ Sirf unread/new entries dikhani hain
+    const unreadLogs = logs.filter(log => log.createdAtMs > lastSeen);
+
+    if (!unreadLogs.length) {
+        listEl.innerHTML = `<p style="padding:16px; text-align:center; color:#999; font-size:13px;">No new notifications.</p>`;
+    } else {
+        listEl.innerHTML = '';
+        unreadLogs.forEach(log => {
+            const action = (log.action || '').toLowerCase();
+            let dotColor = '#888';
+            if (action.includes('delete') || action.includes('remov')) dotColor = '#b52a00';
+            else if (action.includes('add') || action.includes('creat'))  dotColor = '#2a6b3f';
+            else if (action.includes('update') || action.includes('edit')) dotColor = '#555';
+            else if (action.includes('order'))  dotColor = '#7a1c00';
+            else if (action.includes('assign')) dotColor = '#444';
+            else if (action.includes('login'))  dotColor = '#333';
+
+            const timeStr = log.createdAtMs
+                ? new Date(log.createdAtMs).toLocaleString('en-US', {
+                    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+                  })
+                : '—';
+
+            const metaLine = `${log.role || ''}${log.branch ? ` | ${log.branch}` : ''}`;
+
+            listEl.innerHTML += `
+                <div class="notif-item unread">
+                    <div class="notif-dot" style="background:${dotColor};"></div>
+                    <div class="notif-item-body">
+                        <div class="notif-item-action">${log.action || 'Action'}</div>
+                        <div class="notif-item-details">${log.details || ''}${metaLine ? ' — ' + metaLine : ''}</div>
+                        <div class="notif-item-time">${timeStr}</div>
+                    </div>
+                </div>`;
+        });
+    }
+
+    if (unreadLogs.length > 0) {
+        badgeEl.style.display = 'flex';
+        badgeEl.innerText = unreadLogs.length > 99 ? '99+' : unreadLogs.length;
+    } else {
+        badgeEl.style.display = 'none';
+    }
+}
+
+function setupNotifBell() {
+    const bell     = document.getElementById('notifBell');
+    const dropdown = document.getElementById('notifDropdown');
+    if (!bell || !dropdown) return;
+
+    function closeDropdownAndMarkSeen() {
+        if (!dropdown.classList.contains('active')) return;
+        dropdown.classList.remove('active');
+        // Dropdown band hote hi abhi tak dikhayi gayi entries ko "seen" mark kar do
+        setLastSeenTime(Date.now());
+        if (window.__latestNotifLogs) {
+            renderNotifDropdown(window.__latestNotifLogs); // list ab khali/naye items dikhayegi
+        }
+    }
+
+    bell.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (dropdown.classList.contains('active')) {
+            closeDropdownAndMarkSeen();
+        } else {
+            dropdown.classList.add('active');
+            // Open karte waqt current unread items dikhao (mark abhi nahi karna)
+            if (window.__latestNotifLogs) {
+                renderNotifDropdown(window.__latestNotifLogs);
+            }
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!dropdown.contains(e.target) && e.target !== bell) {
+            closeDropdownAndMarkSeen();
+        }
+    });
+}
+
+// ── BROWSER NOTIFICATION (optional, tab band ho tab bhi dikhe) ──
+function requestNotificationPermission() {
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+}
+
+function showBrowserNotification(log) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(log.action || "New Activity", {
+            body: log.details || "",
+            icon: "/favicon.ico" // apna icon path daal dein
+        });
+    }
+}
+
+// ── NOTIFICATION SOUND (optional) ──
+function playNotificationSound() {
+    const audio = new Audio('assets/notification.mp3'); // apna sound file path daal dein
+    audio.play().catch(() => {}); // agar browser block kare to silently ignore
+}
+
 // ✅ System Log — from "system_log" collection
 function loadActivityLog() {
     const container = document.getElementById('activityLog');
     if (!container) return;
+
+    requestNotificationPermission();
 
     db.collection("system_log")           // ✅ collection rename
         .orderBy("created_at", "desc")
@@ -73,10 +201,26 @@ function loadActivityLog() {
         .onSnapshot(snap => {
             if (snap.empty) {
                 container.innerHTML = `<p style="padding:20px; text-align:center; color:#999;">No activity recorded yet.</p>`;
+                renderNotifDropdown([]);
+                isFirstLogLoad = false;
                 return;
             }
 
+            // ✅ Sirf naye added docs par browser notification + sound (pehli load ko skip)
+            if (!isFirstLogLoad) {
+                snap.docChanges().forEach(change => {
+                    if (change.type === "added") {
+                        const log = change.doc.data();
+                        showBrowserNotification(log);
+                        playNotificationSound();
+                    }
+                });
+            }
+            isFirstLogLoad = false;
+
             container.innerHTML = '';
+
+            const notifLogs = []; // for bell dropdown
 
             snap.forEach(doc => {
                 const log    = doc.data();
@@ -93,8 +237,10 @@ function loadActivityLog() {
 
                 // Time format
                 let timeStr = '—';
+                let createdAtMs = 0;
                 if (log.created_at) {
                     const date = log.created_at.toDate ? log.created_at.toDate() : new Date(log.created_at);
+                    createdAtMs = date.getTime();
                     timeStr = date.toLocaleString('en-US', {
                         day:    '2-digit',
                         month:  'short',
@@ -120,7 +266,20 @@ function loadActivityLog() {
                             </div>
                         </div>
                     </div>`;
+
+                notifLogs.push({
+                    id: doc.id,
+                    action: log.action,
+                    details: log.details,
+                    role: log.role,
+                    branch: log.branch,
+                    createdAtMs
+                });
             });
+
+            // update the bell dropdown with the same data
+            window.__latestNotifLogs = notifLogs;
+            renderNotifDropdown(notifLogs);
         }, error => {
             console.error("System log error:", error);
             container.innerHTML = `<p style="padding:20px; text-align:center; color:red;">Error loading system log.</p>`;
@@ -204,6 +363,7 @@ document.addEventListener('click', function(e) {
 document.addEventListener("DOMContentLoaded", () => {
     setDateBadge();
     startLiveClock();
+    setupNotifBell();
     syncStats();
     loadActivityLog();
 });
