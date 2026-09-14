@@ -71,7 +71,15 @@ function animateCount(elementId, target) {
 
 function getLastSeenTime() {
     const val = localStorage.getItem(LAST_SEEN_KEY);
-    return val ? parseInt(val, 10) : 0;
+    if (val === null) {
+        // ✅ Pehli dafa (kabhi "seen" mark nahi hua) — purana poora system_log history
+        // unread/naya na dikhe, isliye "abhi" ko hi last-seen maan ke save kar do.
+        // Ab sirf isse aage jo naye logs aayenge wahi notification/badge mein count/show honge.
+        const now = Date.now();
+        localStorage.setItem(LAST_SEEN_KEY, String(now));
+        return now;
+    }
+    return parseInt(val, 10);
 }
 
 function setLastSeenTime(ts) {
@@ -134,34 +142,28 @@ function renderNotifDropdown(logs) {
 function setupNotifBell() {
     const bell     = document.getElementById('notifBell');
     const dropdown = document.getElementById('notifDropdown');
+    const badgeEl  = document.getElementById('notifBadge');
     if (!bell || !dropdown) return;
-
-    function closeDropdownAndMarkSeen() {
-        if (!dropdown.classList.contains('active')) return;
-        dropdown.classList.remove('active');
-        // Dropdown band hote hi abhi tak dikhayi gayi entries ko "seen" mark kar do
-        setLastSeenTime(Date.now());
-        if (window.__latestNotifLogs) {
-            renderNotifDropdown(window.__latestNotifLogs); // list ab khali/naye items dikhayegi
-        }
-    }
 
     bell.addEventListener('click', (e) => {
         e.stopPropagation();
         if (dropdown.classList.contains('active')) {
-            closeDropdownAndMarkSeen();
+            dropdown.classList.remove('active');
         } else {
             dropdown.classList.add('active');
-            // Open karte waqt current unread items dikhao (mark abhi nahi karna)
+            // Open hotay waqt abhi tak ke unread items list mein dikhao
             if (window.__latestNotifLogs) {
                 renderNotifDropdown(window.__latestNotifLogs);
             }
+            // ✅ Open karte hi turant "seen" mark kar do — badge turant reset/hide ho jayega
+            setLastSeenTime(Date.now());
+            if (badgeEl) badgeEl.style.display = 'none';
         }
     });
 
     document.addEventListener('click', (e) => {
-        if (!dropdown.contains(e.target) && e.target !== bell) {
-            closeDropdownAndMarkSeen();
+        if (!dropdown.contains(e.target) && e.target !== bell && dropdown.classList.contains('active')) {
+            dropdown.classList.remove('active');
         }
     });
 }

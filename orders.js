@@ -169,9 +169,10 @@ function renderOrders() {
             }
         }
 
-        // ✅ Cancel button — sirf online payment orders par jo cancel/delivered nahi
+        // ✅ Cancel button — sirf online payment orders par, aur sirf jab tak status "Pending" hai
+        // Rider assign hote hi (Assigned/Accepted/Picked up/On the way/Delivered) button hide ho jayega
         let cancelBtnHtml = '';
-        if (isPaidOnline && ns !== 'cancelled' && ns !== 'canceled' && ns !== 'delivered' && ns !== 'completed') {
+        if (isPaidOnline && ns === 'pending') {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="background-color:#b52a00;color:white;white-space:nowrap;">Cancel Order</button>`;
         }
 
@@ -599,4 +600,4 @@ function updateReviewsBadge() {
         });
 }
 loadOrders();
-updateReviewsBadge();   
+updateReviewsBadge();
