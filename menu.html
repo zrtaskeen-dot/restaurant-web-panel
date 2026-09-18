@@ -43,7 +43,7 @@
             </div>
 
             <div id="standardMenuTableSection">
-                <div class="table-container">
+                <div class="table-container" style="border: 1.5px solid #bbb; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.08);">
                     <div class="table-header">
                         <span>Image</span>
                         <span>Name</span>
@@ -59,18 +59,18 @@
                 <h2 id="packagePageTitle" class="package-title">Create New Package</h2>
                 
                 <div class="deal-layout" style="display: flex; gap: 25px; flex-wrap: wrap; align-items: flex-start;">
-                    <form id="menuPackageForm" onsubmit="savePackage(event)" style="flex: 1; min-width: 300px; max-width: 420px; background: #fff8ee; padding: 20px; border-radius: 12px; border: 1px solid #f3e5d3; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+                    <form id="menuPackageForm" onsubmit="savePackage(event)" style="flex: 1; min-width: 300px; max-width: 420px; background: #ffffff; padding: 20px; border-radius: 12px; border: 1.5px solid #bbb; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
                         <div style="margin-bottom: 12px;">
                             <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Package Name:</label>
-                            <input type="text" id="menuPackageName" placeholder="e.g., Midnight Special Deal" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
+                            <input type="text" id="menuPackageName" placeholder="e.g., Midnight Special Deal" style="width:100%; padding:10px; border:1.5px solid #bbb; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
                         </div>
                         <div style="margin-bottom: 12px;">
                             <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Package Price (Rs):</label>
-                            <input type="number" id="menuPackagePrice" placeholder="e.g., 1499" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
+                            <input type="number" id="menuPackagePrice" placeholder="e.g., 1499" style="width:100%; padding:10px; border:1.5px solid #bbb; border-radius:8px; background:#fff; font-size:13px; box-sizing: border-box;" required>
                         </div>
                         <div style="margin-bottom: 12px;">
                             <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Items Detail:</label>
-                            <textarea id="menuPackageDesc" rows="4" placeholder="Ticked items will appear here automatically. You can also edit this text manually!" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; font-size:13px; line-height:1.4; font-family:inherit; resize:none; box-sizing: border-box;" required></textarea>
+                            <textarea id="menuPackageDesc" rows="4" placeholder="Ticked items will appear here automatically. You can also edit this text manually!" style="width:100%; padding:10px; border:1.5px solid #bbb; border-radius:8px; background:#fff; font-size:13px; line-height:1.4; font-family:inherit; resize:none; box-sizing: border-box;" required></textarea>
                         </div>
 
                         <div style="margin-bottom: 12px;">
@@ -87,7 +87,7 @@
                         </div>
                     </form>
 
-                    <div class="menu-selection-box" style="flex: 1.3; min-width: 350px; background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+                    <div class="menu-selection-box" style="flex: 1.3; min-width: 350px; background: #fff; padding: 20px; border-radius: 12px; border: 1.5px solid #bbb; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
                         <h3 style="color:#b52a00; margin-bottom:12px; font-size:16px; font-weight:bold;">Select Items & Sizes for this Package</h3>
                         
                         <div class="mini-tabs" style="display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;">
@@ -102,7 +102,7 @@
 
                         <p style="font-size:12px; color:#666; margin-bottom:10px; font-weight:500;">Tick items to add to the package description:</p>
                         
-                        <div id="package-items-selection-grid" style="max-height: 300px; overflow-y: auto; border: 1px solid #f1f1f1; padding: 10px; border-radius: 8px; background: #fafafa;">
+                        <div id="package-items-selection-grid" style="max-height: 300px; overflow-y: auto; border: 1.5px solid #bbb; padding: 10px; border-radius: 8px; background: #fafafa;">
                             <p style="text-align:center; color:#999; font-size:13px; padding:20px;">Select a category above to view items...</p>
                         </div>
                     </div>
@@ -110,7 +110,7 @@
 
                 <div style="margin-top: 40px;">
                     <h3 id="savedPackagesHeading" style="color: #b52a00; font-size: 18px; font-weight: bold; margin-bottom: 15px;">Active Created Packages</h3>
-                    <div class="table-container">
+                    <div class="table-container" style="border: 1.5px solid #bbb; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.08);">
                         <div class="table-header" style="display: grid; grid-template-columns: 2fr 3fr 1.5fr 1.5fr; align-items: center;">
                             <span>Package Name</span>
                             <span>Included Items Summary</span>
@@ -127,12 +127,14 @@
                     <h2 style="font-size: 20px;">Toppings</h2>
                     <button class="add-new-btn" onclick="openToppingModal()" style="margin-bottom: 0;">Add Toppings</button>
                 </div>
-                <div class="table-header" style="grid-template-columns: 1fr 1fr 100px;">
-                    <span>Topping Name</span>
-                    <span>Price</span>
-                    <span>Actions</span>
+                <div class="table-container" style="border: 1.5px solid #bbb; border-radius: 8px; overflow: hidden; box-shadow: 0 3px 8px rgba(0,0,0,0.08);">
+                    <div class="table-header" style="grid-template-columns: 1fr 1fr 100px;">
+                        <span>Topping Name</span>
+                        <span>Price</span>
+                        <span>Actions</span>
+                    </div>
+                    <div id="toppingsTable"></div>
                 </div>
-                <div id="toppingsTable"></div>
             </div>
 
             <div id="modalOverlay" class="modal-overlay" onclick="closeModal(); closeToppingModal();"></div>
@@ -228,6 +230,5 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="alert.js"></script>
 <script src="manager logout.js"></script>
-</body>
 </body>
 </html>

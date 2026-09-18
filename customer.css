@@ -2,7 +2,7 @@
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
-    background-color: #fdf6e3; 
+    background-color: white; 
     color: black;
 }
 
@@ -90,8 +90,9 @@ body {
 /* --- Table Container --- */
 .customer-table-container {
     background: white;
+    border: 1px solid #e0e0e0;              /* ✅ naya border add kiya */
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.10); /* ✅ shadow thora strong kiya */
     overflow: hidden;
 }
 
@@ -121,7 +122,7 @@ body {
 }
 
 .customer-row:hover {
-    background: #fffaf5;
+    background: #f0edec;
 }
 
 .customer-row:last-child {

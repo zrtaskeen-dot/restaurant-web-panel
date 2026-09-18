@@ -158,25 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loginBtn.innerText = "Processing...";
         loginBtn.disabled  = true;
 
-        // ✅ Step 1: Pehle email Firestore mein check karo
-        try {
-            const emailCheck = await db.collection("users")
-                .where("email", "==", email)
-                .where("role",  "==", "manager")
-                .get();
-
-            if (emailCheck.empty) {
-                showToast("No manager account found with this email address.");
-                resetLoginButton(loginBtn);
-                return;
-            }
-        } catch (e) {
-            showToast("Network error. Please check your connection.");
-            resetLoginButton(loginBtn);
-            return;
-        }
-
-        // ✅ Step 2: Email sahi hai — Firebase Auth se login karo
+        // ✅ Step 1: Pehle Firebase Auth se login try karo (email/password
+        // sahi hain ya nahi ye pehle pata chalna chahiye)
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
@@ -188,23 +171,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // ✅ Step 2: Ab Firestore mein manager record check karo.
+            // Agar yahan na mile, matlab email/password sahi tha lekin
+            // admin ne account delete kar diya hai.
             const managerSnapshot = await db.collection("users")
                 .where("email", "==", user.email)
                 .where("role",  "==", "manager")
                 .get();
 
-            if (!managerSnapshot.empty) {
+            if (managerSnapshot.empty) {
+                await auth.signOut();
+                showToast("Your account has been removed by admin. Please contact support.");
+                resetLoginButton(loginBtn);
+                return;
+            }
+
+            {
                 let dynamicBranchId   = "";
                 let dynamicBranchName = "";
                 let managerDocId      = "";
                 let managerName       = "";
+                let managerStatus     = "active"; // 👈 ADDED
 
                 managerSnapshot.forEach(doc => {
                     managerDocId      = doc.id;
                     dynamicBranchId   = doc.data().branchId;
                     dynamicBranchName = doc.data().branch || doc.data().branchName || "Assigned Branch";
                     managerName       = doc.data().name   || 'Manager';
+                    managerStatus     = doc.data().status || 'active'; // 👈 ADDED
                 });
+
+                // ✅ ADDED: block-check — admin ne is manager ko block kiya ho
+                // to login yahin rok dein.
+                if (managerStatus === 'blocked') {
+                    await auth.signOut();
+                    showToast("Your account has been blocked by admin. Please contact support.");
+                    resetLoginButton(loginBtn);
+                    return;
+                }
 
                 if (dynamicBranchId) {
                     await db.collection("users").doc(managerDocId).update({
@@ -238,10 +242,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     resetLoginButton(loginBtn);
                 }
 
-            } else {
-                await auth.signOut();
-                showToast("Manager account not found. Please check your credentials.");
-                resetLoginButton(loginBtn);
             }
 
         } catch (error) {
@@ -249,7 +249,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let msg = "Incorrect password. Please try again.";
 
-            if (error.code === 'auth/invalid-email') {
+            if (error.code === 'auth/user-not-found') {
+                msg = "No account found with this email address.";
+            } else if (error.code === 'auth/invalid-credential') {
+                msg = "Invalid email or password.";
+            } else if (error.code === 'auth/invalid-email') {
                 msg = "Invalid email format.";
             } else if (error.code === 'auth/too-many-requests') {
                 msg = "Too many attempts. Please wait and try again.";

@@ -84,7 +84,7 @@ body {
 /* ── RIGHT PANEL ── */
 .right-panel {
     flex: 1;
-    background:#fcf8dd;
+    background:white;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -111,7 +111,7 @@ body {
 
 .form-header p {
     font-size: 13px;
-    color: #999;
+    color: black;
 }
 
 /* ── FIELDS ── */
@@ -123,7 +123,7 @@ body {
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: #444;
+    color: black;
     margin-bottom: 8px;
     letter-spacing: 0.4px;
 }

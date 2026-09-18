@@ -2,7 +2,7 @@
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
-    background-color: #fdf6e3; 
+    background-color: white; 
     color: black;
 }
 
@@ -308,4 +308,32 @@ body {
     background-color: #b52a00; color: white;
     border: none; padding: 8px 15px; border-radius: 8px;
     font-size: 12px; font-weight: bold; cursor: pointer;
+}
+
+/* --- Generic Panel/Box/Table contrast (background white rehte hue) --- */
+.panel,
+.stat-card,
+.revenue-section,
+.branch-info-header-card,
+.order-grid,
+table,
+.table-container {
+    background: #ffffff;
+    border: 1.5px solid #bbb;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* Table/list ke andar har row ke darmiyan separation line */
+.order-grid,
+table tr,
+.row {
+    border-bottom: 1.5px solid #bbb;
+}
+
+/* Panel/section headers ko thora highlight kar dein */
+.panel-header,
+.revenue-header {
+    border-bottom: 1.5px solid #bbb;
+    padding-bottom: 12px;
+    margin-bottom: 15px;
 }

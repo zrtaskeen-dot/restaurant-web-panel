@@ -2,7 +2,7 @@
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
-    background-color: #fdf6e3; 
+    background-color: white; 
     color: black;
 }
 
@@ -91,7 +91,8 @@ body {
 .table-container {
     background: white;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    border: 1.5px solid #bbb;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     overflow: hidden;
 }
 
@@ -115,7 +116,7 @@ body {
 /* --- Rows --- */
 .row { 
     background: white; 
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1.5px solid #bbb;
     font-size: 13px;
     transition: background 0.15s;
 }

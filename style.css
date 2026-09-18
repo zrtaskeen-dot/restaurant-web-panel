@@ -2,7 +2,7 @@
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
-    background-color: #fdf6e3; 
+    background-color: white; 
     color: black;
 }
 
@@ -137,6 +137,7 @@ body {
     color: white; 
     border-radius: 8px 8px 0 0; 
     font-weight: bold; 
+    border: 1px solid #b52a00;
 }
 .table-header span:nth-child(4) {
     
@@ -145,8 +146,15 @@ body {
 
 .row { 
     background: white; 
-    margin-top: 2px; 
-    border-bottom: 1px solid #eee;
+    margin-top: 0; 
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+
+.row:last-child {
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
 }
 
 .row img { 
@@ -212,7 +220,7 @@ body {
     position: fixed; 
     top: 50%; left: 50%; 
     transform: translate(-50%, -50%); 
-    background-color: #fdf6e3; /* Light Yellowish background from main site */
+    background-color: #ffffff;
     padding: 25px; 
     border-radius: 35px; /* Extra rounded corners like image_7 */
     width: 360px; 
@@ -394,13 +402,13 @@ body {
     padding: 6px 14px; 
     background: #fdfdfd; 
     border: 1px solid #e2e8f0; 
-    color: #4a5568; 
+    color: black; 
     border-radius: 20px; 
     font-weight: 600; 
     cursor: pointer; 
     font-size: 11px; 
     transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 .mini-tab:hover {
     background: #f7fafc;
@@ -413,27 +421,27 @@ body {
     box-shadow: 0 2px 4px rgba(181, 42, 0, 0.2);
 }
 
-/* 🟢 Selection Grid Cards */
+/* 🟢 Selection Grid Cards (Tick Items box andar wale individual item cards) */
 .selection-item-card {
-    background: #fffdf9; 
+    background: white; 
     padding: 12px; 
     margin-bottom: 10px; 
     border-radius: 8px; 
+    border: 1.5px solid #ccc;
     border-left: 4px solid #b52a00; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
     transition: transform 0.15s ease;
 }
 .selection-item-card:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
 }
-
 /* 🟢 Saved Packages Table Rows */
 .saved-pkg-row {
     display: grid; 
     grid-template-columns: 2fr 3fr 1.5fr 1fr; 
     padding: 14px 12px; 
-    border-bottom: 1px solid #f1f5f9; 
+    border-bottom: 1.5px solid #bbb; 
     align-items: center; 
     font-size: 13px; 
     background: #ffffff;
