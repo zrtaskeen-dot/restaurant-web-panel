@@ -133,7 +133,7 @@ body {
 
 .form-header p {
     font-size: 13px;
-    color: #999;
+    color: #1a1a1a;
 }
 
 /* ── FIELDS ── */
@@ -145,7 +145,7 @@ body {
     display: block;
     font-size: 12px;
     font-weight: 600;
-    color: #444;
+    color: black;
     margin-bottom: 8px;
     letter-spacing: 0.4px;
 }
@@ -153,11 +153,11 @@ body {
 .field input {
     width: 100%;
     padding: 12px 14px;
-    border: 1.5px solid #e8e8e8;
+    border: 1.5px solid black;
     border-radius: 10px;
     font-size: 14px;
     color: #222;
-    background: #fafafa;
+    background: white;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }

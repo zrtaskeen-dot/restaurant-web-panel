@@ -28,6 +28,12 @@ window.setFilter = function(filter) {
     renderOrders();
 };
 
+// ✅ Helper: Order ka status — teeno possible field names check karta hai
+// (order_status, orderStatus, status). Kuch bhi na mile to 'Pending'.
+function getOrderStatus(data) {
+    return data.order_status || data.orderStatus || data.status || 'Pending';
+}
+
 // ✅ Helper: Parse delivery_time string to JS Date
 function parseDeliveryTime(timeStr) {
     if (!timeStr) return null;
@@ -61,6 +67,22 @@ function isOnlinePayment(paymentMethod) {
     if (!paymentMethod) return false;
     const method = paymentMethod.toString().toLowerCase();
     return method !== 'cod' && method !== 'cash on delivery' && method !== 'cash';
+}
+
+// ✅ Helper: Order placed date/time ko readable format mein convert karo
+function formatOrderPlacedDate(createdAt) {
+    if (!createdAt) return null;
+    const date = createdAt.toMillis
+        ? new Date(createdAt.toMillis())
+        : new Date(createdAt);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleString('en-US', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 
 // ✅ Sidebar badge update
@@ -112,6 +134,9 @@ function startLiveTimers() {
     }, 1000);
 }
 
+// ✅ Chhota button style — sab actions ek line mein fit karne ke liye
+const SMALL_BTN_STYLE = 'padding:4px 9px;font-size:11px;white-space:nowrap;';
+
 // ✅ Render orders
 function renderOrders() {
     const tableBody = document.getElementById('ordersTableBody');
@@ -143,37 +168,37 @@ function renderOrders() {
 
     filtered.forEach(({ id, data }) => {
         const customerName  = data.customer_name  || data.customerName  || 'Guest';
-        const status        = data.order_status   || data.status        || 'Pending';
+        const status        = getOrderStatus(data);
         const paymentMethod = data.payment_method || data.paymentMethod || 'COD';
         const isScheduled   = checkIsScheduled(data);
         const isPaidOnline  = isOnlinePayment(paymentMethod);
         const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
+        const placedDateStr = formatOrderPlacedDate(data.createdAt);
 
         // Status colors
         let statusColor = '#f5f1f0', statusBg = '#a70000';
         const ns = status.toString().trim().toLowerCase();
-        if (ns === 'assigned')                       { statusColor = '#1b1614'; statusBg = '#f59450'; }
-        if (ns === 'accepted')                       { statusColor = '#7a1c00'; statusBg = '#ffbfa0'; }
-        if (ns === 'picked up')                      { statusColor = '#7a1c00'; statusBg = '#f9c784'; }
-        if (ns === 'on the way')                     { statusColor = '#b52a00'; statusBg = '#f9a03f55'; }
-        if (ns === 'delivered')                      { statusColor = '#5a1500'; statusBg = '#f9d0b0'; }
-        if (ns === 'cancelled' || ns === 'canceled') { statusColor = '#dc3545'; statusBg = '#f8d7da'; }
+        if (ns === 'assigned')                       { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'accepted')                       { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'picked up')                      { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'on the way')                     { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'delivered')                      { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'cancelled' || ns === 'canceled') { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
 
         // Assign button
         let assignBtnHtml = '';
         if (showAssignBtn) {
             if (ns === 'pending') {
-                assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="white-space:nowrap;">Assign Rider</button>`;
+                assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="${SMALL_BTN_STYLE}">Assign Rider</button>`;
             } else if (ns === 'assigned') {
-                assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="white-space:nowrap;background:#e07000;">Reassign</button>`;
+                assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="${SMALL_BTN_STYLE}background:#e07000;">Reassign</button>`;
             }
         }
 
-        // ✅ Cancel button — sirf online payment orders par, aur sirf jab tak status "Pending" hai
-        // Rider assign hote hi (Assigned/Accepted/Picked up/On the way/Delivered) button hide ho jayega
+        // Cancel button — sirf online payment orders par, aur sirf jab tak status "Pending" hai
         let cancelBtnHtml = '';
         if (isPaidOnline && ns === 'pending') {
-            cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="background-color:#b52a00;color:white;white-space:nowrap;">Cancel Order</button>`;
+            cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="${SMALL_BTN_STYLE}background-color:#b52a00;color:white;">Cancel</button>`;
         }
 
         // Badges
@@ -190,6 +215,11 @@ function renderOrders() {
         const scheduledTimeHtml = isScheduled ? `
             <div style="font-size:11px;color:#856404;margin-top:3px;font-weight:500;">
                 Delivery: ${data.delivery_time}
+            </div>` : '';
+
+        const placedDateHtml = placedDateStr ? `
+            <div style="font-size:11px;color:#888;margin-top:3px;">
+                Ordered: ${placedDateStr}
             </div>` : '';
 
         // Timer badge for assigned orders
@@ -214,6 +244,7 @@ function renderOrders() {
                     <span style="font-weight:500;">${customerName}</span>
                     ${scheduledBadge}
                     ${onlineBadge}
+                    ${placedDateHtml}
                     ${scheduledTimeHtml}
                     ${timerHtml}
                 </div>
@@ -222,11 +253,11 @@ function renderOrders() {
                         ${status}
                     </span>
                 </span>
-                <div style="display:flex;justify-content:flex-end;gap:6px;align-items:center;flex-wrap:wrap;">
-                    <button class="btn-action view-btn" onclick="openOrderDetails('${id}')">View</button>
+                <div style="display:flex;justify-content:flex-end;gap:4px;align-items:center;flex-wrap:nowrap;">
+                    <button class="btn-action view-btn" onclick="openOrderDetails('${id}')" style="${SMALL_BTN_STYLE}">View</button>
                     ${assignBtnHtml}
                     ${cancelBtnHtml}
-                    <button class="btn-action delete-btn" onclick="removeOrder('${id}')">Delete</button>
+                    <button class="btn-action delete-btn" onclick="removeOrder('${id}')" style="${SMALL_BTN_STYLE}">Delete</button>
                 </div>
             </div>`;
     });
@@ -253,6 +284,7 @@ async function cancelOnlineOrder(event, orderId) {
 
         await db.collection("orders").doc(orderId).update({
             order_status:       "Cancelled",
+            orderStatus:        "Cancelled",
             cancelledBy:        "Manager",
             cancelledAt:        firebase.firestore.FieldValue.serverTimestamp(),
             cancellationReason: "Invalid receipt"
@@ -299,7 +331,7 @@ function loadOrders() {
             snap.forEach(doc => {
                 const data = doc.data();
                 allOrdersCache.push({ id: doc.id, data });
-                const st = (data.order_status || data.status || '').toLowerCase();
+                const st = getOrderStatus(data).toLowerCase();
                 if (st === 'pending') pendingCount++;
             });
 
@@ -316,8 +348,8 @@ function loadOrders() {
             };
 
             allOrdersCache.sort((a, b) => {
-                const aStatus = (a.data.order_status || a.data.status || 'pending').toLowerCase();
-                const bStatus = (b.data.order_status || b.data.status || 'pending').toLowerCase();
+                const aStatus = getOrderStatus(a.data).toLowerCase();
+                const bStatus = getOrderStatus(b.data).toLowerCase();
                 const aOrder  = statusOrder[aStatus] || 99;
                 const bOrder  = statusOrder[bStatus] || 99;
                 if (aOrder !== bOrder) return aOrder - bOrder;
@@ -362,6 +394,8 @@ async function openOrderDetails(id) {
         const paymentMethod = order.payment_method || order.paymentMethod || 'COD';
         const isPaidOnline  = isOnlinePayment(paymentMethod);
         const receiptUrl    = order.receiptImageUrl || null;
+        const placedDateStr = formatOrderPlacedDate(order.createdAt);
+        const orderStatusText = getOrderStatus(order);
 
         const paymentHtml = `
             <p><strong>Payment:</strong>
@@ -388,11 +422,14 @@ async function openOrderDetails(id) {
                 <strong>Scheduled Delivery:</strong> ${order.delivery_time}
             </p>` : '';
 
+        const placedDateDetailHtml = placedDateStr ? `
+            <p><strong>Order Placed:</strong> ${placedDateStr}</p>` : '';
+
         const riderInfoHtml = order.riderId
             ? `<p><strong>Assigned Rider:</strong> ${order.riderName || 'Rider Assigned'}</p>` : '';
 
         // ✅ Cancelled info
-        const cancelledHtml = (order.order_status === 'Cancelled') ? `
+        const cancelledHtml = (orderStatusText === 'Cancelled') ? `
             <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
                 Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
@@ -401,6 +438,7 @@ async function openOrderDetails(id) {
             <p><strong>Customer:</strong> ${order.customer_name || order.customerName || 'Guest'}</p>
             <p><strong>Phone:</strong> ${order.phone_number || order.phone || "No Phone"}</p>
             <p><strong>Address:</strong> ${order.delivery_address || order.address || "No Address"}</p>
+            ${placedDateDetailHtml}
             ${scheduledHtml}
             ${cancelledHtml}
             ${riderInfoHtml}
@@ -410,7 +448,7 @@ async function openOrderDetails(id) {
             <ul style="padding-left:20px;color:#b52a00;font-weight:500;">${itemsHtml}</ul>
             <hr>
             <p><strong>Total Amount:</strong> Rs. ${order.total_bill || order.totalAmount || 0}</p>
-            <p><strong>Status:</strong> ${order.order_status || 'Pending'}</p>`;
+            <p><strong>Status:</strong> ${orderStatusText}</p>`;
 
         document.getElementById('orderViewModal').style.display = 'block';
         document.getElementById('orderOverlay').style.display   = 'block';
@@ -433,7 +471,7 @@ async function openAssignModal(orderId) {
     .where("role",          "==", "rider")
     .where("branchId",      "==", BRANCH_DOC_ID)
     .where("isAvailable",   "==", true)
-    .where("emailVerified", "==", true)    // ✅ add karo
+    .where("emailVerified", "==", true)
     .get();
 
         if (ridersSnap.empty) {
@@ -505,6 +543,7 @@ async function assignRiderToOrder(riderId, riderName) {
             riderId,
             riderName,
             order_status: "Assigned",
+            orderStatus:  "Assigned",
             assignedAt:   Date.now()
         }, { merge: true });
 
@@ -584,7 +623,7 @@ function updateReviewsBadge() {
 
                     const links = document.querySelectorAll('.sidebar nav a');
                     links.forEach(link => {
-                        if (link.innerText.trim().toLowerCase().includes('review')) {
+                        if (link.textContent.trim().toLowerCase().includes('review')) {
                             let badge = document.getElementById('reviews-badge');
                             if (!badge) {
                                 badge = document.createElement('span');

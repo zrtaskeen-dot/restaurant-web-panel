@@ -98,7 +98,7 @@ function updateOrdersBadge() {
         .onSnapshot(snap => {
             let pendingCount = 0;
             snap.forEach(doc => {
-                const status = (doc.data().order_status || doc.data().status || '').toLowerCase();
+                const status = (doc.data().order_status || doc.data().orderStatus || doc.data().status || '').toLowerCase();
                 if (status === 'pending') pendingCount++;
             });
             const links = document.querySelectorAll('.sidebar nav a');

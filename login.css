@@ -111,7 +111,7 @@ body {
 
 .form-header p {
     font-size: 13px;
-    color: black;
+    color: #1a1a1a;
 }
 
 /* ── FIELDS ── */
@@ -131,7 +131,7 @@ body {
 .field input {
     width: 100%;
     padding: 12px 14px;
-    border: 1.5px solid #e8e8e8;
+    border: 1.5px solid black;
     border-radius: 10px;
     font-size: 14px;
     color: #222;

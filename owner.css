@@ -107,7 +107,7 @@ body {
     background-color: #b52a00;
     color: white;
     display: grid;
-    grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr; 
+    grid-template-columns: 1.2fr 2fr 1.3fr 1.2fr; 
     gap: 15px; 
     padding: 16px 20px;
     border-radius: 15px;
@@ -121,11 +121,11 @@ body {
 
 .owner-row {
     display: grid;
-    grid-template-columns: 1.2fr 2fr 1fr 1.3fr 1.2fr; 
+    grid-template-columns: 1.2fr 2fr 1.3fr 1.2fr; 
     gap: 15px; 
     padding: 12px 20px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1.5px solid #bbb;
     width: 100%; 
     box-sizing: border-box;
     align-items: center;
@@ -211,7 +211,7 @@ body {
 .input-group input, .input-group select {
     width: 100%;
     padding: 7px 10px;
-    border: 1px solid #ccc;
+    border: 1.5px solid #bbb;
     border-radius: 8px;
     box-sizing: border-box;
     font-family: inherit;

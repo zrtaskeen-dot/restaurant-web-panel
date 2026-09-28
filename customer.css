@@ -90,9 +90,9 @@ body {
 /* --- Table Container --- */
 .customer-table-container {
     background: white;
-    border: 1px solid #e0e0e0;              /* ✅ naya border add kiya */
+    border: 1px solid #e0e0e0;              
     border-radius: 16px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.10); /* ✅ shadow thora strong kiya */
+    box-shadow: 0 6px 24px rgba(224, 224, 224, 0.1); /* ✅ shadow thora strong kiya */
     overflow: hidden;
 }
 
@@ -101,7 +101,7 @@ body {
     background-color: #b52a00;
     color: white;
     display: grid;
-    grid-template-columns: 1.2fr 2fr 1fr 2fr 1.5fr;
+    grid-template-columns: 1.4fr 2.4fr 2fr 1.5fr;
     gap: 15px;
     padding: 16px 20px;
     font-weight: bold;
@@ -112,11 +112,11 @@ body {
 /* --- Customer Row --- */
 .customer-row {
     display: grid;
-    grid-template-columns: 1.2fr 2fr 1fr 2fr 1.5fr;
+    grid-template-columns: 1.4fr 2.4fr 2fr 1.5fr;
     gap: 15px;
     padding: 14px 20px;
     align-items: center;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1.5px solid #bbb;
     font-size: 13px;
     transition: background 0.15s;
 }

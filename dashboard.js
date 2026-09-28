@@ -26,6 +26,11 @@ function checkIsScheduled(data) {
     return !isNaN(parsed.getTime());
 }
 
+// ✅ Helper: Order ka status — teeno possible field names check karta hai
+function getOrderStatus(data) {
+    return data.order_status || data.orderStatus || data.status || '';
+}
+
 // 1. Branch Details & Payment Numbers Listener
 function listenToBranchDetails() {
     if (!BRANCH_DOC_ID) return;
@@ -37,18 +42,22 @@ function listenToBranchDetails() {
             const bName = document.getElementById('displayBranchName');
             const bTiming = document.getElementById('displayBranchTiming');
             const bAddr = document.getElementById('displayBranchAddress');
-            
+            const bDelivery = document.getElementById('displayDeliveryCharge'); // 🟢 naya
+
             if (bName) bName.innerText = data.branchName || "Setup Your Branch Name";
             if (bTiming) bTiming.innerText = data.timing || "--:--";
             if (bAddr) bAddr.innerText = data.address || "Enter Address";
+            if (bDelivery) bDelivery.innerText = data.deliveryCharge ? `Rs. ${data.deliveryCharge}` : "Not Set"; // 🟢 naya
 
             const inName = document.getElementById('inputBranchName');
             const inTiming = document.getElementById('inputBranchTiming');
             const inAddr = document.getElementById('inputBranchAddress');
+            const inDelivery = document.getElementById('inputDeliveryCharge'); // 🟢 naya
 
             if (inName) inName.value = data.branchName || "";
             if (inTiming) inTiming.value = data.timing || "";
             if (inAddr) inAddr.value = data.address || "";
+            if (inDelivery) inDelivery.value = data.deliveryCharge || ""; // 🟢 naya
         } else {
             const bName = document.getElementById('displayBranchName');
             if (bName) bName.innerText = "Branch Profile Setup Needed";
@@ -82,8 +91,9 @@ window.saveBranchDetails = async function() {
     const name    = document.getElementById('inputBranchName').value.trim();
     const timing  = document.getElementById('inputBranchTiming').value.trim();
     const address = document.getElementById('inputBranchAddress').value.trim();
+    const delivery = document.getElementById('inputDeliveryCharge').value.trim(); // 🟢 naya
     
-    if (!name || !timing || !address) { 
+    if (!name || !timing || !address || !delivery) {  // 🟢 delivery bhi required
         alert("Please fill all branch details!"); 
         return; 
     }
@@ -99,6 +109,7 @@ window.saveBranchDetails = async function() {
             branchName: name, 
             timing: timing, 
             address: address, 
+            deliveryCharge: delivery,  // 🟢 naya
             updatedAt: Date.now()
         }, { merge: true });
         
@@ -214,7 +225,7 @@ function initDashboard() {
 
         snap.forEach(doc => {
             const data   = doc.data();
-            const status = (data.order_status || data.status || '').toLowerCase();
+            const status = getOrderStatus(data).toLowerCase();
             const amount = Number(data.total_bill || data.totalAmount || 0);
 
             if (status === 'pending') pending++;
@@ -335,7 +346,7 @@ function updateOrdersBadge() {
         .onSnapshot(snap => {
             let pendingCount = 0;
             snap.forEach(doc => {
-                const status = (doc.data().order_status || doc.data().status || '').toLowerCase();
+                const status = getOrderStatus(doc.data()).toLowerCase();
                 if (status === 'pending') pendingCount++;
             });
             const links = document.querySelectorAll('.sidebar nav a');

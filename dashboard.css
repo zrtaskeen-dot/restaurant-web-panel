@@ -251,7 +251,7 @@ body {
     position: fixed;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: white;
+    background: rgb(255, 255, 255);
     padding: 25px;
     border-radius: 15px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
@@ -283,10 +283,10 @@ body {
 .branch-input-group input, .branch-input-group textarea {
     width: 100%;
     padding: 8px 12px;
-    border: 2px solid #ddd;
+    border: 1.5px solid #bbb;
     border-radius: 8px;
     font-size: 13px;
-    background-color: #fdf6e3;
+    background-color:white ;
     box-sizing: border-box;
     resize: none;
 }

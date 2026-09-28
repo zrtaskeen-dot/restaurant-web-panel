@@ -38,7 +38,6 @@ if (!currentBranchId) {
                     <div class="rider-row">
                         <span>${r.name}</span>
                         <span>${r.email}</span>
-                        <span>********</span>
                         <span>${r.phone}</span>
                         <span>${r.cnic || '-'}</span>
                         <span class="rider-branch-text">${r.branchName || "Assigned"}</span>
@@ -59,7 +58,7 @@ function updateOrdersBadge() {
         .onSnapshot(snap => {
             let pendingCount = 0;
             snap.forEach(doc => {
-                const status = (doc.data().order_status || doc.data().status || '').toLowerCase();
+               const status = (doc.data().order_status || doc.data().orderStatus || doc.data().status || '').toLowerCase();
                 if (status === 'pending') pendingCount++;
             });
             const links = document.querySelectorAll('.sidebar nav a');

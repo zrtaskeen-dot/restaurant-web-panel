@@ -12,12 +12,12 @@
 }
 
 #customAlertBox {
-    background: #f3e7b3;
+    background: #ffffff;
     border-radius: 12px;
     padding: 24px 28px;
     min-width: 280px;
     max-width: 400px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 1.5px solid #bbb;
     font-family: 'Segoe UI', Arial, sans-serif;
     animation: alertSlideIn 0.2s ease;
 }
@@ -63,12 +63,12 @@
 }
 
 #customConfirmBox {
-    background: #f3e7b3;
+    background: #ffffff;
     border-radius: 12px;
     padding: 24px 28px;
     min-width: 280px;
     max-width: 400px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    border: 1.5px solid #bbb;
     font-family: 'Segoe UI', Arial, sans-serif;
     animation: alertSlideIn 0.2s ease;
 }

@@ -37,6 +37,7 @@
                     <div class="branch-meta-row">
                         <span><strong> Timing:</strong> <span id="displayBranchTiming">--:--</span></span>
                         <span><strong> Address:</strong> <span id="displayBranchAddress">Loading address...</span></span>
+                        <span><strong> Delivery Charge:</strong> <span id="displayDeliveryCharge">Not Set</span></span>
                     </div>
                 </div>
                 <button class="btn-edit-branch" onclick="openBranchModal()">Edit Details</button>
@@ -132,6 +133,10 @@
         <div class="branch-input-group">
             <label>Branch Address:</label>
             <textarea id="inputBranchAddress" rows="3" placeholder="Enter complete branch address..."></textarea>
+        </div>
+        <div class="branch-input-group">
+            <label>Delivery Charge (Rs.):</label>
+            <input type="number" id="inputDeliveryCharge" placeholder="e.g., 100" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
         </div>
         <div class="branch-modal-actions">
             <button class="btn-branch-cancel" onclick="closeBranchModal()">Cancel</button>

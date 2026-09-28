@@ -75,7 +75,6 @@ db.collection("users")
             <div class="owner-row">
                 <span>${o.name || '-'}</span>
                 <span>${o.email || '-'}<br>${verifiedBadge}</span>
-                <span>********</span>
                 <span>${o.phone || '-'}</span>
                 <div class="owner-actions">
                     <button class="btn-edit-t" onclick="editOwner('${id}')">Edit</button>

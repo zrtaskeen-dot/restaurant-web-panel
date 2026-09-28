@@ -210,9 +210,20 @@ window.deleteDeal = async (id) => {
 };
 
 // 🟢 Sidebar Badge
+// ✅ Helper: Order ka status — teeno possible field names check karta hai
+function getOrderStatus(data) {
+    return data.order_status || data.orderStatus || data.status || '';
+}
+
+// 🟢 Sidebar Badge
 function updateOrdersBadge() {
     if (!BRANCH_DOC_ID) return;
-    db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).where("order_status", "==", "pending").onSnapshot(snap => {
+    db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).onSnapshot(snap => {
+        let pendingCount = 0;
+        snap.forEach(doc => {
+            if (getOrderStatus(doc.data()).toLowerCase() === 'pending') pendingCount++;
+        });
+
         const links = document.querySelectorAll('.sidebar nav a');
         links.forEach(link => {
             if (link.textContent.trim().toLowerCase().includes('order')) {
@@ -223,8 +234,8 @@ function updateOrdersBadge() {
                     badge.style.cssText = 'background:#f9a03f;color:black;font-size:10px;font-weight:bold;padding:2px 7px;border-radius:10px;margin-left:6px;display:none;';
                     link.appendChild(badge);
                 }
-                badge.innerText = snap.size;
-                badge.style.display = snap.size > 0 ? 'inline' : 'none';
+                badge.innerText = pendingCount;
+                badge.style.display = pendingCount > 0 ? 'inline' : 'none';
             }
         });
     });

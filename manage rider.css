@@ -2,7 +2,7 @@
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
-    background-color: #fdf6e3; 
+    background-color: white; 
     color: black;
 }
 
@@ -24,7 +24,7 @@ body {
     flex-direction: column;
     box-sizing: border-box;
     
-    /* 🟢 Sidebar ki position ko screen par fix karne ke liye */
+    /* Sidebar ki position ko screen par fix karne ke liye */
     height: 100vh;
     position: sticky;
     top: 0;
@@ -58,7 +58,7 @@ body {
     font-weight: bold; 
 }
 
-/* 🟢 Logout Button - Bilkul Bottom par Shift karega */
+/* Logout Button - Bilkul Bottom par Shift karega */
 .sidebar nav a.logout-btn {
     margin-top: auto; /* Clean push to bottom */
     background-color: #800000;
@@ -86,15 +86,23 @@ body {
     font-weight: bold;
 }
 
-/* 🟢 Manager Table Design: Fixed for 5 columns only (No Actions) */
+/* Table wrapper — poore table (header + rows) ko ek connected box banata hai */
+.rider-table-container {
+    border: 1.5px solid #bbb;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+}
+
+/* 🟢 FIX: 5 columns (Name, Email, Phone no, CNIC, Branch) —
+   pehle 6 values thin jo ek extra phantom column bana rahi thin. */
 .rider-header {
     background-color: #b52a00;
     color: white;
     display: grid;
-    grid-template-columns: 1.5fr 2fr 1.2fr 1.5fr 1.5fr 1.5fr; /* 6 columns: Name, Email, Password, Phone, CNIC, Branch */
+    grid-template-columns: 1fr 1.6fr 1.1fr 1.4fr 1.2fr;
     gap: 15px; 
     padding: 20px;
-    border-radius: 15px;
     font-weight: bold;
     font-size: 12px;
     text-align: center;
@@ -103,14 +111,19 @@ body {
 
 .rider-row {
     display: grid;
-    grid-template-columns: 1.5fr 2fr 1.2fr 1.5fr 1.5fr 1.5fr;
+    grid-template-columns: 1fr 1.6fr 1.1fr 1.4fr 1.2fr;
     gap: 15px; 
     padding: 12px 15px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    background: white;
+    border-bottom: 1.5px solid #bbb;
     align-items: center;
     font-size: 13px;
     color: #333;
+}
+
+.rider-row:last-child {
+    border-bottom: none;
 }
 
 /* Branch Text highlight color code */

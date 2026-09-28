@@ -253,19 +253,18 @@ db.collection("users")
                 ? `<span style="color:#28a745; font-size:11px; font-weight:bold;">✔ Verified</span>`
                 : `<span style="color:#b52a00; font-size:11px; font-weight:bold;">✘ Not Verified</span>`;
 
-            list.innerHTML += `
-                <div class="rider-row">
-                    <span>${r.name || '-'}</span>
-                    <span>${r.email || '-'} ${verifiedBadge}</span>
-                    <span>********</span>
-                    <span>${r.phone || '-'}</span>
-                    <span>${r.cnic || '-'}</span>
-                    <span class="rider-branch-text">${branchDisplay}</span>
-                    <div class="rider-actions">
-                        <button class="btn-edit-t" onclick="editRider('${id}')">Edit</button>
-                        <button class="btn-delete-t" onclick="deleteRider('${id}')">Delete</button>
-                    </div>
-                </div>`;
+           list.innerHTML += `
+    <div class="rider-row">
+        <span>${r.name || '-'}</span>
+        <span>${r.email || '-'}<br>${verifiedBadge}</span>
+        <span>${r.phone || '-'}</span>
+        <span>${r.cnic || '-'}</span>
+        <span class="rider-branch-text">${branchDisplay}</span>
+        <div class="rider-actions">
+            <button class="btn-edit-t" onclick="editRider('${id}')">Edit</button>
+            <button class="btn-delete-t" onclick="deleteRider('${id}')">Delete</button>
+        </div>
+    </div>`;
         });
     }, (err) => {
         console.error("Firestore error:", err);

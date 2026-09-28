@@ -61,12 +61,21 @@ async function loadCustomers() {
             // Riders aur Managers skip karo
             if (role === "rider" || role === "manager"|| role === "owner"|| role === "admin") return;
 
+            // 🟢 Incomplete/empty records skip karo — jin ka na naam hai na email
+            // (ye zyada tar test accounts ya adhoore signups hote hain, genuine customer nahi)
+            if (!user.name && !user.email) return;
+
             count++;
             const id = doc.id;
             const isBlocked = user.status === "blocked";
 
             // 🟢 Address orders se dhundo
             const address = findAddressForCustomer(user.name, user.phone);
+
+            // 🟢 Email verification badge
+            const verifiedBadge = user.emailVerified
+                ? `<span style="color:#28a745; font-size:11px; font-weight:bold;">✔ Verified</span>`
+                : `<span style="color:#b52a00; font-size:11px; font-weight:bold;">✘ Not Verified</span>`;
 
             const row = document.createElement('div');
             row.className = `customer-row ${isBlocked ? 'blocked-row' : ''}`;
@@ -76,8 +85,10 @@ async function loadCustomers() {
                     ${user.name || 'N/A'} 
                     ${isBlocked ? '<span style="color:#b52a00; font-size:11px; font-weight:bold;">(Blocked)</span>' : ''}
                 </span>
-                <span style="color:#555;">${user.email || 'N/A'}</span>
-                <span>********</span>
+                <span style="color:#555;">
+                    ${user.email || 'N/A'}<br>
+                    ${verifiedBadge}
+                </span>
                 <span style="color:#555; font-size:12px;">${address}</span>
                 <div class="actions-cell">
                     <button class="block-btn" style="background:${isBlocked ? '#28a745' : '#7a1c00'};" onclick="toggleBlock('${id}', ${isBlocked})">

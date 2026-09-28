@@ -103,15 +103,24 @@ body {
 }
 
 /* --- Table --- */
+/* 🟢 Table wrapper — poore table (header + rows) ko ek connected box banata hai */
+.manager-table-container {
+    border: 1.5px solid #bbb;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* 🟢 7 columns: Name, Email, Password, Phone, CNIC, Branch, Actions */
 .table-header {
     background-color: #b52a00;
     color: white;
     display: grid;
-    grid-template-columns: 1fr 1.6fr 0.8fr 1.1fr 1.3fr 1.1fr 1.1fr;
+    grid-template-columns: 1.2fr 1.8fr 1.2fr 1.5fr 1.2fr 1.5fr;
     gap: 10px; 
     padding: 20px;
-    border-radius: 15px;
     font-weight: bold;
     font-size: 13px;
     text-align: center;
@@ -121,15 +130,20 @@ body {
 
 .manager-row {
     display: grid;
-    grid-template-columns: 1fr 1.6fr 0.8fr 1.1fr 1.3fr 1.1fr 1.1fr;
+    grid-template-columns: 1.2fr 1.8fr 1.2fr 1.5fr 1.2fr 1.5fr;
     gap: 10px; 
     padding: 15px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    background: white;
+    border-bottom: 1.5px solid #bbb;
     width: 100%; 
     box-sizing: border-box;
     align-items: center;
     font-size: 13px;
+}
+
+.manager-row:last-child {
+    border-bottom: none;
 }
 
 .manager-actions {
@@ -203,7 +217,7 @@ body {
 .input-group input, .input-group select {
     width: 100%;
     padding: 7px 10px;
-    border: 1px solid #ccc;
+    border: 1.5px solid #bbb;
     border-radius: 8px;
     box-sizing: border-box;
     font-family: inherit;
