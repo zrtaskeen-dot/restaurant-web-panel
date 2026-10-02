@@ -52,7 +52,7 @@ window.closeownerModal = function() {
 
 // --- READ / REAL-TIME FETCH DATA ---
 db.collection("users")
-    .where("role", "==", "owner")
+    .where("roleId", "==", "R004")
     .onSnapshot((snapshot) => {
     const listContainer = document.getElementById('owner-list');
     if (!listContainer) return;
@@ -172,7 +172,6 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
                 email: oEmail,
                 password: oPassword,
                 phone: oPhone,
-                role: "owner",
                 roleId: "R004",
                 emailVerified: false,
                 createdAt: Date.now()

@@ -6,43 +6,129 @@ const firebaseConfig = {
     projectId: 'resturant-e0389',
     authDomain: 'resturant-e0389.firebaseapp.com',
 };
-if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+
+if (!firebase.apps.length) { 
+    firebase.initializeApp(firebaseConfig); 
+}
 const db = firebase.firestore();
 
-// --- Load Customers from Firebase ---
-function loadCustomers() {
-    const listContainer = document.getElementById('customer-list');
+const CUSTOMER_ROLE_ID = "R001";
 
-    // Real-time listener for 'users' collection
-    db.collection("users").onSnapshot((snapshot) => {
-        listContainer.innerHTML = ""; // Clear existing list
+// 🟢 Pehle sab orders fetch karo — phir customers ke liye address dhundo
+let allOrders = [];
+
+async function loadAllOrders() {
+    try {
+        const snap = await db.collection("orders").get();
+        allOrders = [];
+        snap.forEach(doc => allOrders.push(doc.data()));
+    } catch (e) {
+        console.error("Orders fetch error:", e);
+    }
+}
+
+// Address dhundne ka function
+function findAddressForCustomer(name, phone) {
+    // naam se match karo
+    const matches = allOrders.filter(o => {
+        const orderName  = o.customerName || '';
+        const orderPhone = o.phoneNumber || '';
+        return (orderName && orderName.toLowerCase().trim() === (name || '').toLowerCase().trim()) ||
+               (orderPhone && phone && orderPhone === phone);
+    });
+
+    if (matches.length === 0) return "N/A";
+
+    // Latest order ka address lo
+    matches.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    // ✅ Sirf naya naming style use hota hai (purana "delivery_address" nahi)
+    return matches[0].deliveryAddress || "N/A";
+}
+
+// --- Load Customers ---
+async function loadCustomers() {
+    const listContainer = document.getElementById('customer-list');
+    listContainer.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Loading...</p>';
+
+    // Pehle orders load karo
+    await loadAllOrders();
+
+    db.collection("users")
+    .onSnapshot((snapshot) => {
+        listContainer.innerHTML = ""; 
+
+        let count = 0;
 
         snapshot.forEach((doc) => {
             const user = doc.data();
+
+            if (user.roleId !== CUSTOMER_ROLE_ID) return;
+
+            if (!user.name && !user.email) return;
+
+            count++;
             const id = doc.id;
+            const isBlocked = user.status === "blocked";
+
+            // 🟢 Address orders se dhundo
+            const address = findAddressForCustomer(user.name, user.phone);
+
+            // 🟢 Email verification badge
+            const verifiedBadge = user.emailVerified
+                ? `<span style="color:#28a745; font-size:11px; font-weight:bold;">✔ Verified</span>`
+                : `<span style="color:#b52a00; font-size:11px; font-weight:bold;">✘ Not Verified</span>`;
 
             const row = document.createElement('div');
-            row.className = 'customer-row';
+            row.className = `customer-row ${isBlocked ? 'blocked-row' : ''}`;
+            
             row.innerHTML = `
-                <span>${user.name || 'N/A'}</span>
-                <span>${user.email || 'N/A'}</span>
-                <span>********</span>
-                <span>${user.address || 'N/A'}</span>
+                <span style="font-weight:500;">
+                    ${user.name || 'N/A'} 
+                    ${isBlocked ? '<span style="color:#b52a00; font-size:11px; font-weight:bold;">(Blocked)</span>' : ''}
+                </span>
+                <span style="color:#555;">
+                    ${user.email || 'N/A'}<br>
+                    ${verifiedBadge}
+                </span>
+                <span style="color:#555; font-size:12px;">${address}</span>
                 <div class="actions-cell">
-                    <button class="btn-action block-btn" onclick="blockUser('${id}')">Block</button>
-                    <button class="btn-action delete-btn" onclick="deleteUser('${id}')">Delete</button>
+                    <button class="block-btn" style="background:${isBlocked ? '#28a745' : '#7a1c00'};" onclick="toggleBlock('${id}', ${isBlocked})">
+                        ${isBlocked ? 'Unblock' : 'Block'}
+                    </button>
+                    <button class="delete-btn" onclick="deleteUser('${id}')">Delete</button>
                 </div>
             `;
             listContainer.appendChild(row);
         });
+
+        if (count === 0) {
+            listContainer.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">No customers found.</p>';
+        }
+
     }, (error) => {
         console.error("Error fetching users: ", error);
     });
 }
 
-// --- Delete Function ---
-async function deleteUser(id) {
-    if (confirm("Are you sure you want to delete this customer?")) {
+// --- Toggle Block/Unblock --- 🟢 async confirm fix
+window.toggleBlock = async function(id, currentStatus) {
+    const newStatus = currentStatus ? "active" : "blocked";
+    const actionText = currentStatus ? "Unblock" : "Block";
+
+    const agreed = await confirm(`Are you sure you want to ${actionText} this customer?`);
+    if (agreed) {
+        try {
+            await db.collection("users").doc(id).update({ status: newStatus });
+        } catch (e) {
+            alert("Error: " + e.message);
+        }
+    }
+};
+
+// --- Delete Customer --- 🟢 async confirm fix
+window.deleteUser = async function(id) {
+    const agreed = await confirm("Are you sure you want to delete this customer?");
+    if (agreed) {
         try {
             await db.collection("users").doc(id).delete();
             alert("Customer deleted successfully!");
@@ -50,19 +136,6 @@ async function deleteUser(id) {
             alert("Error deleting: " + e.message);
         }
     }
-}
+};
 
-// --- Block Function ---
-async function blockUser(id) {
-    try {
-        await db.collection("users").doc(id).update({
-            status: "blocked"
-        });
-        alert("Customer has been blocked.");
-    } catch (e) {
-        alert("Error blocking: " + e.message);
-    }
-}
-
-// Start fetching when page loads
 document.addEventListener('DOMContentLoaded', loadCustomers);

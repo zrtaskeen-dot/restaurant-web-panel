@@ -12,6 +12,9 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
+// ✅ NEW: Admin ki pehchan — user_role collection mein R005 = admin.
+const ADMIN_ROLE_ID = "R005";
+
 // --- Toast ---
 function showToast(message, type = 'error') {
     const toast = document.getElementById('adminToast');
@@ -51,10 +54,10 @@ document.getElementById('sendResetBtn').addEventListener('click', async function
         return;
     }
 
-    // ✅ Check email in Firestore first
+    // ✅ CHANGED: "role" ki jagah "roleId" se admin check hota hai
     const adminCheck = await db.collection("users")
-        .where("email", "==", email)
-        .where("role",  "==", "admin")
+        .where("email",  "==", email)
+        .where("roleId", "==", ADMIN_ROLE_ID)
         .get();
 
     if (adminCheck.empty) {
@@ -105,11 +108,11 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
     loginBtn.innerText = "Signing in...";
     loginBtn.disabled  = true;
 
-    // ✅ Step 1: Pehle email Firestore mein check karo
+    // ✅ Step 1: Pehle email Firestore mein check karo (ab roleId se)
     try {
         const emailCheck = await db.collection("users")
-            .where("email", "==", email)
-            .where("role",  "==", "admin")
+            .where("email",  "==", email)
+            .where("roleId", "==", ADMIN_ROLE_ID)
             .get();
 
         if (emailCheck.empty) {
@@ -132,9 +135,10 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
+        // ✅ CHANGED: "role" ki jagah "roleId" se admin check hota hai
         const adminSnap = await db.collection("users")
-            .where("email", "==", user.email)
-            .where("role",  "==", "admin")
+            .where("email",  "==", user.email)
+            .where("roleId", "==", ADMIN_ROLE_ID)
             .get();
 
         if (adminSnap.empty) {

@@ -18,7 +18,35 @@ let currentFilter  = 'all';
 let allOrdersCache = [];
 let timerInterval  = null;
 
-// ✅ Set active filter tab
+const riderNameCache = {};
+
+async function getRiderName(riderId) {
+    if (!riderId) return null;
+    if (riderNameCache[riderId]) return riderNameCache[riderId];
+    try {
+        const doc = await db.collection("users").doc(riderId).get();
+        const name = doc.exists ? (doc.data().name || 'Rider') : 'Unknown Rider';
+        riderNameCache[riderId] = name;
+        return name;
+    } catch (e) {
+        console.error("Rider name fetch error:", e);
+        return 'Rider';
+    }
+}
+
+const watchedRiderIds = new Set();
+function watchRiderDoc(riderId) {
+    if (!riderId || watchedRiderIds.has(riderId)) return;
+    watchedRiderIds.add(riderId);
+    db.collection("users").doc(riderId).onSnapshot(doc => {
+        riderNameCache[riderId] = doc.exists ? (doc.data().name || 'Rider') : 'Unknown Rider';
+        renderOrders();
+    }, error => {
+        console.error("Rider doc watch error:", riderId, error);
+        watchedRiderIds.delete(riderId);
+    });
+}
+
 window.setFilter = function(filter) {
     currentFilter = filter;
     ['all', 'scheduled', 'online', 'cod'].forEach(f => {
@@ -28,13 +56,10 @@ window.setFilter = function(filter) {
     renderOrders();
 };
 
-// ✅ Helper: Order ka status — teeno possible field names check karta hai
-// (order_status, orderStatus, status). Kuch bhi na mile to 'Pending'.
 function getOrderStatus(data) {
-    return data.order_status || data.orderStatus || data.status || 'Pending';
+    return data.orderStatus || 'Pending';
 }
 
-// ✅ Helper: Parse delivery_time string to JS Date
 function parseDeliveryTime(timeStr) {
     if (!timeStr) return null;
     try {
@@ -44,7 +69,6 @@ function parseDeliveryTime(timeStr) {
     } catch (e) { return null; }
 }
 
-// ✅ Helper: Within 1 hour window
 function isWithin1Hour(deliveryTimeStr) {
     const deliveryTime = parseDeliveryTime(deliveryTimeStr);
     if (!deliveryTime) return false;
@@ -52,24 +76,21 @@ function isWithin1Hour(deliveryTimeStr) {
     return diffMins <= 60 && diffMins > 0;
 }
 
-// ✅ Helper: Is scheduled order
 function checkIsScheduled(data) {
-    const raw = (data.delivery_time || '').toString().trim().toLowerCase();
+    const raw = (data.deliveryTime || '').toString().trim().toLowerCase();
     return raw !== ''
         && raw !== 'now'
         && raw !== 'as soon as possible'
         && raw !== 'asap'
-        && parseDeliveryTime(data.delivery_time) !== null;
+        && parseDeliveryTime(data.deliveryTime) !== null;
 }
 
-// ✅ Helper: Is online payment
 function isOnlinePayment(paymentMethod) {
     if (!paymentMethod) return false;
     const method = paymentMethod.toString().toLowerCase();
     return method !== 'cod' && method !== 'cash on delivery' && method !== 'cash';
 }
 
-// ✅ Helper: Order placed date/time ko readable format mein convert karo
 function formatOrderPlacedDate(createdAt) {
     if (!createdAt) return null;
     const date = createdAt.toMillis
@@ -85,7 +106,6 @@ function formatOrderPlacedDate(createdAt) {
     });
 }
 
-// ✅ Sidebar badge update
 function updateSidebarBadge(count) {
     const links = document.querySelectorAll('.sidebar nav a');
     links.forEach(link => {
@@ -103,7 +123,6 @@ function updateSidebarBadge(count) {
     });
 }
 
-// --- Modal close ---
 document.addEventListener("DOMContentLoaded", () => {
     const overlay = document.getElementById('orderOverlay');
     if (overlay) overlay.addEventListener('click', () => {
@@ -114,7 +133,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (assignOverlay) assignOverlay.addEventListener('click', closeAssignModal);
 });
 
-// ✅ Live timer for assigned orders
 function startLiveTimers() {
     if (timerInterval) clearInterval(timerInterval);
     timerInterval = setInterval(() => {
@@ -134,10 +152,11 @@ function startLiveTimers() {
     }, 1000);
 }
 
-// ✅ Chhota button style — sab actions ek line mein fit karne ke liye
 const SMALL_BTN_STYLE = 'padding:4px 9px;font-size:11px;white-space:nowrap;';
 
-// ✅ Render orders
+let highlightedOrderId = null;
+let highlightTimer     = null;
+
 function renderOrders() {
     const tableBody = document.getElementById('ordersTableBody');
     if (!tableBody) return;
@@ -172,10 +191,9 @@ function renderOrders() {
         const paymentMethod = data.payment_method || data.paymentMethod || 'COD';
         const isScheduled   = checkIsScheduled(data);
         const isPaidOnline  = isOnlinePayment(paymentMethod);
-        const showAssignBtn = isScheduled ? isWithin1Hour(data.delivery_time) : true;
+        const showAssignBtn = isScheduled ? isWithin1Hour(data.deliveryTime) : true;
         const placedDateStr = formatOrderPlacedDate(data.createdAt);
 
-        // Status colors
         let statusColor = '#f5f1f0', statusBg = '#a70000';
         const ns = status.toString().trim().toLowerCase();
         if (ns === 'assigned')                       { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
@@ -185,7 +203,6 @@ function renderOrders() {
         if (ns === 'delivered')                      { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
         if (ns === 'cancelled' || ns === 'canceled') { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
 
-        // Assign button
         let assignBtnHtml = '';
         if (showAssignBtn) {
             if (ns === 'pending') {
@@ -195,13 +212,11 @@ function renderOrders() {
             }
         }
 
-        // Cancel button — sirf online payment orders par, aur sirf jab tak status "Pending" hai
         let cancelBtnHtml = '';
         if (isPaidOnline && ns === 'pending') {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="${SMALL_BTN_STYLE}background-color:#b52a00;color:white;">Cancel</button>`;
         }
 
-        // Badges
         const scheduledBadge = isScheduled ? `
             <span style="background:#fff3cd;color:#856404;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;display:inline-block;margin-left:5px;border:1px solid #ffc107;">
                 Scheduled
@@ -214,7 +229,7 @@ function renderOrders() {
 
         const scheduledTimeHtml = isScheduled ? `
             <div style="font-size:11px;color:#856404;margin-top:3px;font-weight:500;">
-                Delivery: ${data.delivery_time}
+                Delivery: ${data.deliveryTime}
             </div>` : '';
 
         const placedDateHtml = placedDateStr ? `
@@ -222,7 +237,12 @@ function renderOrders() {
                 Ordered: ${placedDateStr}
             </div>` : '';
 
-        // Timer badge for assigned orders
+        const riderLiveName = data.riderId ? (riderNameCache[data.riderId] || '...') : null;
+        const riderNameHtml = riderLiveName ? `
+            <div style="font-size:11px;color:#1a4a5e;margin-top:3px;font-weight:500;">
+                Rider: ${riderLiveName}
+            </div>` : '';
+
         let timerHtml = '';
         if (ns === 'assigned' && data.assignedAt) {
             const assignedAt = typeof data.assignedAt === 'number'
@@ -235,10 +255,18 @@ function renderOrders() {
                 </div>`;
         }
 
-        const isPending = ns === 'pending';
+        const isPending     = ns === 'pending';
+        // ✅ NEW: highlight ab yahan, render ke andar, apply hoti hai — taake
+        // agle kisi bhi re-render mein bhi (jab tak timer khatam na ho) yeh
+        // style banti rahe.
+        const isHighlighted = (id === highlightedOrderId);
+
+        let rowStyle = '';
+        if (isPending)     rowStyle += 'border-left:3px solid #b52a00;';
+        if (isHighlighted) rowStyle += 'background:#fff3cd;border:2px solid #f9a03f;border-radius:10px;transition:all 0.3s;';
 
         tableBody.innerHTML += `
-            <div class="row order-grid" data-order-id="${id}" style="${isPending ? 'border-left:3px solid #b52a00;' : ''}">
+            <div class="row order-grid" data-order-id="${id}" style="${rowStyle}">
                 <span style="font-weight:bold;color:#b52a00;font-size:13px;">#${id.slice(-5).toUpperCase()}</span>
                 <div>
                     <span style="font-weight:500;">${customerName}</span>
@@ -246,6 +274,7 @@ function renderOrders() {
                     ${onlineBadge}
                     ${placedDateHtml}
                     ${scheduledTimeHtml}
+                    ${riderNameHtml}
                     ${timerHtml}
                 </div>
                 <span>
@@ -265,7 +294,6 @@ function renderOrders() {
     startLiveTimers();
 }
 
-// ✅ Cancel Online Order — custom-alert.js ka confirm use karo
 async function cancelOnlineOrder(event, orderId) {
     if (event) {
         event.preventDefault();
@@ -278,23 +306,16 @@ async function cancelOnlineOrder(event, orderId) {
     if (!userConfirmed) return;
 
     try {
-        // ✅ Order data pehle nikal lo — customer ka id chahiye notification ke liye
         const orderDoc = await db.collection("orders").doc(orderId).get();
         const orderData = orderDoc.data();
 
         await db.collection("orders").doc(orderId).update({
-            order_status:       "Cancelled",
             orderStatus:        "Cancelled",
             cancelledBy:        "Manager",
             cancelledAt:        firebase.firestore.FieldValue.serverTimestamp(),
             cancellationReason: "Invalid receipt"
         });
 
-        // ✅ Customer ki screen pe notification bhejo
-        // orders collection mein field ka naam "customerId" hai, lekin
-        // notifications collection ka NotificationScreen "userId" field
-        // pe query karti hai (Dart app dekho) — isliye value copy karte
-        // waqt naam badal ke "userId" likhna hai.
         if (orderData && orderData.customerId) {
             await db.collection("notifications").add({
                 userId:    orderData.customerId,
@@ -312,7 +333,6 @@ async function cancelOnlineOrder(event, orderId) {
     }
 }
 
-// --- Load Orders ---
 function loadOrders() {
     const tableBody = document.getElementById('ordersTableBody');
     if (!tableBody) return;
@@ -331,6 +351,7 @@ function loadOrders() {
             snap.forEach(doc => {
                 const data = doc.data();
                 allOrdersCache.push({ id: doc.id, data });
+                if (data.riderId) watchRiderDoc(data.riderId);
                 const st = getOrderStatus(data).toLowerCase();
                 if (st === 'pending') pendingCount++;
             });
@@ -343,7 +364,6 @@ function loadOrders() {
                 'on the way': 5,
                 'delivered' : 6,
                 'cancelled' : 7,
-                'canceled'  : 7,
                 'completed' : 8
             };
 
@@ -366,7 +386,6 @@ function loadOrders() {
         });
 }
 
-// --- VIEW ORDER DETAILS ---
 async function openOrderDetails(id) {
     if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
     try {
@@ -419,25 +438,40 @@ async function openOrderDetails(id) {
 
         const scheduledHtml = checkIsScheduled(order) ? `
             <p style="background:#fff3cd;padding:8px 12px;border-radius:8px;border-left:4px solid #ffc107;">
-                <strong>Scheduled Delivery:</strong> ${order.delivery_time}
+                <strong>Scheduled Delivery:</strong> ${order.deliveryTime}
             </p>` : '';
 
         const placedDateDetailHtml = placedDateStr ? `
             <p><strong>Order Placed:</strong> ${placedDateStr}</p>` : '';
 
+        const liveRiderName = order.riderId ? await getRiderName(order.riderId) : null;
         const riderInfoHtml = order.riderId
-            ? `<p><strong>Assigned Rider:</strong> ${order.riderName || 'Rider Assigned'}</p>` : '';
+            ? `<p><strong>Assigned Rider:</strong> ${liveRiderName || 'Rider Assigned'}</p>` : '';
 
-        // ✅ Cancelled info
         const cancelledHtml = (orderStatusText === 'Cancelled') ? `
             <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
                 Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
 
-        document.getElementById('orderInfo').innerHTML = `
-            <p><strong>Customer:</strong> ${order.customer_name || order.customerName || 'Guest'}</p>
-            <p><strong>Phone:</strong> ${order.phone_number || order.phone || "No Phone"}</p>
-            <p><strong>Address:</strong> ${order.delivery_address || order.address || "No Address"}</p>
+       // ✅ Customer email fetch karo users collection se
+let customerEmail = '';
+const customerId = order.customerId || '';
+if (customerId) {
+    try {
+        const customerDoc = await db.collection("users").doc(customerId).get();
+        if (customerDoc.exists) {
+            customerEmail = customerDoc.data().email || '';
+        }
+    } catch (e) {
+        console.error("Customer fetch error:", e);
+    }
+}
+
+document.getElementById('orderInfo').innerHTML = `
+    <p><strong>Customer:</strong> ${order.customer_name || order.customerName || 'Guest'}</p>
+    <p><strong>Email:</strong> ${customerEmail || 'Not available'}</p>
+    <p><strong>Phone:</strong> ${order.phone_number || order.phone || "No Phone"}</p>
+    <p><strong>Address:</strong> ${order.deliveryAddress ||  order.address || "No Address"}</p>
             ${placedDateDetailHtml}
             ${scheduledHtml}
             ${cancelledHtml}
@@ -457,7 +491,19 @@ async function openOrderDetails(id) {
     }
 }
 
-// --- ASSIGN RIDER ---
+// mirrors RiderController.isRiderOnline() on the Flutter side.
+// isAvailable alone isn't trustworthy — a killed/closed app can leave it
+// stuck at true. A rider only really counts as online if their app also
+// checked in (lastSeen) within the last 90 seconds.
+const ONLINE_MAX_AGE_MS = 2500;
+function isRiderReallyOnline(r) {
+    if (r.isAvailable !== true) return false;
+    const seen = r.lastSeen;
+    const seenMs = seen && seen.toMillis ? seen.toMillis() : null;
+    if (!seenMs) return false; // no heartbeat yet -> treat as offline
+    return (Date.now() - seenMs) <= ONLINE_MAX_AGE_MS;
+}
+
 async function openAssignModal(orderId) {
     if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
     assignOrderId = orderId;
@@ -468,25 +514,30 @@ async function openAssignModal(orderId) {
 
     try {
        const ridersSnap = await db.collection("users")
-    .where("role",          "==", "rider")
+    .where("roleId",        "==", "R002")
     .where("branchId",      "==", BRANCH_DOC_ID)
     .where("isAvailable",   "==", true)
     .where("emailVerified", "==", true)
     .get();
 
-        if (ridersSnap.empty) {
+        // isAvailable==true above is just a coarse filter — still filter
+        // out riders whose app has gone stale (closed/killed but the
+        // Firestore field never got flipped back to false).
+        const onlineRiderDocs = ridersSnap.docs.filter(doc => isRiderReallyOnline(doc.data()));
+
+        if (onlineRiderDocs.length === 0) {
             listContainer.innerHTML = '<p style="text-align:center;padding:20px;color:#b52a00;font-weight:bold;">No available riders found in your branch.</p>';
             return;
         }
 
         let html = '';
-        for (const riderDoc of ridersSnap.docs) {
+        for (const riderDoc of onlineRiderDocs) {
             const r       = riderDoc.data();
             const riderId = riderDoc.id;
 
             const activeOrdersSnap = await db.collection("orders")
                 .where("riderId",       "==", riderId)
-                .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
+                .where("orderStatus",   "in", ["Assigned", "Accepted", "assigned", "accepted"])
                 .get();
 
             const pendingCount = activeOrdersSnap.size;
@@ -529,7 +580,7 @@ async function assignRiderToOrder(riderId, riderName) {
     try {
         const activeOrdersSnap = await db.collection("orders")
             .where("riderId",       "==", riderId)
-            .where("order_status",  "in", ["Assigned", "Accepted", "assigned", "accepted"])
+            .where("orderStatus",   "in", ["Assigned", "Accepted", "assigned", "accepted"])
             .get();
 
         const currentActive = activeOrdersSnap.size;
@@ -541,8 +592,7 @@ async function assignRiderToOrder(riderId, riderName) {
 
         await orderRef.set({
             riderId,
-            riderName,
-            order_status: "Assigned",
+            riderName:    firebase.firestore.FieldValue.delete(),
             orderStatus:  "Assigned",
             assignedAt:   Date.now()
         }, { merge: true });
@@ -583,25 +633,21 @@ function highlightOrderFromReview() {
     const highlightId = localStorage.getItem("highlight_order_id");
     if (!highlightId) return;
 
-    const allRows = document.querySelectorAll('.row.order-grid');
-    allRows.forEach(row => {
-        if (row.getAttribute('data-order-id') === highlightId) {
-            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            row.style.background   = '#fff3cd';
-            row.style.border       = '2px solid #f9a03f';
-            row.style.borderRadius = '10px';
-            row.style.transition   = 'all 0.3s';
-            setTimeout(() => {
-                row.style.background   = '';
-                row.style.border       = '';
-                row.style.borderRadius = '';
-            }, 8000);
-        }
-    });
-
     localStorage.removeItem("highlight_order_id");
+
+    highlightedOrderId = highlightId;
+    renderOrders();
+
+    const row = document.querySelector(`.row.order-grid[data-order-id="${highlightId}"]`);
+    if (row) row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    if (highlightTimer) clearTimeout(highlightTimer);
+    highlightTimer = setTimeout(() => {
+        highlightedOrderId = null;
+        renderOrders();
+    }, 8000);
 }
-// ✅ Sidebar Reviews Badge
+
 function updateReviewsBadge() {
     if (!BRANCH_DOC_ID) return;
 

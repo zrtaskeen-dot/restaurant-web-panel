@@ -276,7 +276,7 @@ function initDashboard() {
 
     // Riders count
     db.collection("users")
-        .where("role",          "==", "rider")
+        .where("roleId",          "==", "R002")
         .where("branchId",      "==", BRANCH_DOC_ID)
         .where("emailVerified", "==", true)
         .onSnapshot(snap => {

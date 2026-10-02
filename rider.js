@@ -13,6 +13,10 @@ const db = firebase.firestore();
 
 const FIREBASE_API_KEY = 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE';
 
+// ✅ NEW: Rider role ab sirf roleId se pehchana jata hai — user_role collection
+// mein R002 = "rider" hai, isliye "role" field ki zaroorat nahi.
+const RIDER_ROLE_ID = "R002";
+
 let editId = null;
 
 function logActivity(action, details) {
@@ -51,7 +55,7 @@ async function createAuthUser(email, password) {
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
 
-    // Verification email bhejo
+    // Verification email 
     await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${FIREBASE_API_KEY}`,
         {
@@ -203,12 +207,13 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
                 return;
             }
 
+            // ✅ CHANGED: "role" field hata diya — ab sirf roleId (R002) se
+            // rider ki pehchaan hoti hai, jo user_role collection mein defined hai.
             const riderData = {
                 uid, name, email, password,
                 phone, cnic,
                 branchId, branchName,
-                role: "rider",
-                roleId: "R002",
+                roleId: RIDER_ROLE_ID,
                 emailVerified: false,
                 isAvailable: false,
                 totalOrders: 0,
@@ -232,8 +237,9 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
 });
 
 // --- REAL-TIME RIDERS LIST ---
+// ✅ CHANGED: "role" ki jagah "roleId" se query hota hai
 db.collection("users")
-    .where("role", "==", "rider")
+    .where("roleId", "==", RIDER_ROLE_ID)
     .onSnapshot((snapshot) => {
         const list = document.getElementById('rider-list');
         if (!list) return;

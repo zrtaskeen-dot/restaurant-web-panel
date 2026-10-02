@@ -100,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const managerCheck = await db.collection("users")
                 .where("email", "==", email)
-                .where("role",  "==", "manager")
+                .where("roleId",  "==", "R003")
                 .get();
 
             if (managerCheck.empty) {
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // admin ne account delete kar diya hai.
             const managerSnapshot = await db.collection("users")
                 .where("email", "==", user.email)
-                .where("role",  "==", "manager")
+                .where("roleId",  "==", "R003")
                 .get();
 
             if (managerSnapshot.empty) {
@@ -200,15 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     managerName       = doc.data().name   || 'Manager';
                     managerStatus     = doc.data().status || 'active'; // 👈 ADDED
                 });
-
-                // ✅ ADDED: block-check — admin ne is manager ko block kiya ho
-                // to login yahin rok dein.
-                if (managerStatus === 'blocked') {
-                    await auth.signOut();
-                    showToast("Your account has been blocked by admin. Please contact support.");
-                    resetLoginButton(loginBtn);
-                    return;
-                }
 
                 if (dynamicBranchId) {
                     await db.collection("users").doc(managerDocId).update({

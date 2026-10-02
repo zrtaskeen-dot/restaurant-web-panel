@@ -297,21 +297,21 @@ function syncStats() {
     if (syncTimeEl) syncTimeEl.innerText = nowTime();
 
     // Riders
-    db.collection("users").where("role", "==", "rider").onSnapshot(snap => {
+    db.collection("users").where("roleId", "==", "R002").onSnapshot(snap => {
         animateCount('total-riders', snap.size);
         showLog('logRiders', 'logRidersText', 'logRidersTime',
             `${snap.size} rider(s) synced`);
     });
 
     // Customers
-    db.collection("users").where("roleID", "==", "R001").onSnapshot(snap => {
+    db.collection("users").where("roleId", "==", "R001").onSnapshot(snap => {
         animateCount('total-customers', snap.size);
         showLog('logCustomers', 'logCustomersText', 'logCustomersTime',
             `${snap.size} customer(s) synced`);
     });
 
     // Managers
-    db.collection("users").where("role", "==", "manager").onSnapshot(snap => {
+    db.collection("users").where("roleId", "==", "R003").onSnapshot(snap => {
         animateCount('total-managers', snap.size);
         showLog('logManagers', 'logManagersText', 'logManagersTime',
             `${snap.size} manager(s) synced`);

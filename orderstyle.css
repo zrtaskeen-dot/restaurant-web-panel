@@ -161,14 +161,14 @@ body {
     position: fixed; 
     top: 50%; left: 50%; 
     transform: translate(-50%, -50%); 
-    background: #fdf6e3; 
+    background: white; 
     padding: 30px; 
     border-radius: 20px; 
     width: 420px; 
     z-index: 1000;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border: 1.5px solid #bbb;
 }
 
 .modal h2 {
@@ -185,7 +185,7 @@ body {
 
 .modal-body hr {
     border: none;
-    border-top: 1px solid #e0e0e0;
+    border-top: 1.5px solid #bbb;
     margin: 12px 0;
 }
 

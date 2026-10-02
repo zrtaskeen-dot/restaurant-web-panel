@@ -12,41 +12,11 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// 🟢 Pehle sab orders fetch karo — phir customers ke liye address dhundo
-let allOrders = [];
-
-async function loadAllOrders() {
-    try {
-        const snap = await db.collection("orders").get();
-        allOrders = [];
-        snap.forEach(doc => allOrders.push(doc.data()));
-    } catch (e) {
-        console.error("Orders fetch error:", e);
-    }
-}
-
-// Address dhundne ka function
-function findAddressForCustomer(name, phone) {
-    // naam se match karo
-    const matches = allOrders.filter(o => 
-        (o.customer_name && o.customer_name.toLowerCase().trim() === (name || '').toLowerCase().trim()) ||
-        (o.phone_number && phone && o.phone_number === phone)
-    );
-
-    if (matches.length === 0) return "N/A";
-
-    // Latest order ka address lo
-    matches.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    return matches[0].delivery_address || "N/A";
-}
-
+const CUSTOMER_ROLE_ID = "R001";
 // --- Load Customers ---
-async function loadCustomers() {
+function loadCustomers() {
     const listContainer = document.getElementById('customer-list');
     listContainer.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Loading...</p>';
-
-    // Pehle orders load karo
-    await loadAllOrders();
 
     db.collection("users")
     .onSnapshot((snapshot) => {
@@ -56,21 +26,17 @@ async function loadCustomers() {
 
         snapshot.forEach((doc) => {
             const user = doc.data();
-            const role = user.role || "";
 
-            // Riders aur Managers skip karo
-            if (role === "rider" || role === "manager"|| role === "owner"|| role === "admin") return;
+            if (user.roleId !== CUSTOMER_ROLE_ID) return;
 
             // 🟢 Incomplete/empty records skip karo — jin ka na naam hai na email
-            // (ye zyada tar test accounts ya adhoore signups hote hain, genuine customer nahi)
             if (!user.name && !user.email) return;
 
             count++;
             const id = doc.id;
             const isBlocked = user.status === "blocked";
 
-            // 🟢 Address orders se dhundo
-            const address = findAddressForCustomer(user.name, user.phone);
+            const address = user.address || "N/A";
 
             // 🟢 Email verification badge
             const verifiedBadge = user.emailVerified

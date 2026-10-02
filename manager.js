@@ -26,11 +26,11 @@ function logActivity(action, details) {
             created_at: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // ✅ System log — admin dashboard ke liye
+        // ✅ System log 
         db.collection("system_log").add(logData)
             .catch(err => console.error("system_log error:", err));
 
-        // ✅ Activity log — owner app ke liye
+        // ✅ Activity log 
         db.collection("activity_logs").add(logData)
             .catch(err => console.error("activity_logs error:", err));
 
@@ -52,7 +52,6 @@ window.closeManagerModal = function() {
     document.getElementById('managerForm').reset();
     editManagerId = null;
 
-    // 🟢 Fields wapas dikhao (next time Add Manager ke liye)
     const emailGroup = document.getElementById('managerEmail').closest('.input-group');
     const passwordGroup = document.getElementById('managerPassword').closest('.input-group');
     if (emailGroup) emailGroup.style.display = 'block';
@@ -61,7 +60,7 @@ window.closeManagerModal = function() {
 
 // --- READ / REAL-TIME FETCH DATA ---
 db.collection("users")
-    .where("role", "==", "manager")
+    .where("roleId", "==", "R003")
     .onSnapshot((snapshot) => {
         const listContainer = document.getElementById('manager-list');
         if (!listContainer) return;
@@ -211,7 +210,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
             const newUser = userCredential.user;
             const userUid = newUser.uid;
 
-            // Verification email bhejo
+            // Verification email 
             await newUser.sendEmailVerification();
 
             // Branch check/create
@@ -232,7 +231,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
                 branchWasCreated = true;
             }
 
-            // Firestore mein manager data save karo
+            // Manager Data in Firebase
             const managerData = {
                 uid: userUid,
                 name: mName,
@@ -242,7 +241,6 @@ document.getElementById('managerForm').addEventListener('submit', async function
                 cnic: mCnic,
                 branch: mBranch,
                 branchId: automaticBranchId,
-                role: "manager",
                 roleId: "R003",
                 emailVerified: false,
                 createdAt: Date.now()
@@ -281,7 +279,6 @@ window.editManager = function(id) {
                 document.getElementById('managerCnic').value = m.cnic || '';
                 document.getElementById('managerBranch').value = m.branch || '';
 
-                // 🟢 Edit mode mein email aur password fields hide karo
                 const emailGroup = document.getElementById('managerEmail').closest('.input-group');
                 const passwordGroup = document.getElementById('managerPassword').closest('.input-group');
                 if (emailGroup) emailGroup.style.display = 'none';

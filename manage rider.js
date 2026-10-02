@@ -19,7 +19,7 @@ if (!currentBranchId) {
     if (list) list.innerHTML = '<p style="padding: 20px; text-align: center; color: red;">Session error: Branch ID not found. Please login again.</p>';
 } else {
     db.collection("users")
-        .where("role",          "==", "rider")
+        .where("roleId",          "==", "R002")
         .where("branchId",      "==", currentBranchId)
         .where("emailVerified", "==", true)         
         .onSnapshot((snapshot) => {
