@@ -198,7 +198,7 @@ function loadActivityLog() {
     requestNotificationPermission();
 
     db.collection("system_log")           // ✅ collection rename
-        .orderBy("created_at", "desc")
+        .orderBy("createdAt", "desc")
         .limit(50)
         .onSnapshot(snap => {
             if (snap.empty) {
@@ -240,8 +240,9 @@ function loadActivityLog() {
                 // Time format
                 let timeStr = '—';
                 let createdAtMs = 0;
-                if (log.created_at) {
-                    const date = log.created_at.toDate ? log.created_at.toDate() : new Date(log.created_at);
+                if (log.createdAt) {
+    const raw  = log.createdAt;
+    const date = raw.toDate ? raw.toDate() : new Date(raw);
                     createdAtMs = date.getTime();
                     timeStr = date.toLocaleString('en-US', {
                         day:    '2-digit',
@@ -254,7 +255,7 @@ function loadActivityLog() {
                 }
 
                 // ✅ Role + By ek line, branch agar ho
-                const metaLine = `${log.role || ''}${log.branch ? ` | ${log.branch}` : ''}`;
+                const metaLine = `${log.performedBy ||  ''}${log.branch ? ` | ${log.branch}` : ''}`;
 
                 container.innerHTML += `
                     <div class="activity-entry">

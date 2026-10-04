@@ -34,10 +34,8 @@ function formatDate(timestamp) {
     });
 }
 
-// ✅ Go to order — orders.html par jao aur order highlight karo
 window.goToOrder = function(orderId) {
     if (!orderId) return;
-    // localStorage mein save karo
     localStorage.setItem("highlight_order_id", orderId);
     window.location.href = "orders.html";
 };
@@ -64,7 +62,6 @@ function renderReviews(reviews) {
             <p class="review-comment">"${r.comment || 'No comment provided.'}"</p>
             <div class="review-footer">
 
-                <!-- ✅ Clickable Order ID -->
                 <span 
                     class="order-id" 
                     onclick="goToOrder('${r.orderId}')"
@@ -90,7 +87,7 @@ window.filterReviews = function(rating, btn) {
     }
 };
 
-// ✅ Sidebar badge — orders page par bhi dikhay
+// Sidebar badge 
 function updateOrdersBadge() {
     if (!BRANCH_DOC_ID) return;
     db.collection("orders")
@@ -117,11 +114,10 @@ function updateOrdersBadge() {
             });
         });
 }
-// ✅ Sidebar Reviews Badge — Realtime Updates
+// Sidebar Reviews Badge 
 function updateReviewsBadge() {
     if (!BRANCH_DOC_ID) return;
 
-    // Step 1: Pehle Branch ke valid order IDs listen karein
     db.collection("orders")
         .where("branchId", "==", BRANCH_DOC_ID)
         .onSnapshot(async ordersSnap => {
@@ -130,7 +126,7 @@ function updateReviewsBadge() {
 
             if (branchOrderIds.size === 0) return;
 
-            // Step 2: Unread reviews listen karein
+            // Unread reviews listen 
             db.collection("reviews")
                 .where("isRead", "==", false)
                 .onSnapshot(reviewsSnap => {
@@ -141,7 +137,6 @@ function updateReviewsBadge() {
                         }
                     });
 
-                    // Sidebar navigation links check karke badge append karein
                     const links = document.querySelectorAll('.sidebar nav a');
                     links.forEach(link => {
                         if (link.textContent.trim().toLowerCase().includes('review')) {
@@ -159,7 +154,7 @@ function updateReviewsBadge() {
                 });
         });
 }
-// ✅ Mark reviews as read
+// ---Mark reviews as read
 async function markReviewsAsRead(reviewIds) {
     if (reviewIds.length === 0) return;
     const batch = db.batch();
@@ -169,7 +164,7 @@ async function markReviewsAsRead(reviewIds) {
     await batch.commit();
 }
 
-// --- LOAD REVIEWS ---
+// --- LOAD REVIEWS 
 async function loadReviews() {
     const container = document.getElementById('reviewsList');
 
@@ -179,7 +174,7 @@ async function loadReviews() {
     }
 
     try {
-        // Step 1: Branch ke orders ki IDs nikalo
+
         const ordersSnap = await db.collection("orders")
             .where("branchId", "==", BRANCH_DOC_ID)
             .get();
@@ -189,7 +184,6 @@ async function loadReviews() {
             return;
         }
 
-        // ✅ Orders ka count bhi save karo badge ke liye
         let pendingCount = 0;
         const branchOrderIds = new Set();
         ordersSnap.forEach(doc => {
@@ -198,7 +192,6 @@ async function loadReviews() {
             if (status === 'pending') pendingCount++;
         });
 
-        // Step 2: Reviews fetch karo
         const reviewsSnap = await db.collection("reviews").get();
 
        allReviews = [];
@@ -207,10 +200,10 @@ reviewsSnap.forEach(doc => {
     const r = doc.data();
     if (branchOrderIds.has(r.orderId)) {
         allReviews.push({ id: doc.id, ...r });
-        if (!r.isRead) unreadIds.push(doc.id); // ✅ unread collect karo
+        if (!r.isRead) unreadIds.push(doc.id); 
     }
 });
-await markReviewsAsRead(unreadIds); // ✅ sab read mark karo
+await markReviewsAsRead(unreadIds); 
 
         // Sort newest first
         allReviews.sort((a, b) => {
@@ -234,7 +227,7 @@ await markReviewsAsRead(unreadIds); // ✅ sab read mark karo
     }
 }
 
-// --- LOGOUT --- 🟢 async confirm fix
+// --- LOGOUT --- 
 window.confirmLogout = async function() {
     const agreed = await confirm("Are you sure you want to logout?");
     if (agreed) {

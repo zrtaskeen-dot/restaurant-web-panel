@@ -152,11 +152,9 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
         // ✅ Login log
         const loginLog = {
             action:       "Admin Login",
-            performed_by: "Admin",
-            role:         "Admin",
-            branch:       "",
+            performedBy: "Admin",
             details:      "Admin logged in to the system",
-            created_at:   firebase.firestore.FieldValue.serverTimestamp()
+            createdAt:   firebase.firestore.FieldValue.serverTimestamp()
         };
         db.collection("system_log").add(loginLog).catch(err => console.error(err));
 

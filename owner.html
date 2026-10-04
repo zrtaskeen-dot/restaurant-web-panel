@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> <!-- ✅ Added -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script> 
 </head>
 <body>
 
@@ -18,10 +18,10 @@
             <h2 class="sidebar-title">Admin Panel</h2>
             <nav>
                 <a href="admin.html"> Dashboard Overview</a>
-                <a href="rider.html">Manage Riders</a> 
-                <a href="manager.html">Manage Managers</a>
-                <a href="owner.html" class="active">Manage owner</a>
-                <a href="customer.html">Manage Customers</a>
+                <a href="rider.html">Riders</a> 
+                <a href="manager.html">Managers</a>
+                <a href="owner.html" class="active">Owner</a>
+                <a href="customer.html">Customers</a>
                 <a href="#" class="logout-btn">Logout</a>
             </nav>
         </div>
@@ -69,7 +69,7 @@
                    <input type="text" id="ownerPhone" required placeholder="03XXXXXXXXX" maxlength="11">
                 </div>
                 <div class="modal-actions">
-                    <button type="submit" id="ownerRegBtn" class="btn-save">Register Owner</button> <!-- ✅ id added -->
+                    <button type="submit" id="ownerRegBtn" class="btn-save">Register Owner</button> 
                     <button type="button" class="btn-cancel" onclick="closeownerModal()">Cancel</button>
                 </div>
             </form>

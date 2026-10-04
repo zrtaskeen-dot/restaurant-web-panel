@@ -16,7 +16,7 @@ console.log("Active Logged-in Manager Branch ID:", BRANCH_DOC_ID);
 
 let revenueChart = null;
 
-// ✅ Helper: Check if scheduled order
+// Check if scheduled order
 function checkIsScheduled(data) {
     const raw = (data.delivery_time || '').toString().trim().toLowerCase();
     if (raw === '' || raw === 'now' || raw === 'as soon as possible' || raw === 'asap') return false;
@@ -26,7 +26,6 @@ function checkIsScheduled(data) {
     return !isNaN(parsed.getTime());
 }
 
-// ✅ Helper: Order ka status — teeno possible field names check karta hai
 function getOrderStatus(data) {
     return data.order_status || data.orderStatus || data.status || '';
 }
@@ -34,7 +33,7 @@ function getOrderStatus(data) {
 // 1. Branch Details & Payment Numbers Listener
 function listenToBranchDetails() {
     if (!BRANCH_DOC_ID) return;
-    
+
     // Branch Info Listener
     db.collection("restaurant_info").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
         if (doc.exists) {
@@ -42,30 +41,29 @@ function listenToBranchDetails() {
             const bName = document.getElementById('displayBranchName');
             const bTiming = document.getElementById('displayBranchTiming');
             const bAddr = document.getElementById('displayBranchAddress');
-            const bDelivery = document.getElementById('displayDeliveryCharge'); // 🟢 naya
+            const bDelivery = document.getElementById('displayDeliveryCharge');
 
             if (bName) bName.innerText = data.branchName || "Setup Your Branch Name";
             if (bTiming) bTiming.innerText = data.timing || "--:--";
             if (bAddr) bAddr.innerText = data.address || "Enter Address";
-            if (bDelivery) bDelivery.innerText = data.deliveryCharge ? `Rs. ${data.deliveryCharge}` : "Not Set"; // 🟢 naya
+            if (bDelivery) bDelivery.innerText = data.deliveryCharge ? `Rs. ${data.deliveryCharge}` : "Not Set";
 
             const inName = document.getElementById('inputBranchName');
             const inTiming = document.getElementById('inputBranchTiming');
             const inAddr = document.getElementById('inputBranchAddress');
-            const inDelivery = document.getElementById('inputDeliveryCharge'); // 🟢 naya
+            const inDelivery = document.getElementById('inputDeliveryCharge');
 
             if (inName) inName.value = data.branchName || "";
             if (inTiming) inTiming.value = data.timing || "";
             if (inAddr) inAddr.value = data.address || "";
-            if (inDelivery) inDelivery.value = data.deliveryCharge || ""; // 🟢 naya
+            if (inDelivery) inDelivery.value = data.deliveryCharge || "";
         } else {
             const bName = document.getElementById('displayBranchName');
             if (bName) bName.innerText = "Branch Profile Setup Needed";
         }
     });
 
-    // 🟢 Payment Accounts Listener (Updates Header View & Modal Inputs)
-    db.collection("branches").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
+    db.collection("payment_method").doc(BRANCH_DOC_ID).onSnapshot((doc) => {
         if (doc.exists) {
             const data = doc.data();
             const ep = data.easyPaisaNumber || "Not Set";
@@ -91,13 +89,13 @@ window.saveBranchDetails = async function() {
     const name    = document.getElementById('inputBranchName').value.trim();
     const timing  = document.getElementById('inputBranchTiming').value.trim();
     const address = document.getElementById('inputBranchAddress').value.trim();
-    const delivery = document.getElementById('inputDeliveryCharge').value.trim(); // 🟢 naya
-    
-    if (!name || !timing || !address || !delivery) {  // 🟢 delivery bhi required
-        alert("Please fill all branch details!"); 
-        return; 
+    const delivery = document.getElementById('inputDeliveryCharge').value.trim();
+
+    if (!name || !timing || !address || !delivery) {
+        alert("Please fill all branch details!");
+        return;
     }
-    
+
     const saveBtn = document.getElementById('btnSaveBranch');
     if (saveBtn) {
         saveBtn.innerText = "Saving...";
@@ -106,13 +104,28 @@ window.saveBranchDetails = async function() {
 
     try {
         await db.collection("restaurant_info").doc(BRANCH_DOC_ID).set({
-            branchName: name, 
-            timing: timing, 
-            address: address, 
-            deliveryCharge: delivery,  // 🟢 naya
+            branchName: name,
+            timing: timing,
+            address: address,
+            deliveryCharge: delivery,
             updatedAt: Date.now()
         }, { merge: true });
-        
+
+        // 🟢 Branch name admin ke "Manager Management" page mein bhi
+        // sync honi chahiye, is liye usi branchId se linked saare
+        // users docs (managers/riders) mein branchName update karo
+        const linkedUsersSnap = await db.collection("users")
+            .where("branchId", "==", BRANCH_DOC_ID)
+            .get();
+
+        if (!linkedUsersSnap.empty) {
+            const batch = db.batch();
+            linkedUsersSnap.forEach(userDoc => {
+                batch.update(userDoc.ref, { branchName: name });
+            });
+            await batch.commit();
+        }
+
         closeBranchModal();
         alert("Branch Details Updated Successfully!");
     } catch (error) {
@@ -147,11 +160,12 @@ window.savePaymentNumbers = async function() {
         btn.disabled  = true;
     }
     try {
-        await db.collection("branches").doc(BRANCH_DOC_ID).set({
+
+        await db.collection("payment_method").doc(BRANCH_DOC_ID).set({
             easyPaisaNumber: epVal,
             jazzCashNumber:  jcVal
         }, { merge: true });
-        
+
         closePaymentModal();
         alert("Payment account numbers updated successfully!");
     } catch (e) {
@@ -169,18 +183,18 @@ window.savePaymentNumbers = async function() {
 window.openBranchModal = function() {
     const overlay = document.getElementById('branchModalOverlay');
     const modal   = document.getElementById('branchEditModal');
-    if (overlay && modal) { 
-        overlay.style.display = 'block'; 
-        modal.style.display   = 'block'; 
+    if (overlay && modal) {
+        overlay.style.display = 'block';
+        modal.style.display   = 'block';
     }
 };
 
 window.closeBranchModal = function() {
     const overlay = document.getElementById('branchModalOverlay');
     const modal   = document.getElementById('branchEditModal');
-    if (overlay && modal) { 
-        overlay.style.display = 'none'; 
-        modal.style.display   = 'none'; 
+    if (overlay && modal) {
+        overlay.style.display = 'none';
+        modal.style.display   = 'none';
     }
 };
 

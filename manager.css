@@ -103,7 +103,6 @@ body {
 }
 
 /* --- Table --- */
-/* 🟢 Table wrapper — poore table (header + rows) ko ek connected box banata hai */
 .manager-table-container {
     border: 1.5px solid #bbb;
     border-radius: 15px;
@@ -113,7 +112,6 @@ body {
     box-sizing: border-box;
 }
 
-/* 🟢 7 columns: Name, Email, Password, Phone, CNIC, Branch, Actions */
 .table-header {
     background-color: #b52a00;
     color: white;
@@ -248,4 +246,18 @@ body {
     border-radius: 8px;
     font-weight: bold;
     cursor: pointer;
+}
+
+/* --- Branch Management --- */
+
+.branch-section-title {
+    margin-top: 40px;
+}
+
+.branch-table-header {
+    grid-template-columns: 1.3fr 2fr 1.3fr 1.5fr 1.2fr;
+}
+
+.branch-row {
+    grid-template-columns: 1.3fr 2fr 1.3fr 1.5fr 1.2fr;
 }

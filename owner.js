@@ -18,15 +18,21 @@ let editOwnerId = null;
 // --- ACTIVITY LOG HELPER ---
 function logActivity(action, details) {
     try {
-        db.collection("system_log").add({
+        const logData = {
             action,
-            role: "Admin",
-            branch: "",
+            performedBy: "Admin",  
             details,
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch((err) => console.error("System log write failed:", err));
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("system_log").add(logData)
+            .catch(err => console.error("system_log error:", err));
+
+        db.collection("activity_logs").add(logData)
+            .catch(err => console.error("activity_logs error:", err));
+
     } catch (err) {
-        console.error("System log error:", err);
+        console.error("Log error:", err);
     }
 }
 
@@ -42,8 +48,6 @@ window.closeownerModal = function() {
     document.getElementById('ownerModal').style.display = 'none';
     document.getElementById('ownerForm').reset();
     editOwnerId = null;
-
-    // 🟢 Fields wapas dikhao next Add Owner ke liye
     const emailGroup    = document.getElementById('ownerEmail').closest('.input-group');
     const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
     if (emailGroup)    emailGroup.style.display    = 'block';
@@ -96,19 +100,19 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
     const oPassword = document.getElementById('ownerPassword').value;
     const oPhone    = document.getElementById('ownerPhone').value.trim();
 
-    // 🟢 Name check
+    // Name check
     if (!oName || oName.length < 2) {
         alert("Please enter a valid name (at least 2 characters).");
         return;
     }
 
-    // 🟢 Email format check
+    // Email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(oEmail)) {
         alert("Please enter a valid email address.\nExample: user@example.com");
         return;
     }
 
-    // 🟢 Password strength check (skip in edit mode if empty)
+    // Password strength check 
     if (!editOwnerId || oPassword) {
         const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
         if (!passRegex.test(oPassword)) {
@@ -117,7 +121,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         }
     }
 
-    // 🟢 Phone 11 digit check
+    // Phone 11 digit check
     if (!/^\d{11}$/.test(oPhone)) {
         alert("Phone number must be exactly 11 digits!");
         return;
@@ -132,7 +136,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         || 'Admin';
 
     try {
-        // 🟢 Phone uniqueness check
+        // Phone uniqueness check
         const phoneSnap = await db.collection("users").where("phone", "==", oPhone).get();
         const phoneDuplicate = phoneSnap.docs.some(doc => doc.id !== editOwnerId);
         if (phoneDuplicate) {
@@ -157,20 +161,19 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         } else {
             // --- NEW ENTRY MODE ---
 
-            // Step 1: Firebase Auth account banao
+            // Account
             const userCredential = await auth.createUserWithEmailAndPassword(oEmail, oPassword);
             const newUser = userCredential.user;
             const userUid = newUser.uid;
 
-            // Step 2: Verification email bhejo
+            // Verification email 
             await newUser.sendEmailVerification();
 
-            // Step 3: Firestore mein save karo
+            // save in firstore
             await db.collection("users").doc(userUid).set({
                 uid: userUid,
                 name: oName,
                 email: oEmail,
-                password: oPassword,
                 phone: oPhone,
                 roleId: "R004",
                 emailVerified: false,
@@ -179,7 +182,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
 
             logActivity("Owner Added", `New owner "${oName}" registered`, adminPerformer);
 
-            // Step 4: Admin session logout
+            // Admin session logout
             await auth.signOut();
 
             alert(`Owner registered successfully!\n\nVerification email sent to:\n${oEmail}\n\nOwner cannot login until email is verified.`);
@@ -206,7 +209,6 @@ window.editOwner = async (id) => {
             document.getElementById('ownerPassword').value = o.password || '';
             document.getElementById('ownerPhone').value    = o.phone    || '';
 
-            // 🟢 Edit mode mein email aur password fields hide karo
             const emailGroup    = document.getElementById('ownerEmail').closest('.input-group');
             const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
             if (emailGroup)    emailGroup.style.display    = 'none';
@@ -220,7 +222,7 @@ window.editOwner = async (id) => {
     }
 };
 
-// --- DELETE FUNCTION --- 🟢 async confirm fix
+// --- DELETE FUNCTION --- 
 window.deleteOwner = async (id) => {
     const agreed = await confirm("Are you sure you want to remove this owner?");
     if (agreed) {
@@ -236,7 +238,7 @@ window.deleteOwner = async (id) => {
     }
 };
 
-// Close modal on outside click
+// Close modal 
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('ownerModal');
     if (e.target === modal) closeownerModal();

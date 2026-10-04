@@ -30,33 +30,34 @@ let packageSelectedItems = [];
 let packageAllItems = [];
 let currentPackageMiniCategory = 'PIZZA';
 
-// 🟢 NEW: Stores the base64 string of the selected deal image for preview
 let dealBase64Image = "";
 
 // --- ACTIVITY LOG HELPER ---
-// This page is branch/manager scoped (via active_branch_id), so role defaults to
-// "Manager". NOTE: performedBy is picked from localStorage first (adjust the key
-// name below to whatever your login flow actually stores, e.g. 'manager_name' /
-// 'user_name'), falling back to the signed-in auth email, then a generic label.
 function logActivity(action, details) {
     try {
         const performedBy = localStorage.getItem('manager_name')
             || localStorage.getItem('user_name')
             || (firebase.auth().currentUser ? firebase.auth().currentUser.email : null)
             || 'Manager';
-        const role   = localStorage.getItem('user_role')        || 'Manager';
         const branch = localStorage.getItem('managerBranchName') || '';
 
-       db.collection("system_log").add({
-    action,
-    performed_by: performedBy,
-    role,                    // ✅ role add karo
-    branch,
-    details,
-    created_at: firebase.firestore.FieldValue.serverTimestamp()
-}).catch((err) => console.error("System log write failed:", err));
+        const logData = {
+            action,
+            performedBy,
+            branch,
+            details,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+          
+        };
+
+        db.collection("system_log").add(logData)
+            .catch((err) => console.error("System log write failed:", err));
+
+        db.collection("activity_logs").add(logData)
+            .catch((err) => console.error("Activity log write failed:", err));
+
     } catch (err) {
-        console.error("System log error:", err);
+        console.error("Log error:", err);
     }
 }
 
@@ -65,12 +66,6 @@ function formatPricesForLog(prices) {
     return Object.entries(prices).map(([k, v]) => `${k}: Rs.${v}`).join(', ');
 }
 
-// --- IN-APP CUSTOMER NOTIFICATION (no Cloud Functions) ---
-// Writes straight to the same `notifications` collection the Flutter app's
-// NotificationService.broadcastToAllCustomers() writes to (userId: 'ALL',
-// isRead: false, serverTimestamp). NotificationScreen already listens to
-// this collection live, so every customer sees it instantly — no backend
-// function needed.
 function broadcastToAllCustomers(title, body) {
     db.collection("notifications").add({
         userId: "ALL",
@@ -81,9 +76,7 @@ function broadcastToAllCustomers(title, body) {
     }).catch(err => console.error("Broadcast notification failed:", err));
 }
 
-// ─────────────────────────────────────────────
 //  DEAL IMAGE: Preview on file select
-// ─────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
 
     // Wire up deal image file input preview
@@ -130,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // 🟢 NEW: Require image on CREATE, allow skip on EDIT
+            //  Require image on CREATE, allow skip on EDIT
             if (!editPackageId && !dealFile) {
                 alert("Please upload an image for this package!");
                 return;
@@ -144,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 let imageUrl = "";
 
-                // 🟢 NEW: Upload deal image to Cloudinary if a file was selected
+                // Upload deal image to Cloudinary if a file was selected
                 if (dealFile) {
                     const formData = new FormData();
                     formData.append("file", dealFile);
@@ -181,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     // Let every customer know about the new combo/deal.
                     broadcastToAllCustomers(
-                        `New ${currentCategory} Alert! 🎉`,
+                        `New ${currentCategory} Alert! `,
                         `${name} is now available for Rs. ${price}. Order now!`
                     );
                 }
@@ -376,7 +369,7 @@ window.saveItem = async function () {
 
             // Let every customer know about the new menu item.
             broadcastToAllCustomers(
-                "New Item Added! 🍽️",
+                "New Item Added!",
                 `${name} is now available in ${currentCategory}. Order now!`
             );
         }
@@ -419,7 +412,7 @@ window.loadMenuItems = function (category) {
         const pDesc = document.getElementById('menuPackageDesc');
         if (pDesc) pDesc.value = '';
 
-        // 🟢 Reset deal image preview
+        // Reset deal image preview
         dealBase64Image = "";
         const dealImagePreview = document.getElementById('dealImagePreview');
         if (dealImagePreview) {
@@ -639,14 +632,12 @@ window.togglePackageItemSelection = function (checkbox) {
 
     if (checkbox.checked) {
         if (qtyWrap) qtyWrap.style.display = 'flex';
-        // Exact match ya x-wala entry nahi hai to add karo
         const alreadyExists = packageSelectedItems.some(i => i === name || i === `${name} x1` || i.match(new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} x\\d+$`)));
         if (!alreadyExists) {
             packageSelectedItems.push(`${name} x1`);
         }
     } else {
         if (qtyWrap) qtyWrap.style.display = 'none';
-        // Exact match remove karo
         packageSelectedItems = packageSelectedItems.filter(i => {
             return !(i === name || i === `${name} x1` || i.match(new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} x\\d+$`)));
         });
@@ -681,7 +672,7 @@ window.changeQty = function(name, delta) {
     updateDescTextarea();
 };
 
-// 🟢 Textarea update
+// Textarea update
 function updateDescTextarea() {
     const txt = document.getElementById('menuPackageDesc');
     if (!txt) return;
@@ -689,7 +680,6 @@ function updateDescTextarea() {
     txt.value = packageSelectedItems.length === 0
         ? ''
         : packageSelectedItems.map((item, index) => {
-            // x1 ho to number nahi dikhana
             const display = item.replace(/ x1$/, '');
             return `${index + 1}. ${display}`;
         }).join('\n');
@@ -708,7 +698,7 @@ window.editPackage = async function (id) {
         document.getElementById('menuPackagePrice').value = data.prices ? (data.prices.simple || '') : '';
         document.getElementById('menuPackageDesc').value = data.description || '';
 
-        // 🟢 Show existing image in preview when editing
+        // Show existing image in preview when editing
         const dealImagePreview = document.getElementById('dealImagePreview');
         if (dealImagePreview && data.imageUrl) {
             dealImagePreview.src = data.imageUrl;
@@ -754,7 +744,7 @@ function resetPackageFormState() {
     const pDescField = document.getElementById('menuPackageDesc');
     if (pDescField) pDescField.value = '';
 
-    // 🟢 Reset deal image fields
+    // Reset deal image fields
     dealBase64Image = "";
     const dealImagePreview = document.getElementById('dealImagePreview');
     if (dealImagePreview) {
@@ -789,7 +779,7 @@ function fetchSavedPackagesLive() {
                 const pkgId = doc.id;
                 const priceVal = pkg.prices ? (pkg.prices.simple || 0) : 0;
 
-                // 🟢 Show package image in the table row
+                // Show package image in the table row
                 const imgSrc = pkg.imageUrl || 'https://via.placeholder.com/50';
 
                 const row = document.createElement('div');
@@ -957,13 +947,10 @@ window.requestDelete = async (id) => {
         }
     }
 };
-// 🟢 Sidebar Badge
-// ✅ Helper: Order ka status — teeno possible field names check karta hai
+// Sidebar Badge
 function getOrderStatus(data) {
     return data.order_status || data.orderStatus || data.status || '';
 }
-
-// 🟢 Sidebar Badge
 function updateOrdersBadge() {
     if (!BRANCH_DOC_ID) return;
     db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).onSnapshot(snap => {
@@ -988,7 +975,7 @@ function updateOrdersBadge() {
         });
     });
 }
-// 🟢 Sidebar Reviews Badge
+//Sidebar Reviews Badge
 function updateReviewsBadge() {
     if (!BRANCH_DOC_ID) return;
 

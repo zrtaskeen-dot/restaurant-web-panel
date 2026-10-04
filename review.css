@@ -13,7 +13,7 @@ body {
 .admin-container { 
     display: flex; 
     min-height: 100vh; 
-    align-items: stretch; /* Both sidebar and content stay aligned */
+    align-items: stretch; 
 }
 
 /* --- Sidebar --- */
@@ -23,12 +23,9 @@ body {
     color: white; 
     padding: 20px; 
     font-size: 14px;
-    
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    
-    /* 🟢 Sidebar ki position ko screen par fix karne ke liye */
     height: 100vh;
     position: sticky;
     top: 0;
@@ -44,7 +41,7 @@ body {
 .sidebar nav {
     display: flex;
     flex-direction: column;
-    height: 100%; /* Nav ko full available space dega */
+    height: 100%; 
 }
 
 .sidebar nav a { 
@@ -62,9 +59,8 @@ body {
     font-weight: bold; 
 }
 
-/* 🟢 Logout Button - Bilkul Bottom par Shift karega */
 .sidebar nav a.logout-btn {
-    margin-top: auto; /* Clean push to bottom */
+    margin-top: auto; 
     background-color: #800000;
     text-align: center;
     font-weight: bold;
@@ -77,14 +73,14 @@ body {
     background-color: #5c0000;
 }
 
-/* ── MAIN CONTENT ── */
+/*  MAIN CONTENT  */
 .main-content {
     flex: 1;
     padding: 28px;
     overflow-y: auto;
 }
 
-/* ── PAGE HEADER ── */
+/*  PAGE HEADER  */
 .page-header {
     display: flex;
     justify-content: space-between;
@@ -105,7 +101,7 @@ body {
     color: #888;
 }
 
-/* ── STATS ── */
+/*  STATS */
 .stats-row {
     display: flex;
     gap: 16px;
@@ -135,7 +131,7 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* ── FILTER ROW ── */
+/*  FILTER ROW  */
 .filter-row {
     display: flex;
     gap: 8px;
@@ -165,14 +161,14 @@ body {
     border-color: #b52a00;
 }
 
-/* ── REVIEWS GRID ── */
+/*  REVIEWS GRID */
 #reviewsList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 16px;
 }
 
-/* ── REVIEW CARD ── */
+/* REVIEW CARD */
 .review-card {
     background: white;
     border-radius: 14px;
@@ -252,7 +248,7 @@ body {
     color: #aaa;
 }
 
-/* ── EMPTY STATE ── */
+/* EMPTY STATE */
 .empty-state {
     grid-column: 1 / -1;
     text-align: center;

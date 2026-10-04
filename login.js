@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
         e.preventDefault();
 
         const email    = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
+        const password = document.getElementById('loginPassword').value.trim();
         const loginBtn = document.getElementById('btnLogin');
 
         loginBtn.innerText = "Processing...";
@@ -215,11 +215,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     // ✅ Login log
                     const loginLog = {
                         action:       "Manager Login",
-                        performed_by: managerName,
-                        role:         "Manager",
+                        performedBy: managerName,
                         branch:       dynamicBranchName,
                         details:      `Manager "${managerName}" logged in to branch "${dynamicBranchName}"`,
-                        created_at:   firebase.firestore.FieldValue.serverTimestamp()
+                        createdAt:   firebase.firestore.FieldValue.serverTimestamp()
                     };
                     db.collection("system_log").add(loginLog).catch(err => console.error(err));
                     db.collection("activity_logs").add(loginLog).catch(err => console.error(err));

@@ -18,10 +18,10 @@
             <h2 class="sidebar-title">Admin Panel</h2>
             <nav>
                 <a href="admin.html">Dashboard Overview</a>
-                <a href="rider.html">Manage Riders</a>
-                <a href="manager.html" class="active">Manage Managers</a>
-                <a href="owner.html">Manage owner</a>
-                <a href="customer.html">Manage Customers</a>
+                <a href="rider.html">Riders</a>
+                <a href="manager.html" class="active">Managers</a>
+                <a href="owner.html">Owner</a>
+                <a href="customer.html">Customers</a>
                 <a href="#" class="logout-btn">Logout</a>
             </nav>
         </div>
@@ -42,6 +42,22 @@
                 </div>
                 <div id="manager-list">
                     <p style="padding: 20px; text-align: center;">Loading managers...</p>
+                </div>
+            </div>
+
+            <!-- --- BRANCH MANAGEMENT SECTION (added at the end of the page) --- -->
+            <h1 class="page-title branch-section-title">Branches</h1>
+
+            <div class="manager-table-container">
+                <div class="table-header branch-table-header">
+                    <span>Branch Name</span>
+                    <span>Address</span>
+                    <span>Delivery Charge</span>
+                    <span>Timing</span>
+                    <span style="text-align: center;">Actions</span>
+                </div>
+                <div id="branch-list">
+                    <p style="padding: 20px; text-align: center;">Loading branches...</p>
                 </div>
             </div>
         </div>

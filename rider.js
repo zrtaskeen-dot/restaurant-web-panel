@@ -23,17 +23,14 @@ function logActivity(action, details) {
     try {
         const logData = {
             action,
-            role:         "Admin",
-            branch:       "",
+            performedBy: "Admin",  // ✅ sirf "Admin"
             details,
-            created_at: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        // ✅ System log — admin dashboard ke liye
         db.collection("system_log").add(logData)
             .catch(err => console.error("system_log error:", err));
 
-        // ✅ Activity log — owner app ke liye
         db.collection("activity_logs").add(logData)
             .catch(err => console.error("activity_logs error:", err));
 
@@ -41,7 +38,6 @@ function logActivity(action, details) {
         console.error("Log error:", err);
     }
 }
-
 // --- CREATE USER IN FIREBASE AUTHENTICATION ---
 async function createAuthUser(email, password) {
     const res = await fetch(

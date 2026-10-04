@@ -256,9 +256,8 @@ function renderOrders() {
         }
 
         const isPending     = ns === 'pending';
-        // ✅ NEW: highlight ab yahan, render ke andar, apply hoti hai — taake
-        // agle kisi bhi re-render mein bhi (jab tak timer khatam na ho) yeh
-        // style banti rahe.
+
+        // --- Highlight orders
         const isHighlighted = (id === highlightedOrderId);
 
         let rowStyle = '';
@@ -453,7 +452,6 @@ async function openOrderDetails(id) {
                 Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
 
-       // ✅ Customer email fetch karo users collection se
 let customerEmail = '';
 const customerId = order.customerId || '';
 if (customerId) {
@@ -492,9 +490,6 @@ document.getElementById('orderInfo').innerHTML = `
 }
 
 // mirrors RiderController.isRiderOnline() on the Flutter side.
-// isAvailable alone isn't trustworthy — a killed/closed app can leave it
-// stuck at true. A rider only really counts as online if their app also
-// checked in (lastSeen) within the last 90 seconds.
 const ONLINE_MAX_AGE_MS = 2500;
 function isRiderReallyOnline(r) {
     if (r.isAvailable !== true) return false;
@@ -520,9 +515,6 @@ async function openAssignModal(orderId) {
     .where("emailVerified", "==", true)
     .get();
 
-        // isAvailable==true above is just a coarse filter — still filter
-        // out riders whose app has gone stale (closed/killed but the
-        // Firestore field never got flipped back to false).
         const onlineRiderDocs = ridersSnap.docs.filter(doc => isRiderReallyOnline(doc.data()));
 
         if (onlineRiderDocs.length === 0) {
@@ -628,7 +620,7 @@ window.closeOrderView = function() {
     document.getElementById('orderOverlay').style.display   = 'none';
 };
 
-// ✅ Highlight order from review page
+// Highlight order from review page
 function highlightOrderFromReview() {
     const highlightId = localStorage.getItem("highlight_order_id");
     if (!highlightId) return;
