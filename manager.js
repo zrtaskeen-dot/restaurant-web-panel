@@ -131,9 +131,9 @@ document.getElementById('managerForm').addEventListener('submit', async function
         }
     }
 
-    // 🟢 Phone 11 digit check
-    if (!/^\d{11}$/.test(mPhone)) {
-        alert("Phone number must be exactly 11 digits!");
+        // 🟢 Phone +92 format check
+    if (!/^\+92\d{10}$/.test(mPhone)) {
+        alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
     }
 
@@ -261,7 +261,6 @@ document.getElementById('managerForm').addEventListener('submit', async function
 
             // Manager Data in Firebase
             const managerData = {
-                uid: userUid,
                 name: mName,
                 email: mEmail,
                 phone: mPhone,
@@ -302,7 +301,9 @@ window.editManager = function(id) {
                 document.getElementById('managerName').value = m.name || '';
                 document.getElementById('managerEmail').value = m.email || '';
                 document.getElementById('managerPassword').value = m.password || '';
-                document.getElementById('managerPhone').value = m.phone || '';
+                 let ph = m.phone || "";
+            if (/^0\d{10}$/.test(ph)) ph = "+92" + ph.slice(1);   // purana 03... format convert
+            document.getElementById('managerPhone').value    = ph || "+92";
                 document.getElementById('managerCnic').value = m.cnic || '';
                 document.getElementById('managerBranch').value = m.branchName || '';
 
@@ -359,6 +360,16 @@ function togglePass(id, icon) {
     }
 }
 
+// 🟢 Phone: +92 hamesha rahe, sirf digits likhe jayein
+document.getElementById('managerPhone').addEventListener('input', function (e) {
+    let raw = e.target.value;
+    if (raw.startsWith('+92')) raw = raw.slice(3);
+    let val = raw.replace(/\D/g, '');
+    if (val.startsWith('0')) val = val.slice(1);
+    if (val.startsWith('92') && val.length > 10) val = val.slice(2);
+    val = val.slice(0, 10);
+    e.target.value = '+92' + val;
+});
 // =====================================================================
 // --- DELIVERY AREA FROM BRANCH ADDRESS ---
 // Branch ka address save hote hi Google Geocoding se location nikalti hai
@@ -371,9 +382,9 @@ function togglePass(id, icon) {
 const GEOCODING_API_KEY = 'AIzaSyDDTpx9ZaDEsDzGIOnrsWLQL3vHKz7DZU4';
 
 // Branch ke address se har taraf itne km tak delivery (box ka aadha size).
-// Purana zone takreeban 7x7 km tha, yani 3.5 km har taraf.
-// Kisi branch ke document mein 'deliveryRadiusKm' field ho to wo use hoti hai.
-const DEFAULT_DELIVERY_RADIUS_KM = 4;
+// Sab branches ke liye yahi default hai. Kisi ek branch ka radius alag
+// karna ho to uske document mein 'deliveryRadiusKm' field (km) daal dein.
+const DEFAULT_DELIVERY_RADIUS_KM = 5;
 
 function buildBoundsAround(lat, lng, radiusKm) {
     const dLat = radiusKm / 110.574;
@@ -543,11 +554,10 @@ db.collection("restaurant_info")
             listContainer.innerHTML += `
                 <div class="manager-row branch-row">
                     <span style="font-weight: bold; color: #b52a00;">${b.branchName || '-'}</span>
-                    <span>${b.address || '-'}<br><small style="font-size:11px; font-weight:bold; color:${b.deliveryBounds ? '#28a745' : '#b52a00'};">${b.deliveryBounds ? '📍 Delivery area set' : '⚠ Delivery area not set'}</small></span>
+                    <span>${b.address || '-'}<br><small style="font-size:11px; font-weight:bold; color:${b.deliveryBounds ? '#28a745' : '#b52a00'};">${b.deliveryBounds ? ' Delivery area set' : '⚠ Delivery area not set'}</small></span>
                     <span>${b.deliveryCharge || '-'}</span>
                     <span>${b.timing || '-'}</span>
                     <div class="manager-actions">
-                        <button class="btn-edit-t" onclick="setDeliveryArea('${id}')">Set Area</button>
                         <button class="btn-delete-t" onclick="deleteBranch('${id}', '${(b.branchName || '').replace(/'/g, "\\'")}')">Delete</button>
                     </div>
                 </div>

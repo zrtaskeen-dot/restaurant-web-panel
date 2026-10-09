@@ -180,12 +180,12 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 5% auto;
+    margin: 1% auto;
     padding: 20px;
     width: 400px;
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    max-height: 90vh;
+    max-height: 95vh;
     overflow-y: auto;
 }
 

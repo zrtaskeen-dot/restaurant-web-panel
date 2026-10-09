@@ -12,9 +12,9 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 let previousOrderCount = null;
-let isFirstLogLoad = true; // pehli load par notification skip karne ke liye
+let isFirstLogLoad = true; 
 
-const LAST_SEEN_KEY = 'admin_notif_last_seen'; // localStorage key
+const LAST_SEEN_KEY = 'admin_notif_last_seen'; 
 
 // ── DATE BADGE ──
 function setDateBadge() {
@@ -24,7 +24,7 @@ function setDateBadge() {
     if (badge) badge.innerText = now.toLocaleDateString('en-US', options);
 }
 
-// ✅ Live Clock
+// Live Clock
 function startLiveClock() {
     function tick() {
         const clock = document.getElementById('liveClock');
@@ -40,7 +40,7 @@ function startLiveClock() {
     setInterval(tick, 1000);
 }
 
-// ── TIME HELPER ──
+//  TIME HELPER 
 function nowTime() {
     return new Date().toLocaleTimeString('en-US', {
         hour:   '2-digit',
@@ -49,7 +49,7 @@ function nowTime() {
     });
 }
 
-// ── SYSTEM LOG PANEL HELPER ──
+// SYSTEM LOG PANEL HELPER 
 function showLog(id, textId, timeId, text) {
     const entry = document.getElementById(id);
     if (entry) entry.style.display = 'flex';
@@ -65,16 +65,11 @@ function animateCount(elementId, target) {
     if (el) el.innerText = target;
 }
 
-// ══════════════════════════════════════════
-// 🔔 NOTIFICATION BELL SYSTEM
-// ══════════════════════════════════════════
+//  NOTIFICATION BELL SYSTEM
 
 function getLastSeenTime() {
     const val = localStorage.getItem(LAST_SEEN_KEY);
     if (val === null) {
-        // ✅ Pehli dafa (kabhi "seen" mark nahi hua) — purana poora system_log history
-        // unread/naya na dikhe, isliye "abhi" ko hi last-seen maan ke save kar do.
-        // Ab sirf isse aage jo naye logs aayenge wahi notification/badge mein count/show honge.
         const now = Date.now();
         localStorage.setItem(LAST_SEEN_KEY, String(now));
         return now;
@@ -86,15 +81,13 @@ function setLastSeenTime(ts) {
     localStorage.setItem(LAST_SEEN_KEY, String(ts));
 }
 
-// Renders the dropdown list + badge count from the given logs array
-// logs = [{ id, action, details, role, branch, createdAtMs }]
 function renderNotifDropdown(logs) {
     const listEl  = document.getElementById('notifDropdownList');
     const badgeEl = document.getElementById('notifBadge');
     if (!listEl || !badgeEl) return;
 
     const lastSeen = getLastSeenTime();
-    // ✅ Sirf unread/new entries dikhani hain
+    //  unread/new entries 
     const unreadLogs = logs.filter(log => log.createdAtMs > lastSeen);
 
     if (!unreadLogs.length) {
@@ -151,11 +144,9 @@ function setupNotifBell() {
             dropdown.classList.remove('active');
         } else {
             dropdown.classList.add('active');
-            // Open hotay waqt abhi tak ke unread items list mein dikhao
             if (window.__latestNotifLogs) {
                 renderNotifDropdown(window.__latestNotifLogs);
             }
-            // ✅ Open karte hi turant "seen" mark kar do — badge turant reset/hide ho jayega
             setLastSeenTime(Date.now());
             if (badgeEl) badgeEl.style.display = 'none';
         }
@@ -168,7 +159,7 @@ function setupNotifBell() {
     });
 }
 
-// ── BROWSER NOTIFICATION (optional, tab band ho tab bhi dikhe) ──
+// BROWSER NOTIFICATION 
 function requestNotificationPermission() {
     if ("Notification" in window && Notification.permission !== "granted") {
         Notification.requestPermission();
@@ -190,14 +181,14 @@ function playNotificationSound() {
     audio.play().catch(() => {}); // agar browser block kare to silently ignore
 }
 
-// ✅ System Log — from "system_log" collection
+// System Log 
 function loadActivityLog() {
     const container = document.getElementById('activityLog');
     if (!container) return;
 
     requestNotificationPermission();
 
-    db.collection("system_log")           // ✅ collection rename
+    db.collection("system_log")           
         .orderBy("createdAt", "desc")
         .limit(50)
         .onSnapshot(snap => {
@@ -208,7 +199,6 @@ function loadActivityLog() {
                 return;
             }
 
-            // ✅ Sirf naye added docs par browser notification + sound (pehli load ko skip)
             if (!isFirstLogLoad) {
                 snap.docChanges().forEach(change => {
                     if (change.type === "added") {

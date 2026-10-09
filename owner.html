@@ -64,9 +64,15 @@
         <i class="fa-regular fa-eye" onclick="togglePass('ownerPassword', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); cursor:pointer; color:#888;"></i>
     </div>
 </div>
-                <div class="input-group">
+             <div class="input-group">
                     <label>Phone no:</label>
-                   <input type="text" id="ownerPhone" required placeholder="03XXXXXXXXX" maxlength="11">
+                    <input type="text" id="ownerPhone" autocomplete="off"
+                        value="+92"
+                        placeholder="+923XXXXXXXXX"
+                        maxlength="13"
+                        pattern="\+92\d{10}"
+                        title="Phone format: +92XXXXXXXXXX (e.g. +923001234567)"
+                        required>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" id="ownerRegBtn" class="btn-save">Register Owner</button> 

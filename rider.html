@@ -66,17 +66,18 @@
                 <!-- 🟢 Phone: 11 digits required -->
                 <div class="input-group">
                     <label>Phone no:</label>
-                    <input type="text" id="riderPhone" 
-                        placeholder="03XXXXXXXXX" 
-                        maxlength="11" 
-                        pattern="\d{11}"
-                        title="Phone number must be exactly 11 digits"
-                        required>
+                    <input type="text" id="riderPhone" autocomplete="off"
+    value="+92"
+    placeholder="+923XXXXXXXXX"
+    maxlength="13"
+    pattern="\+92\d{10}"
+    title="Phone format: +92XXXXXXXXXX (e.g. +923001234567)"
+    required>
                 </div>
                 <!-- 🟢 CNIC field -->
                 <div class="input-group">
                     <label>CNIC:</label>
-                    <input type="text" id="riderCnic" 
+                    <input type="text" id="riderCnic" autocomplete="off"
                         placeholder="XXXXX-XXXXXXX-X"
                         maxlength="15"
                         pattern="\d{5}-\d{7}-\d{1}"

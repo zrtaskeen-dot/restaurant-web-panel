@@ -110,8 +110,12 @@ window.closeModal = function () {
     // 🟢 Fields wapas dikhao next Add Rider ke liye
     const emailGroup    = document.getElementById('riderEmail').closest('.input-group');
     const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
-    if (emailGroup)    emailGroup.style.display    = 'block';
+       if (emailGroup)    emailGroup.style.display    = 'block';
     if (passwordGroup) passwordGroup.style.display = 'block';
+
+    // 🟢 Add Rider ke liye required wapas
+    document.getElementById('riderEmail').required    = true;
+    document.getElementById('riderPassword').required = true;
 };
 
 // --- SAVE / UPDATE RIDER ---
@@ -129,7 +133,6 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     const selectedOption = branchSelect ? branchSelect.options[branchSelect.selectedIndex] : null;
     const branchName     = selectedOption ? selectedOption.getAttribute('data-name') : "";
 
-    // 🟢 Phone validation — exactly 11 digits
         // 🟢 Email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
         alert("Please enter a valid email address.\nExample: user@gmail.com");
@@ -145,9 +148,9 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
         }
     }
 
-    // 🟢 Phone validation — exactly 11 digits
-    if (!/^\d{11}$/.test(phone)) {
-        alert("Phone number must be exactly 11 digits!");
+       // 🟢 Phone validation — +92 format
+    if (!/^\+92\d{10}$/.test(phone)) {
+        alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
     }
 
@@ -188,7 +191,6 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
                 branchId, branchName,
                 updatedAt: Date.now()
             };
-            if (password) updateData.password = password;
 
             await db.collection("users").doc(editId).update(updateData);
             alert("Rider Updated Successfully!");
@@ -205,8 +207,11 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
 
             // ✅ CHANGED: "role" field hata diya — ab sirf roleId (R002) se
             // rider ki pehchaan hoti hai, jo user_role collection mein defined hai.
+            // ✅ CHANGED: "password" field Firestore mein save nahi hota —
+            // password sirf Firebase Auth mein (createAuthUser ke zariye)
+            // save hota hai, plaintext Firestore mein nahi hona chahiye.
             const riderData = {
-                uid, name, email, password,
+                 name, email,
                 phone, cnic,
                 branchId, branchName,
                 roleId: RIDER_ROLE_ID,
@@ -284,8 +289,10 @@ window.editRider = async (id) => {
 
             document.getElementById('riderName').value     = r.name     || "";
             document.getElementById('riderEmail').value    = r.email    || "";
-            document.getElementById('riderPassword').value = r.password || "";
-            document.getElementById('riderPhone').value    = r.phone    || "";
+            document.getElementById('riderPassword').value = "";
+                        let ph = r.phone || "";
+            if (/^0\d{10}$/.test(ph)) ph = "+92" + ph.slice(1);   // purana 03... format convert
+            document.getElementById('riderPhone').value    = ph || "+92";
             document.getElementById('riderCnic').value     = r.cnic     || "";
 
             await loadBranchDropdown(r.branchId);
@@ -295,6 +302,10 @@ window.editRider = async (id) => {
             const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
             if (emailGroup)    emailGroup.style.display    = 'none';
             if (passwordGroup) passwordGroup.style.display = 'none';
+
+            // 🟢 Hidden fields se "required" hatao, warna browser submit rok deta hai
+            document.getElementById('riderEmail').required    = false;
+            document.getElementById('riderPassword').required = false;
 
             document.querySelector('.modal-header').innerText = "Edit Rider";
             document.getElementById('riderModal').style.display = 'block';
@@ -328,6 +339,18 @@ document.getElementById('riderCnic').addEventListener('input', function(e) {
     if (val.length > 15) val = val.slice(0,15);
     e.target.value = val;
 });
+
+// 🟢 Phone: +92 hamesha rahe, user sirf aage ke 10 digits likhe
+document.getElementById('riderPhone').addEventListener('input', function (e) {
+    let raw = e.target.value;
+    if (raw.startsWith('+92')) raw = raw.slice(3);
+    let val = raw.replace(/\D/g, '');
+    if (val.startsWith('0')) val = val.slice(1);
+    if (val.startsWith('92') && val.length > 10) val = val.slice(2);
+    val = val.slice(0, 10);
+    e.target.value = '+92' + val;
+});
+
 window.addEventListener('click', function(e) {
     if (e.target === document.getElementById('riderModal')) closeModal();
 });

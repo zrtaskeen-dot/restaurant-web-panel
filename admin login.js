@@ -12,10 +12,9 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// ✅ NEW: Admin ki pehchan — user_role collection mein R005 = admin.
 const ADMIN_ROLE_ID = "R005";
 
-// --- Toast ---
+//  Toast 
 function showToast(message, type = 'error') {
     const toast = document.getElementById('adminToast');
     toast.innerText = message;
@@ -23,7 +22,7 @@ function showToast(message, type = 'error') {
     setTimeout(() => { toast.className = 'toast hidden'; }, 4000);
 }
 
-// ✅ Forgot Password Modal
+//  Forgot Password Modal
 window.openForgotModal = function() {
     document.getElementById('forgotEmail').value = '';
     document.getElementById('forgotModal').style.display = 'flex';
@@ -44,7 +43,7 @@ document.getElementById('forgotPasswordLink').addEventListener('click', function
     openForgotModal();
 });
 
-// ✅ Send Reset Link
+// Send Reset Link
 document.getElementById('sendResetBtn').addEventListener('click', async function() {
     const email    = document.getElementById('forgotEmail').value.trim();
     const resetBtn = document.getElementById('sendResetBtn');
@@ -54,7 +53,6 @@ document.getElementById('sendResetBtn').addEventListener('click', async function
         return;
     }
 
-    // ✅ CHANGED: "role" ki jagah "roleId" se admin check hota hai
     const adminCheck = await db.collection("users")
         .where("email",  "==", email)
         .where("roleId", "==", ADMIN_ROLE_ID)
@@ -84,7 +82,7 @@ document.getElementById('sendResetBtn').addEventListener('click', async function
     }
 });
 
-// --- Eye Button ---
+//  Eye Button 
 document.getElementById('eyeBtn').addEventListener('click', function() {
     const input    = document.getElementById('adminPassword');
     const isHidden = input.type === 'password';
@@ -97,7 +95,7 @@ document.getElementById('eyeBtn').addEventListener('click', function() {
            <circle cx="12" cy="12" r="3"/>`;
 });
 
-// --- Login ---
+// Login 
 document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 

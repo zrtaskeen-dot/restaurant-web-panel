@@ -52,6 +52,10 @@ window.closeownerModal = function() {
     const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
     if (emailGroup)    emailGroup.style.display    = 'block';
     if (passwordGroup) passwordGroup.style.display = 'block';
+
+    // Add Owner ke liye required wapas
+    document.getElementById('ownerEmail').required    = true;
+    document.getElementById('ownerPassword').required = true;
 };
 
 // --- READ / REAL-TIME FETCH DATA ---
@@ -122,8 +126,8 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
     }
 
     // Phone 11 digit check
-    if (!/^\d{11}$/.test(oPhone)) {
-        alert("Phone number must be exactly 11 digits!");
+    if (!/^\+92\d{10}$/.test(oPhone)) {
+        alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
     }
 
@@ -150,10 +154,10 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
             await db.collection("users").doc(editOwnerId).update({
                 name: oName,
                 email: oEmail,
-                password: oPassword,
                 phone: oPhone,
                 updatedAt: Date.now()
             });
+
             alert("Owner Records Updated Successfully!");
             logActivity("Owner Updated", `Updated details for owner "${oName}"`, adminPerformer);
             closeownerModal();
@@ -206,14 +210,19 @@ window.editOwner = async (id) => {
 
             document.getElementById('ownerName').value     = o.name     || '';
             document.getElementById('ownerEmail').value    = o.email    || '';
-            document.getElementById('ownerPassword').value = o.password || '';
-            document.getElementById('ownerPhone').value    = o.phone    || '';
+            document.getElementById('ownerPassword').value = '';
+            let ph = o.phone || "";
+            if (/^0\d{10}$/.test(ph)) ph = "+92" + ph.slice(1);  
+            document.getElementById('ownerPhone').value    = ph || "+92";
 
             const emailGroup    = document.getElementById('ownerEmail').closest('.input-group');
             const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
             if (emailGroup)    emailGroup.style.display    = 'none';
             if (passwordGroup) passwordGroup.style.display = 'none';
 
+            // Hidden fields se "required" hatao, warna browser submit rok deta hai
+            document.getElementById('ownerEmail').required    = false;
+            document.getElementById('ownerPassword').required = false;
             document.querySelector('.modal-header').innerText = "Update Owner Details";
             document.getElementById('ownerModal').style.display = 'block';
         }
@@ -242,6 +251,16 @@ window.deleteOwner = async (id) => {
 window.addEventListener('click', function(e) {
     const modal = document.getElementById('ownerModal');
     if (e.target === modal) closeownerModal();
+});
+// Phone: +92 hamesha rahe, sirf digits likhe jayein
+document.getElementById('ownerPhone').addEventListener('input', function (e) {
+    let raw = e.target.value;
+    if (raw.startsWith('+92')) raw = raw.slice(3);
+    let val = raw.replace(/\D/g, '');
+    if (val.startsWith('0')) val = val.slice(1);
+    if (val.startsWith('92') && val.length > 10) val = val.slice(2);
+    val = val.slice(0, 10);
+    e.target.value = '+92' + val;
 });
 
 function togglePass(id, icon) {
