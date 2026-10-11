@@ -78,8 +78,13 @@ function listenToBranchDetails() {
             // Modal inputs pre-fill
             const epModalInput = document.getElementById("modalEasyPaisa");
             const jcModalInput = document.getElementById("modalJazzCash");
-            if (epModalInput) epModalInput.value = data.easyPaisaNumber || "";
-            if (jcModalInput) jcModalInput.value = data.jazzCashNumber  || "";
+           const toPlus92 = (n) => {
+    n = n || "";
+    if (/^0\d{10}$/.test(n)) return "+92" + n.slice(1);
+    return n || "+92";
+};
+if (epModalInput) epModalInput.value = toPlus92(data.easyPaisaNumber);
+if (jcModalInput) jcModalInput.value = toPlus92(data.jazzCashNumber);
         }
     });
 }
@@ -143,18 +148,22 @@ window.saveBranchDetails = async function() {
 window.savePaymentNumbers = async function() {
     if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
 
-    const epVal = document.getElementById("modalEasyPaisa")?.value.trim() || "";
-    const jcVal = document.getElementById("modalJazzCash")?.value.trim() || "";
-    const btn   = document.getElementById("btnSavePayment");
-    const phoneRegex = /^\d{11}$/;
-    if (epVal && !phoneRegex.test(epVal)) {
-        alert("Invalid Number");
-        return;
-    }
-    if (jcVal && !phoneRegex.test(jcVal)) {
-        alert("Invalid Number");
-        return;
-    }
+   let epVal = document.getElementById("modalEasyPaisa")?.value.trim() || "";
+let jcVal = document.getElementById("modalJazzCash")?.value.trim() || "";
+const btn = document.getElementById("btnSavePayment");
+
+if (epVal === "+92") epVal = "";
+if (jcVal === "+92") jcVal = "";
+
+const phoneRegex = /^\+92\d{10}$/;
+if (epVal && !phoneRegex.test(epVal)) {
+    alert("EasyPaisa number must be in +92 format!\nExample: +923001234567");
+    return;
+}
+if (jcVal && !phoneRegex.test(jcVal)) {
+    alert("JazzCash number must be in +92 format!\nExample: +923001234567");
+    return;
+}
     if (btn) {
         btn.innerText = "Saving...";
         btn.disabled  = true;
@@ -446,4 +455,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === paymentOverlay) closePaymentModal();
         });
     }
+        // Payment inputs: +92 hamesha rahe
+    ['modalEasyPaisa', 'modalJazzCash'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('input', function (e) {
+            let raw = e.target.value;
+            if (raw.startsWith('+92')) raw = raw.slice(3);
+            let val = raw.replace(/\D/g, '');
+            if (val.startsWith('0')) val = val.slice(1);
+            if (val.startsWith('92') && val.length > 10) val = val.slice(2);
+            val = val.slice(0, 10);
+            e.target.value = '+92' + val;
+        });
+    });
 });

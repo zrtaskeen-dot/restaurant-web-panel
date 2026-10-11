@@ -30,17 +30,26 @@
             <!-- Filter Tabs -->
             <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
                 <button onclick="setFilter('all')" id="filter-all" class="filter-tab active-tab">
-                    🧾 All Orders
+                     All Orders
                 </button>
                 <button onclick="setFilter('scheduled')" id="filter-scheduled" class="filter-tab">
-                    🗓️ Scheduled
+                     Scheduled
                 </button>
                 <button onclick="setFilter('online')" id="filter-online" class="filter-tab">
-                    💳 Online Payment
+                     Online Payment
                 </button>
                 <button onclick="setFilter('cod')" id="filter-cod" class="filter-tab">
-                    💵 COD
+                     COD
                 </button>
+                <button onclick="setFilter('incomplete')" id="filter-incomplete" class="filter-tab">
+     Incomplete
+</button>
+<button onclick="setFilter('cancelled')" id="filter-cancelled" class="filter-tab">
+     Cancelled
+</button>
+<button onclick="setFilter('undelivered')" id="filter-undelivered" class="filter-tab">
+     Undelivered
+</button>
             </div>
 
             <!--  Order count -->

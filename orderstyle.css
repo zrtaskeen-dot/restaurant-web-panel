@@ -219,12 +219,12 @@ body {
 .filter-tab {
     padding: 7px 16px;
     border-radius: 20px;
-    border: 1.5px solid #ddd;
+    border: 1.5px solid #bbb;
     background: white;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    color: #555;
+    color: black;
     transition: all 0.2s;
 }
 

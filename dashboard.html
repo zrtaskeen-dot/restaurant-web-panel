@@ -149,14 +149,16 @@
 <div id="paymentModalOverlay" class="branch-modal-overlay"></div>
 <div id="paymentEditModal" class="branch-card-modal">
     <h3>Update Payment Numbers</h3>
-    <div class="branch-input-group">
-        <label style="color: black;"> EasyPaisa Number:</label>
-        <input type="text" id="modalEasyPaisa" maxlength="11" placeholder="e.g., 03001234567" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </div>
-    <div class="branch-input-group">
-        <label style="color:black"> JazzCash Number:</label>
-        <input type="text" id="modalJazzCash" maxlength="11" placeholder="e.g., 03007654321" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-    </div>
+   <div class="branch-input-group">
+    <label style="color: black;"> EasyPaisa Number:</label>
+    <input type="text" id="modalEasyPaisa" autocomplete="off"
+           value="+92" maxlength="13" placeholder="+923XXXXXXXXX">
+</div>
+<div class="branch-input-group">
+    <label style="color:black"> JazzCash Number:</label>
+    <input type="text" id="modalJazzCash" autocomplete="off"
+           value="+92" maxlength="13" placeholder="+923XXXXXXXXX">
+</div>
     <div class="branch-modal-actions">
         <button class="btn-branch-cancel" onclick="closePaymentModal()">Cancel</button>
         <button id="btnSavePayment" class="btn-branch-save" onclick="savePaymentNumbers()">Save Updates</button>

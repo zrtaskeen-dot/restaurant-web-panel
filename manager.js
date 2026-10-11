@@ -20,7 +20,7 @@ function logActivity(action, details) {
     try {
         const logData = {
             action,
-            performedBy: "Admin",  // ✅ sirf "Admin"
+            performedBy: "Admin",  
             details,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };

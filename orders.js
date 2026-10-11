@@ -49,7 +49,7 @@ function watchRiderDoc(riderId) {
 
 window.setFilter = function(filter) {
     currentFilter = filter;
-    ['all', 'scheduled', 'online', 'cod'].forEach(f => {
+    ['all', 'scheduled', 'online', 'cod', 'incomplete', 'cancelled', 'undelivered'].forEach(f => {
         const btn = document.getElementById(`filter-${f}`);
         if (btn) btn.classList.toggle('active-tab', f === filter);
     });
@@ -83,6 +83,173 @@ function checkIsScheduled(data) {
         && raw !== 'as soon as possible'
         && raw !== 'asap'
         && parseDeliveryTime(data.deliveryTime) !== null;
+}
+
+// ---------------------------------------------------------------------
+// INCOMPLETE ORDERS
+//  1) Har order 45 minute mein deliver hona chahiye. Jo order abhi tak
+//     Pending ya Assigned hai aur uski deadline guzar chuki hai:
+//       - Scheduled order  => deadline = uska delivery time
+//       - Baaki sab orders => deadline = order place hone ke 45 minute baad
+//  (Cancelled orders Incomplete mein nahi aate, unka alag "Cancelled" filter hai)
+// ---------------------------------------------------------------------
+const DELIVERY_WINDOW_MINUTES = 45;
+
+function isCancelledStatus(statusLower) {
+    return statusLower === 'cancelled' || statusLower === 'canceled';
+}
+
+// Order ki deadline (milliseconds mein), na mile to null
+function getDeliveryDeadlineMs(data) {
+    if (checkIsScheduled(data)) {
+        const t = parseDeliveryTime(data.deliveryTime);
+        return t ? t.getTime() : null;
+    }
+    const c = data.createdAt;
+    const createdMs = c ? (c.toMillis ? c.toMillis() : new Date(c).getTime()) : NaN;
+    if (isNaN(createdMs)) return null;
+    return createdMs + DELIVERY_WINDOW_MINUTES * 60 * 1000;
+}
+
+function isOverdueIncomplete(data) {
+    const st = getOrderStatus(data).toString().trim().toLowerCase();
+    if (st !== 'pending' && st !== 'assigned') return false;
+    const deadline = getDeliveryDeadlineMs(data);
+    return deadline !== null && deadline < Date.now();
+}
+
+// Cancelled order ki wajah (Cancelled filter / row mein dikhane ke liye)
+function getCancelReason(data) {
+    const by  = data.cancelledBy ? `Cancelled by ${data.cancelledBy}` : 'Order was cancelled';
+    const why = data.cancellationReason || 'No reason given';
+    return `${by} — ${why}`;
+}
+
+// Undelivered order
+function isUndeliveredStatus(statusLower) {
+    return statusLower === 'undelivered';
+}
+
+// Undelivered order ki wajah (rider ne jo reason diya)
+function getUndeliveredReason(data) {
+    const riderName = data.riderId ? (riderNameCache[data.riderId] || 'Rider') : 'Rider';
+    const why = data.undeliveredReason || 'No reason given';
+    return `Undelivered by ${riderName} — ${why}`;
+}
+
+// Pending/Assigned order ki deadline guzarne ki wajah (text)
+// statusOverride: jab order ka status pehle hi "Incomplete" ho chuka ho to
+// riderId dekh kar batate hain ke woh pehle Pending tha ya Assigned
+function getOverdueReason(data, statusOverride) {
+    const st = (statusOverride || getOrderStatus(data)).toString().trim().toLowerCase();
+    const missed = checkIsScheduled(data)
+        ? `Delivery time (${data.deliveryTime}) has passed.`
+        : `Not delivered within ${DELIVERY_WINDOW_MINUTES} minutes of being placed.`;
+    if (st === 'assigned') {
+        const riderName = data.riderId ? (riderNameCache[data.riderId] || 'the rider') : 'the rider';
+        return `${missed} Assigned to ${riderName}, but the rider never accepted the order.`;
+    }
+    return `${missed} No rider was assigned to this order.`;
+}
+
+// null => order incomplete nahi hai, warna { type, reason } wapas aata hai
+function getIncompleteInfo(data) {
+    const st = getOrderStatus(data).toString().trim().toLowerCase();
+
+    // Firestore mein status "Incomplete" likha ja chuka hai => wahan se wajah parho
+    if (st === 'incomplete') {
+        return {
+            type: 'overdue',
+            reason: data.incompleteReason
+                || getOverdueReason(data, data.riderId ? 'assigned' : 'pending')
+        };
+    }
+
+    // Deadline guzar chuki hai, lekin Firestore mein status abhi update hona baqi hai
+    if (isOverdueIncomplete(data)) {
+        return { type: 'overdue', reason: getOverdueReason(data) };
+    }
+
+    return null;
+}
+
+// ---------------------------------------------------------------------
+// Overdue order ka status Firestore mein "Incomplete" likhna.
+// Transaction use hoti hai: agar usi lamhe rider ne order accept kar liya
+// ya manager ne cancel kar diya ho to uska status overwrite nahi hota.
+// Firestore mein sirf orderStatus aur incompleteReason likhe jate hain.
+// ---------------------------------------------------------------------
+const incompleteFlagged = new Set();
+
+async function markOrderIncomplete(id) {
+    const ref = db.collection("orders").doc(id);
+
+    // Rider ka naam pehle cache mein la lo taake wajah mein naam likha ja sake
+    const cached = allOrdersCache.find(o => o.id === id);
+    if (cached && cached.data.riderId) await getRiderName(cached.data.riderId);
+
+    await db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (!snap.exists) return;
+        const cur = snap.data();
+        if (!isOverdueIncomplete(cur)) return;   // beech mein status badal chuka hai
+        tx.update(ref, {
+            orderStatus:      'Incomplete',
+            incompleteReason: getOverdueReason(cur)
+        });
+    });
+}
+
+// Jin orders ka status pehle se "Incomplete" hai (kisi aur jagah se likha gaya)
+// lekin Firestore mein incompleteReason nahi hai, unmein reason likhna,
+// aur purani previousStatus / incompleteAt fields hata dena.
+const incompleteBackfilled = new Set();
+
+async function backfillIncompleteOrder(id, data) {
+    if (data.riderId) await getRiderName(data.riderId);
+
+    const update = {};
+    if (!data.incompleteReason) {
+        update.incompleteReason = getOverdueReason(data, data.riderId ? 'assigned' : 'pending');
+    }
+    if (data.previousStatus !== undefined) {
+        update.previousStatus = firebase.firestore.FieldValue.delete();
+    }
+    if (data.incompleteAt !== undefined) {
+        update.incompleteAt = firebase.firestore.FieldValue.delete();
+    }
+    if (Object.keys(update).length === 0) return;
+
+    await db.collection("orders").doc(id).update(update);
+}
+
+function flagOverdueOrders() {
+    allOrdersCache.forEach(({ id, data }) => {
+        const st = getOrderStatus(data).toString().trim().toLowerCase();
+
+        // Pehle se Incomplete order: reason missing ho ya previousStatus ho to theek karo
+        if (st === 'incomplete') {
+            const needsFix = !data.incompleteReason
+                || data.previousStatus !== undefined
+                || data.incompleteAt !== undefined;
+            if (needsFix && !incompleteBackfilled.has(id)) {
+                incompleteBackfilled.add(id);
+                backfillIncompleteOrder(id, data).catch(err => {
+                    console.error("Incomplete backfill error:", id, err);
+                    incompleteBackfilled.delete(id);
+                });
+            }
+            return;
+        }
+
+        // Naya overdue order: status Incomplete likho
+        if (!isOverdueIncomplete(data) || incompleteFlagged.has(id)) return;
+        incompleteFlagged.add(id);
+        markOrderIncomplete(id).catch(err => {
+            console.error("Incomplete mark error:", id, err);
+            incompleteFlagged.delete(id);   // agli dafa dobara koshish hogi
+        });
+    });
 }
 
 function isOnlinePayment(paymentMethod) {
@@ -157,24 +324,87 @@ const SMALL_BTN_STYLE = 'padding:4px 9px;font-size:11px;white-space:nowrap;';
 let highlightedOrderId = null;
 let highlightTimer     = null;
 
+// --- Sorting (Incomplete orders Pending/Assigned ke upar nahi, neeche jate hain) ---
+const statusOrder = {
+    'pending'    : 1,
+    'assigned'   : 2,
+    'accepted'   : 3,
+    'undelivered': 4,
+    'delivered'  : 5,
+    'cancelled'  : 6,
+    'incomplete' : 7
+};
+
+function getSortRank(data) {
+    if (isOverdueIncomplete(data)) return 7;
+    return statusOrder[getOrderStatus(data).toLowerCase()] || 99;
+}
+
+function sortOrdersCache() {
+    allOrdersCache.sort((a, b) => {
+        const aOrder = getSortRank(a.data);
+        const bOrder = getSortRank(b.data);
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        const aTime = a.data.createdAt?.toMillis?.() || a.data.createdAt || 0;
+        const bTime = b.data.createdAt?.toMillis?.() || b.data.createdAt || 0;
+        return bTime - aTime;
+    });
+}
+
+// Sidebar badge mein sirf woh Pending orders gine jate hain jo Incomplete nahi hain
+function getPendingCount() {
+    return allOrdersCache.filter(({ data }) =>
+        getOrderStatus(data).toLowerCase() === 'pending' && !isOverdueIncomplete(data)
+    ).length;
+}
+
+// Deadline waqt ke sath guzarti hai (Firestore mein koi change nahi hota),
+// isliye har 30 second baad check hota hai ke koi naya order Incomplete to nahi hua,
+// aur aisa order mile to uska status Firestore mein "Incomplete" kar diya jata hai.
+let lastIncompleteSignature = '';
+function computeIncompleteSignature() {
+    return allOrdersCache
+        .filter(({ data }) => isOverdueIncomplete(data))
+        .map(({ id }) => id)
+        .sort()
+        .join(',');
+}
+
+setInterval(() => {
+    flagOverdueOrders();
+    if (computeIncompleteSignature() !== lastIncompleteSignature) {
+        updateSidebarBadge(getPendingCount());
+        renderOrders();
+    }
+}, 30000);
+
 function renderOrders() {
     const tableBody = document.getElementById('ordersTableBody');
     if (!tableBody) return;
 
+    sortOrdersCache();
+    lastIncompleteSignature = computeIncompleteSignature();
+
     const filtered = allOrdersCache.filter(({ data }) => {
         const isScheduled  = checkIsScheduled(data);
         const isPaidOnline = isOnlinePayment(data.payment_method || data.paymentMethod || '');
-        if (currentFilter === 'scheduled') return isScheduled;
-        if (currentFilter === 'online')    return isPaidOnline;
-        if (currentFilter === 'cod')       return !isPaidOnline;
+        if (currentFilter === 'scheduled')   return isScheduled;
+        if (currentFilter === 'online')      return isPaidOnline;
+        if (currentFilter === 'cod')         return !isPaidOnline;
+        if (currentFilter === 'incomplete')  return getIncompleteInfo(data) !== null;
+        if (currentFilter === 'cancelled')   return isCancelledStatus(getOrderStatus(data).toString().trim().toLowerCase());
+        if (currentFilter === 'undelivered') return isUndeliveredStatus(getOrderStatus(data).toString().trim().toLowerCase());
         return true;
     });
 
     const countEl = document.getElementById('orderCount');
     if (countEl) {
-        const label = currentFilter === 'all'      ? 'All Orders' :
-                      currentFilter === 'scheduled' ? 'Scheduled Orders' :
-                      currentFilter === 'online'    ? 'Online Payment Orders' : 'COD Orders';
+        const label = currentFilter === 'all'         ? 'All Orders' :
+                      currentFilter === 'scheduled'   ? 'Scheduled Orders' :
+                      currentFilter === 'online'      ? 'Online Payment Orders' :
+                      currentFilter === 'incomplete'  ? 'Incomplete Orders' :
+                      currentFilter === 'cancelled'   ? 'Cancelled Orders' :
+                      currentFilter === 'undelivered' ? 'Undelivered Orders' : 'COD Orders';
         countEl.innerText = `Showing ${filtered.length} ${label}`;
     }
 
@@ -194,6 +424,9 @@ function renderOrders() {
         const showAssignBtn = isScheduled ? isWithin1Hour(data.deliveryTime) : true;
         const placedDateStr = formatOrderPlacedDate(data.createdAt);
 
+        const incompleteInfo = getIncompleteInfo(data);
+        const displayStatus  = incompleteInfo ? 'Incomplete' : status;
+
         let statusColor = '#f5f1f0', statusBg = '#a70000';
         const ns = status.toString().trim().toLowerCase();
         if (ns === 'assigned')                       { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
@@ -202,9 +435,12 @@ function renderOrders() {
         if (ns === 'on the way')                     { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
         if (ns === 'delivered')                      { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
         if (ns === 'cancelled' || ns === 'canceled') { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (ns === 'undelivered')                    { statusColor = '#f5f1f0'; statusBg = '#a70000'; }
+        if (incompleteInfo)                          { statusColor = '#ffffff'; statusBg = '#a70000'; }
 
         let assignBtnHtml = '';
-        if (showAssignBtn) {
+        // Incomplete order par sirf View aur Delete dikhte hain (Assign/Reassign/Cancel nahi)
+        if (showAssignBtn && !incompleteInfo) {
             if (ns === 'pending') {
                 assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="${SMALL_BTN_STYLE}">Assign Rider</button>`;
             } else if (ns === 'assigned') {
@@ -213,8 +449,13 @@ function renderOrders() {
         }
 
         let cancelBtnHtml = '';
-        if (isPaidOnline && ns === 'pending') {
+        if (isPaidOnline && ns === 'pending' && !incompleteInfo) {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="${SMALL_BTN_STYLE}background-color:#b52a00;color:white;">Cancel</button>`;
+        }
+        // Delete sirf Delivered, Cancelled, Undelivered ya Incomplete orders par dikhao
+        let deleteBtnHtml = '';
+        if (ns === 'delivered' || ns === 'cancelled' || ns === 'undelivered' || incompleteInfo) {
+            deleteBtnHtml = `<button class="btn-action delete-btn" onclick="removeOrder('${id}')" style="${SMALL_BTN_STYLE}">Delete</button>`;
         }
 
         const scheduledBadge = isScheduled ? `
@@ -243,8 +484,19 @@ function renderOrders() {
                 Rider: ${riderLiveName}
             </div>` : '';
 
+        // Incomplete / Cancelled / Undelivered order ki wajah
+        const reasonText = incompleteInfo
+            ? incompleteInfo.reason
+            : (isCancelledStatus(ns) ? getCancelReason(data)
+            : (isUndeliveredStatus(ns) ? getUndeliveredReason(data) : null));
+        const incompleteReasonHtml = reasonText ? `
+            <div style="font-size:11px;color:#b52a00;margin-top:4px;font-weight:600;">
+                Reason: ${reasonText}
+            </div>` : '';
+
+        // Incomplete order par "Assigned ... ago" timer nahi dikhate (reason mein wajah likhi hoti hai)
         let timerHtml = '';
-        if (ns === 'assigned' && data.assignedAt) {
+        if (ns === 'assigned' && data.assignedAt && !incompleteInfo) {
             const assignedAt = typeof data.assignedAt === 'number'
                 ? data.assignedAt
                 : data.assignedAt.toMillis ? data.assignedAt.toMillis() : Date.now();
@@ -255,7 +507,7 @@ function renderOrders() {
                 </div>`;
         }
 
-        const isPending     = ns === 'pending';
+        const isPending     = ns === 'pending' && !incompleteInfo;
 
         // --- Highlight orders
         const isHighlighted = (id === highlightedOrderId);
@@ -274,18 +526,19 @@ function renderOrders() {
                     ${placedDateHtml}
                     ${scheduledTimeHtml}
                     ${riderNameHtml}
+                    ${incompleteReasonHtml}
                     ${timerHtml}
                 </div>
                 <span>
                     <span style="background:${statusBg};color:${statusColor};font-weight:bold;font-size:11px;padding:4px 12px;border-radius:20px;display:inline-block;">
-                        ${status}
+                        ${displayStatus}
                     </span>
                 </span>
-                <div style="display:flex;justify-content:flex-end;gap:4px;align-items:center;flex-wrap:nowrap;">
+                 <div style="display:flex;justify-content:center;gap:4px;align-items:center;flex-wrap:nowrap;">
                     <button class="btn-action view-btn" onclick="openOrderDetails('${id}')" style="${SMALL_BTN_STYLE}">View</button>
-                    ${assignBtnHtml}
+                     ${assignBtnHtml}
                     ${cancelBtnHtml}
-                    <button class="btn-action delete-btn" onclick="removeOrder('${id}')" style="${SMALL_BTN_STYLE}">Delete</button>
+                    ${deleteBtnHtml}
                 </div>
             </div>`;
     });
@@ -345,39 +598,16 @@ function loadOrders() {
         .where("branchId", "==", BRANCH_DOC_ID)
         .onSnapshot(snap => {
             allOrdersCache = [];
-            let pendingCount = 0;
 
             snap.forEach(doc => {
                 const data = doc.data();
+                if (data.deletedByManager === true) return;   // manager ne delete kiya hua order skip
                 allOrdersCache.push({ id: doc.id, data });
                 if (data.riderId) watchRiderDoc(data.riderId);
-                const st = getOrderStatus(data).toLowerCase();
-                if (st === 'pending') pendingCount++;
             });
 
-            const statusOrder = {
-                'pending'   : 1,
-                'assigned'  : 2,
-                'accepted'  : 3,
-                'picked up' : 4,
-                'on the way': 5,
-                'delivered' : 6,
-                'cancelled' : 7,
-                'completed' : 8
-            };
-
-            allOrdersCache.sort((a, b) => {
-                const aStatus = getOrderStatus(a.data).toLowerCase();
-                const bStatus = getOrderStatus(b.data).toLowerCase();
-                const aOrder  = statusOrder[aStatus] || 99;
-                const bOrder  = statusOrder[bStatus] || 99;
-                if (aOrder !== bOrder) return aOrder - bOrder;
-                const aTime = a.data.createdAt?.toMillis?.() || a.data.createdAt || 0;
-                const bTime = b.data.createdAt?.toMillis?.() || b.data.createdAt || 0;
-                return bTime - aTime;
-            });
-
-            updateSidebarBadge(pendingCount);
+            flagOverdueOrders();
+            updateSidebarBadge(getPendingCount());
             renderOrders();
             highlightOrderFromReview();
         }, error => {
@@ -452,27 +682,42 @@ async function openOrderDetails(id) {
                 Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
 
-let customerEmail = '';
-const customerId = order.customerId || '';
-if (customerId) {
-    try {
-        const customerDoc = await db.collection("users").doc(customerId).get();
-        if (customerDoc.exists) {
-            customerEmail = customerDoc.data().email || '';
-        }
-    } catch (e) {
-        console.error("Customer fetch error:", e);
-    }
-}
+        // Delivery time guzarne wale Pending/Assigned orders ki wajah
+        const incompleteInfo = getIncompleteInfo(order);
+        const incompleteHtml = (incompleteInfo && incompleteInfo.type === 'overdue') ? `
+            <p style="background:#e2e3e5;padding:8px 12px;border-radius:8px;border-left:4px solid  #dc3545;color:#dc3545;font-weight:600;">
+                Incomplete Order — ${incompleteInfo.reason}
+            </p>` : '';
 
-document.getElementById('orderInfo').innerHTML = `
-    <p><strong>Customer:</strong> ${order.customer_name || order.customerName || 'Guest'}</p>
-    <p><strong>Email:</strong> ${customerEmail || 'Not available'}</p>
-    <p><strong>Phone:</strong> ${order.phone_number || order.phone || "No Phone"}</p>
-    <p><strong>Address:</strong> ${order.deliveryAddress ||  order.address || "No Address"}</p>
+        // Rider ne order undeliver kiya to uski wajah
+        const undeliveredHtml = (orderStatusText.toString().toLowerCase() === 'undelivered') ? `
+            <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
+                Order Undelivered by ${liveRiderName || 'Rider'} — Reason: ${order.undeliveredReason || 'No reason given'}
+            </p>` : '';
+
+        let customerEmail = '';
+        const customerId = order.customerId || '';
+        if (customerId) {
+            try {
+                const customerDoc = await db.collection("users").doc(customerId).get();
+                if (customerDoc.exists) {
+                    customerEmail = customerDoc.data().email || '';
+                }
+            } catch (e) {
+                console.error("Customer fetch error:", e);
+            }
+        }
+
+        document.getElementById('orderInfo').innerHTML = `
+            <p><strong>Customer:</strong> ${order.customer_name || order.customerName || 'Guest'}</p>
+            <p><strong>Email:</strong> ${customerEmail || 'Not available'}</p>
+            <p><strong>Phone:</strong> ${order.phone_number || order.phone || "No Phone"}</p>
+            <p><strong>Address:</strong> ${order.deliveryAddress ||  order.address || "No Address"}</p>
             ${placedDateDetailHtml}
             ${scheduledHtml}
             ${cancelledHtml}
+            ${incompleteHtml}
+            ${undeliveredHtml}
             ${riderInfoHtml}
             ${paymentHtml}
             <hr>
@@ -508,12 +753,12 @@ async function openAssignModal(orderId) {
     document.getElementById('assignRiderOverlay').style.display = 'block';
 
     try {
-       const ridersSnap = await db.collection("users")
-    .where("roleId",        "==", "R002")
-    .where("branchId",      "==", BRANCH_DOC_ID)
-    .where("isAvailable",   "==", true)
-    .where("emailVerified", "==", true)
-    .get();
+        const ridersSnap = await db.collection("users")
+            .where("roleId",        "==", "R002")
+            .where("branchId",      "==", BRANCH_DOC_ID)
+            .where("isAvailable",   "==", true)
+            .where("emailVerified", "==", true)
+            .get();
 
         const onlineRiderDocs = ridersSnap.docs.filter(doc => isRiderReallyOnline(doc.data()));
 
@@ -605,7 +850,17 @@ async function removeOrder(id) {
     try {
         const doc = await db.collection("orders").doc(id).get();
         if (doc.exists && doc.data().branchId === BRANCH_DOC_ID) {
-            await db.collection("orders").doc(id).delete();
+            const st = getOrderStatus(doc.data()).toString().trim().toLowerCase();
+            const isIncomplete = st === 'incomplete' || isOverdueIncomplete(doc.data());
+            if (st !== 'delivered' && st !== 'cancelled' && st !== 'canceled' && st !== 'undelivered' && !isIncomplete) {
+                alert("Only Delivered, Cancelled, Undelivered or Incomplete orders can be deleted.");
+                return;
+            }
+            // Soft delete: Firestore se nahi mitta, sirf manager se chhup jata hai
+            await db.collection("orders").doc(id).update({
+                deletedByManager: true,
+                deletedByManagerAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
             alert("Order deleted successfully!");
         } else {
             alert("Unauthorized action.");
@@ -647,7 +902,10 @@ function updateReviewsBadge() {
         .where("branchId", "==", BRANCH_DOC_ID)
         .onSnapshot(ordersSnap => {
             const branchOrderIds = new Set();
-            ordersSnap.forEach(doc => branchOrderIds.add(doc.id));
+            ordersSnap.forEach(doc => {
+                if (doc.data().deletedByManager === true) return;
+                branchOrderIds.add(doc.id);
+            });
 
             db.collection("reviews")
                 .where("isRead", "==", false)

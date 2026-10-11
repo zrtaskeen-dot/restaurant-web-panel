@@ -180,13 +180,14 @@ async function loadReviews() {
             .get();
 
         if (ordersSnap.empty) {
-            container.innerHTML = `<div class="empty-state"><div style="font-size:48px;">📭</div><p>No orders found for this branch.</p></div>`;
+            container.innerHTML = `<div class="empty-state"><div style="font-size:48px;"></div><p>No orders found for this branch.</p></div>`;
             return;
         }
 
         let pendingCount = 0;
         const branchOrderIds = new Set();
-        ordersSnap.forEach(doc => {
+             ordersSnap.forEach(doc => {
+            if (doc.data().deletedByManager === true) return;   // deleted order ke reviews hide
             branchOrderIds.add(doc.id);
             const status = (doc.data().order_status || doc.data().status || '').toLowerCase();
             if (status === 'pending') pendingCount++;

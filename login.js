@@ -221,7 +221,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         createdAt:   firebase.firestore.FieldValue.serverTimestamp()
                     };
                     db.collection("system_log").add(loginLog).catch(err => console.error(err));
-                    db.collection("activity_logs").add(loginLog).catch(err => console.error(err));
 
                     showToast("Login Successful!", 'success');
                     setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);

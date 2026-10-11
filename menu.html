@@ -75,7 +75,7 @@
 
                         <div style="margin-bottom: 12px;">
                             <label style="display:block; font-weight:bold; color:#b52a00; margin-bottom:6px; font-size:13px;">Add Package Picture:</label>
-                            <input type="file" id="dealImageInput" accept="image/*" style="width:100%; padding:5px; font-size:13px; box-sizing: border-box;">
+                            <input type="file" id="dealImageInput" accept=".png,.jpg,.jpeg,image/png,image/jpeg" style="width:100%; padding:5px; font-size:13px; box-sizing: border-box;">
                         </div>
                         <div id="dealImagePreviewContainer" style="margin-top: 10px; margin-bottom: 15px; text-align: center;">
                             <p style="font-size: 11px; color: #666; margin-bottom: 5px; font-weight: bold;">Package Image Preview:</p>
@@ -142,7 +142,7 @@
                 <h2 id="modalTitle">Add Item</h2>
                 <div id="mainModalBody" class="modal-body">
                     <label>Item Name:</label>
-                    <input type="text" id="itemName" placeholder="e.g. Margherita" class="rounded-input">
+                    <input type="text" id="itemName" placeholder="" class="rounded-input">
                     <div class="size-container" id="standardSizesSection">
                         <div class="size-header"><span>Size</span><span>Price (Rs.)</span></div>
                         <div class="size-row"><label><input type="checkbox" id="size-small"> Small</label><input type="number" id="price-small" placeholder="0" class="orange-price-input"></div>
@@ -198,7 +198,7 @@
                     <label id="ingredientsLabel" style="margin-top:15px; display:block;">Ingredients:</label>
                     <textarea id="itemDesc" placeholder="Enter ingredients..." class="rounded-textarea"></textarea>
                     <label style="margin-top:15px; display:block;">Add Picture:</label>
-                    <input type="file" id="itemImage" class="file-input" onchange="previewImage(event)">
+                    <input type="file" id="itemImage" class="file-input" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="previewImage(event)">
                     <div id="imagePreviewContainer" style="margin-top: 10px; text-align: center; display: none;">
                         <p style="font-size: 12px; color: #666; margin-bottom: 5px;">Image Preview:</p>
                         <img id="imagePreview" src="#" alt="Preview" style="width: 100px; height: 100px; border-radius: 10px; object-fit: cover; border: 2px solid #b52a00; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
@@ -216,7 +216,7 @@
                     <label>Topping Name:</label>
                     <input type="text" id="topName" placeholder="e.g. Extra Cheese" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb; margin-bottom: 10px;">
                     <label>Price (Rs.):</label>
-                    <input type="number" id="topPrice" placeholder="0" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb;">
+                    <input type="number" id="topPrice" placeholder="0" min="0" step="1" style="width: 100%; padding: 10px; border-radius: 15px; border: 1px solid #ddd; background: #fff9eb;">
                 </div>
                 <div class="modal-actions" style="margin-top: 15px; display: flex; justify-content: center; gap: 10px;">
                     <button onclick="saveTopping()" style="background-color: #f9a03f; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Save</button>

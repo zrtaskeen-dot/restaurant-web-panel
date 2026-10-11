@@ -32,6 +32,28 @@ let currentPackageMiniCategory = 'PIZZA';
 
 let dealBase64Image = "";
 
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg'];
+const MAX_IMAGE_MB = 5;
+
+function isValidImage(file, inputEl) {
+    if (!file) return true;
+
+    const nameOk = /\.(png|jpe?g)$/i.test(file.name);
+    const typeOk = ALLOWED_IMAGE_TYPES.includes(file.type);
+
+    if (!nameOk || !typeOk) {
+        alert("Only images are allowed! Please select a PNG or JPG/JPEG file.");
+        if (inputEl) inputEl.value = "";
+        return false;
+    }
+    if (file.size > MAX_IMAGE_MB * 1024 * 1024) {
+        alert(`Image must be smaller than ${MAX_IMAGE_MB}MB.`);
+        if (inputEl) inputEl.value = "";
+        return false;
+    }
+    return true;
+}
+
 // --- ACTIVITY LOG HELPER ---
 function logActivity(action, details) {
     try {
@@ -80,24 +102,33 @@ function broadcastToAllCustomers(title, body) {
 document.addEventListener("DOMContentLoaded", () => {
 
     // Wire up deal image file input preview
-    const dealImageInput = document.getElementById('dealImageInput');
-    if (dealImageInput) {
-        dealImageInput.addEventListener('change', function () {
-            const file = this.files[0];
-            if (!file) return;
+   const dealImageInput = document.getElementById('dealImageInput');
+if (dealImageInput) {
+    dealImageInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                dealBase64Image = e.target.result; // save base64 for reference
-                const preview = document.getElementById('dealImagePreview');
-                if (preview) {
-                    preview.src = e.target.result;
-                    preview.style.border = "2px solid #b52a00";
-                }
-            };
-            reader.readAsDataURL(file);
-        });
-    }
+        if (!isValidImage(file, this)) {
+            const preview = document.getElementById('dealImagePreview');
+            if (preview) {
+                preview.src = "https://via.placeholder.com/120";
+                preview.style.border = "2px dashed #b52a00";
+            }
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            dealBase64Image = e.target.result;
+            const preview = document.getElementById('dealImagePreview');
+            if (preview) {
+                preview.src = e.target.result;
+                preview.style.border = "2px solid #b52a00";
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+}
 
     // Load default category
     window.loadMenuItems('PIZZA');
@@ -113,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const desc = document.getElementById('menuPackageDesc').value.trim();
             const dealFileInput = document.getElementById('dealImageInput');
             const dealFile = dealFileInput ? dealFileInput.files[0] : null;
+            if (dealFile && !isValidImage(dealFile, dealFileInput)) return;
 
             if (!desc) {
                 alert("Please add description details manually or tick items from grid!");
@@ -206,16 +238,21 @@ window.closeModal = function () {
 }
 
 window.previewImage = function (event) {
-    const reader = new FileReader();
+    const file = event.target.files[0];
     const previewContainer = document.getElementById('imagePreviewContainer');
     const previewImg = document.getElementById('imagePreview');
-    reader.onload = function () {
-        if (reader.readyState === 2) {
-            previewImg.src = reader.result;
-            previewContainer.style.display = 'block';
-        }
+
+    if (file && !isValidImage(file, event.target)) {
+        previewContainer.style.display = 'none';
+        return;
     }
-    if (event.target.files[0]) reader.readAsDataURL(event.target.files[0]);
+
+    const reader = new FileReader();
+    reader.onload = function () {
+        previewImg.src = reader.result;
+        previewContainer.style.display = 'block';
+    };
+    if (file) reader.readAsDataURL(file);
 };
 
 window.openModal = function (isEdit, docId = null, data = null) {
@@ -289,6 +326,7 @@ window.saveItem = async function () {
     const description = document.getElementById('itemDesc').value.trim();
     const fileInput = document.getElementById('itemImage');
     const file = fileInput ? fileInput.files[0] : null;
+    if (file && !isValidImage(file, fileInput)) return;
     const prices = {};
     let priceSelected = false;
 
@@ -831,6 +869,11 @@ window.closeToppingModal = function () {
 };
 
 window.saveTopping = async function () {
+    const priceVal = Number(document.getElementById('topPrice').value);
+if (isNaN(priceVal) || priceVal < 0) {
+    alert("Price cannot be negative. Please enter a valid price.");
+    return;
+}
     const nameInput = document.getElementById('topName');
     const priceInput = document.getElementById('topPrice');
     if (!nameInput || !priceInput) return;
