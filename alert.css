@@ -1,4 +1,3 @@
-/* ── Alert ── */
 #customAlertOverlay {
     position: fixed;
     inset: 0;
@@ -49,7 +48,7 @@
     background: #e08800;
 }
 
-/* ── Confirm ── */
+/*  Confirm  */
 #customConfirmOverlay {
     position: fixed;
     inset: 0;
@@ -118,7 +117,7 @@
     background: #dddbdb;
 }
 
-/* ── Animations ── */
+/* Animations  */
 @keyframes alertFadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }

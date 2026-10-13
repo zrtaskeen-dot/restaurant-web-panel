@@ -183,8 +183,7 @@ if (dealImageInput) {
                     name: name,
                     description: desc,
                     category: currentCategory,
-                    prices: { simple: Number(price) },
-                    updatedAt: Date.now()
+                    prices: { simple: Number(price) }
                 };
 
                 // Only set imageUrl if we got one (don't overwrite existing on edit if no new file)
@@ -199,7 +198,6 @@ if (dealImageInput) {
                 } else {
                     packageData.imageUrl = imageUrl || "https://via.placeholder.com/150";
                     packageData.branchId = BRANCH_DOC_ID;
-                    packageData.createdAt = Date.now();
                     await db.collection("menu").add(packageData);
                     alert(`${currentCategory} Created Successfully inside Menu!`);
                     logActivity(`${currentCategory} Added`, `Created "${name}" - Rs. ${price}`);
@@ -383,16 +381,20 @@ window.saveItem = async function () {
             imageUrl = d.secure_url;
         }
 
-        const itemData = {
-            name,
-            description: isSoftDrink ? "" : description,
-            category: currentCategory,
-            prices,
-            branchId: BRANCH_DOC_ID,
-            updatedAt: Date.now()
-        };
+       const itemData = {
+    name,
+    category: currentCategory,
+    prices,
+    branchId: BRANCH_DOC_ID
+};
 
-        if (imageUrl) itemData.imageUrl = imageUrl;
+if (!isSoftDrink) {
+    itemData.description = description;
+} else if (isEditingItem) {
+    itemData.description = firebase.firestore.FieldValue.delete();
+}
+
+if (imageUrl) itemData.imageUrl = imageUrl;
 
         if (isEditingItem) {
             await db.collection("menu").doc(editDocId).update(itemData);
@@ -400,7 +402,6 @@ window.saveItem = async function () {
             logActivity("Menu Item Updated", `Updated "${name}" in ${currentCategory} (${formatPricesForLog(prices)})`);
         } else {
             if (!imageUrl) itemData.imageUrl = "https://via.placeholder.com/150";
-            itemData.createdAt = Date.now();
             await db.collection("menu").add(itemData);
             alert("Item Added Successfully!");
             logActivity("Menu Item Added", `Added "${name}" to ${currentCategory} (${formatPricesForLog(prices)})`);
@@ -421,7 +422,7 @@ window.saveItem = async function () {
     }
 }
 
-// --- LOAD MENU ITEMS ---
+// LOAD MENU ITEMS 
 window.loadMenuItems = function (category) {
     currentCategory = category.toUpperCase();
     const menuTable = document.getElementById('menuTable');
@@ -535,7 +536,7 @@ tableHeader.innerHTML = `<span>Image</span><span>Name</span><span>Ingredients</s
         });
 };
 
-// --- PACKAGE ITEMS FROM FIRESTORE ---
+// PACKAGE ITEMS FROM FIRESTORE
 function loadPackageItemsFromFirestore() {
     if (!BRANCH_DOC_ID) return;
 
@@ -584,7 +585,6 @@ function renderPackageSelectionGrid() {
 
         const makeCheck = (sizeKey, label) => {
     const fullName = `${item.name} (${label})`;
-    // Check existing quantity
     const existingEntry = packageSelectedItems.find(i => i.startsWith(fullName));
     const existingQty   = existingEntry
         ? parseInt(existingEntry.replace(fullName, '').replace('x', '').trim()) || 1
@@ -723,7 +723,7 @@ function updateDescTextarea() {
         }).join('\n');
 }
 
-// --- EDIT PACKAGE ---
+// EDIT PACKAGE
 window.editPackage = async function (id) {
     try {
         const doc = await db.collection("menu").doc(id).get();
@@ -765,7 +765,7 @@ window.editPackage = async function (id) {
     }
 };
 
-// --- RESET PACKAGE FORM ---
+//  RESET PACKAGE FORM 
 function resetPackageFormState() {
     editPackageId = null;
     packageSelectedItems = [];
@@ -793,7 +793,7 @@ function resetPackageFormState() {
     if (dealImageInput) dealImageInput.value = "";
 }
 
-// --- SAVED PACKAGES LIVE TABLE ---
+// SAVED PACKAGES
 function fetchSavedPackagesLive() {
     const tableBody = document.getElementById('savedPackagesTableBody');
     if (!tableBody) return;
@@ -842,7 +842,7 @@ function fetchSavedPackagesLive() {
         });
 }
 
-// --- Topping Functions ---
+// Topping Functions
 window.openToppingModal = function (isEdit = false, id = null, data = null) {
     document.getElementById('toppingModal').style.display = 'block';
     document.getElementById('modalOverlay').style.display = 'block';
@@ -891,15 +891,13 @@ if (isNaN(priceVal) || priceVal < 0) {
             name,
             price: parseFloat(price),
             category: currentCategory,
-            branchId: BRANCH_DOC_ID,
-            updatedAt: Date.now()
+            branchId: BRANCH_DOC_ID
         };
         if (isEditingTopping) {
             await db.collection("toppings").doc(editToppingId).update(toppingData);
             alert("Topping Updated Successfully!");
             logActivity("Topping Updated", `Updated topping "${name}" (${currentCategory}) - Rs. ${price}`);
         } else {
-            toppingData.createdAt = Date.now();
             await db.collection("toppings").add(toppingData);
             alert("Topping Added Successfully!");
             logActivity("Topping Added", `Added topping "${name}" (${currentCategory}) - Rs. ${price}`);
@@ -960,7 +958,7 @@ window.deleteTopping = async function (id) {
     }
 }
 
-// --- Common Handlers ---
+// Common Handlers
 window.filterCategory = function (e, cat) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     if (e && e.target) e.target.classList.add('active');
@@ -1018,7 +1016,7 @@ function updateOrdersBadge() {
         });
     });
 }
-//Sidebar Reviews Badge
+// Sidebar Reviews Badge
 function updateReviewsBadge() {
     if (!BRANCH_DOC_ID) return;
 

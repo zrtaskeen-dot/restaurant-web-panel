@@ -13,7 +13,8 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 
 const CUSTOMER_ROLE_ID = "R001";
-// --- Load Customers ---
+
+// Load Customers 
 function loadCustomers() {
     const listContainer = document.getElementById('customer-list');
     listContainer.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">Loading...</p>';
@@ -29,7 +30,7 @@ function loadCustomers() {
 
             if (user.roleId !== CUSTOMER_ROLE_ID) return;
 
-            // 🟢 Incomplete/empty records skip karo — jin ka na naam hai na email
+            // Incomplete/empty records skip 
             if (!user.name && !user.email) return;
 
             count++;
@@ -38,7 +39,7 @@ function loadCustomers() {
 
             const address = user.address || "N/A";
 
-            // 🟢 Email verification badge
+            //  Email verification badge
             const verifiedBadge = user.emailVerified
                 ? `<span style="color:#28a745; font-size:11px; font-weight:bold;">✔ Verified</span>`
                 : `<span style="color:#b52a00; font-size:11px; font-weight:bold;">✘ Not Verified</span>`;
@@ -75,7 +76,7 @@ function loadCustomers() {
     });
 }
 
-// --- Toggle Block/Unblock --- 🟢 async confirm fix
+//  Toggle Block/Unblock
 window.toggleBlock = async function(id, currentStatus) {
     const newStatus = currentStatus ? "active" : "blocked";
     const actionText = currentStatus ? "Unblock" : "Block";
@@ -90,7 +91,7 @@ window.toggleBlock = async function(id, currentStatus) {
     }
 };
 
-// --- Delete Customer --- 🟢 async confirm fix
+// Delete Customer 
 window.deleteUser = async function(id) {
     const agreed = await confirm("Are you sure you want to delete this customer?");
     if (agreed) {

@@ -1,8 +1,3 @@
-// ══════════════════════════════
-// custom-alert.js
-// ══════════════════════════════
-
-// ── Alert override ──
 window.alert = function(message) {
     const existing = document.getElementById('customAlertOverlay');
     if (existing) existing.remove();
@@ -33,7 +28,7 @@ window.alert = function(message) {
     document.addEventListener('keydown', keyHandler);
 };
 
-// ── Confirm override ──
+// Confirm override 
 window.confirm = function(message) {
     return new Promise((resolve) => {
         const existing = document.getElementById('customConfirmOverlay');

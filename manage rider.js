@@ -50,7 +50,7 @@ if (!currentBranchId) {
         });
 }
 
-// ✅ Sidebar Badge — both "pending" and "Pending"
+// Sidebar Badge 
 function updateOrdersBadge() {
     if (!currentBranchId) return;
     db.collection("orders")
@@ -77,7 +77,7 @@ function updateOrdersBadge() {
             });
         });
 }
-// ✅ Sidebar Reviews Badge
+//Sidebar Reviews Badge
 function updateReviewsBadge() {
     if (!currentBranchId) return;
 
@@ -114,7 +114,7 @@ function updateReviewsBadge() {
                 });
         });
 }
-// --- LOGOUT --- 🟢 async confirm fix
+// LOGOUT 
 window.confirmLogout = async function() {
     const agreed = await confirm("Are you sure you want to logout?");
     if (agreed) {

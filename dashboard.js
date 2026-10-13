@@ -30,7 +30,7 @@ function getOrderStatus(data) {
     return data.order_status || data.orderStatus || data.status || '';
 }
 
-// 1. Branch Details & Payment Numbers Listener
+// Branch Details & Payment Numbers Listener
 function listenToBranchDetails() {
     if (!BRANCH_DOC_ID) return;
 
@@ -89,7 +89,7 @@ if (jcModalInput) jcModalInput.value = toPlus92(data.jazzCashNumber);
     });
 }
 
-// 2. Save Branch Details
+// Save Branch Details
 window.saveBranchDetails = async function() {
     const name    = document.getElementById('inputBranchName').value.trim();
     const timing  = document.getElementById('inputBranchTiming').value.trim();
@@ -116,9 +116,6 @@ window.saveBranchDetails = async function() {
             updatedAt: Date.now()
         }, { merge: true });
 
-        // 🟢 Branch name admin ke "Manager Management" page mein bhi
-        // sync honi chahiye, is liye usi branchId se linked saare
-        // users docs (managers/riders) mein branchName update karo
         const linkedUsersSnap = await db.collection("users")
             .where("branchId", "==", BRANCH_DOC_ID)
             .get();
@@ -144,7 +141,7 @@ window.saveBranchDetails = async function() {
 };
 
 
-/// 🟢 Save Payment Account Numbers (Exact 11 Digits Validation)
+//Save Payment Account Numbers 
 window.savePaymentNumbers = async function() {
     if (!BRANCH_DOC_ID) return alert("Session expired. Please login again!");
 
@@ -188,7 +185,7 @@ if (jcVal && !phoneRegex.test(jcVal)) {
     }
 };
 
-// 🟢 Modal Controls for Branch Modal
+// Modal Controls for Branch Modal
 window.openBranchModal = function() {
     const overlay = document.getElementById('branchModalOverlay');
     const modal   = document.getElementById('branchEditModal');
@@ -207,7 +204,7 @@ window.closeBranchModal = function() {
     }
 };
 
-// 🟢 Modal Controls for Payment Modal
+// Modal Controls for Payment Modal
 window.openPaymentModal = function() {
     const overlay = document.getElementById('paymentModalOverlay');
     const modal   = document.getElementById('paymentEditModal');
@@ -226,7 +223,7 @@ window.closePaymentModal = function() {
     }
 };
 
-// 3. Dashboard Counters
+// Dashboard Counters
 function initDashboard() {
     if (!BRANCH_DOC_ID) return;
 
@@ -285,7 +282,7 @@ function initDashboard() {
         updateRevenueChart(deliverNowRev, deliverLaterRev, codRevenue, onlineRevenue);
     });
 
-    // Unique customers
+    // customers
     db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).onSnapshot(snap => {
         const uniqueCustomers = new Set();
         snap.forEach(doc => {
@@ -308,7 +305,7 @@ function initDashboard() {
         });
 }
 
-// 4. Revenue Chart
+//Revenue Chart
 function updateRevenueChart(nowRevenue, laterRevenue, codRevenue, onlineRevenue) {
     const ctx = document.getElementById('revenueChart');
     if (!ctx) return;
@@ -455,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target === paymentOverlay) closePaymentModal();
         });
     }
-        // Payment inputs: +92 hamesha rahe
+
     ['modalEasyPaisa', 'modalJazzCash'].forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;

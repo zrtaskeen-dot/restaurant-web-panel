@@ -11,7 +11,7 @@ body {
     align-items: stretch; 
 }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar { 
     width: 220px; 
     background-color: #b52a00; 
@@ -67,7 +67,7 @@ body {
 .sidebar nav a.logout-btn:hover {
     background-color: #5c0000;
 }
-/* --- Main Content Area --- */
+/*  Main Content Area */
 .main-content { 
     flex: 1; 
     padding: 25px; 
@@ -124,7 +124,7 @@ body {
     object-fit: contain;
 }
 
-/* --- Revenue Section --- */
+/* Revenue Section */
 .revenue-section { 
     background: white; 
     padding: 30px; 
@@ -177,7 +177,7 @@ body {
 .yellow { background-color: #f9a03f; } /* Deliver Now */
 .blue { background-color: #2a00e6; }   /* Deliver Later */
 
-/* Responsive Fix */
+/* Responsive */
 @media (max-width: 1100px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
@@ -189,7 +189,7 @@ body {
     .main-content { margin-left: 80px; }
 }
 
-/* --- Branch Header Card Design --- */
+/*  Branch Header */
 .branch-info-header-card {
     background-color: white;
     padding: 15px 25px;
@@ -232,7 +232,7 @@ body {
     opacity: 0.9;
 }
 
-/* --- Branch Modal Layouts --- */
+/*  Branch Modal Layouts */
 .branch-modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -304,7 +304,7 @@ body {
     font-size: 12px; font-weight: bold; cursor: pointer;
 }
 
-/* --- Generic Panel --- */
+/* Generic Panel */
 .panel,
 .stat-card,
 .revenue-section,

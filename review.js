@@ -1,4 +1,3 @@
-// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
     appId: '1:848662087857:web:0c1349bc37248181a0fa90',
@@ -16,7 +15,7 @@ const BRANCH_DOC_ID = localStorage.getItem("active_branch_id");
 
 let allReviews = [];
 
-// --- STAR GENERATOR ---
+// STAR GENERATOR 
 function generateStars(rating) {
     let stars = '';
     for (let i = 1; i <= 5; i++) {

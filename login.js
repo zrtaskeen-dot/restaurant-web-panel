@@ -1,4 +1,3 @@
-// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
     appId: '1:848662087857:web:0c1349bc37248181a0fa90',
@@ -13,7 +12,7 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-// 🟢 Toast function
+// Toast function
 function showToast(message, type = 'error') {
     const existing = document.getElementById('loginToast');
     if (existing) existing.remove();
@@ -54,7 +53,7 @@ function showToast(message, type = 'error') {
     }, 4000);
 }
 
-// ✅ Forgot Password Modal
+// Forgot Password Modal
 window.openForgotModal = function() {
     document.getElementById('forgotEmail').value = '';
     document.getElementById('forgotModal').style.display = 'flex';
@@ -78,7 +77,7 @@ function resetLoginButton(button) {
 document.addEventListener("DOMContentLoaded", () => {
     localStorage.clear();
 
-    // 🟢 Forgot Password link
+    // Forgot Password link
     const forgotLink = document.getElementById('forgotPasswordLink');
     if (forgotLink) {
         forgotLink.addEventListener('click', function(e) {
@@ -87,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // ✅ Send Reset Link
+    // Send Reset Link
     const sendResetBtn = document.getElementById('sendResetBtn');
     if (sendResetBtn) {
         sendResetBtn.addEventListener('click', async function() {
@@ -98,14 +97,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            const managerCheck = await db.collection("users")
-                .where("email", "==", email)
-                .where("roleId",  "==", "R003")
-                .get();
+            try {
+                const managerCheck = await db.collection("users")
+                    .where("email", "==", email)
+                    .where("roleId",  "==", "R003")
+                    .get();
 
-            if (managerCheck.empty) {
-                showToast("No manager account found with this email address.");
-                return;
+                if (managerCheck.empty) {
+                    showToast("No manager account found with this email address.");
+                    return;
+                }
+            } catch (checkErr) {
+                console.warn("Manager pre-check skipped:", checkErr.code);
             }
 
             sendResetBtn.innerText = "Sending...";
@@ -128,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 🟢 Eye toggle
+    // Eye toggle
     const eyeBtn = document.getElementById('eyeBtn');
     if (eyeBtn) {
         eyeBtn.addEventListener('click', function() {
@@ -144,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // 🟢 Login Form
+    // Login Form
     const loginForm = document.getElementById('loginForm');
     if (!loginForm) return;
 
@@ -158,8 +161,6 @@ document.addEventListener("DOMContentLoaded", () => {
         loginBtn.innerText = "Processing...";
         loginBtn.disabled  = true;
 
-        // ✅ Step 1: Pehle Firebase Auth se login try karo (email/password
-        // sahi hain ya nahi ye pehle pata chalna chahiye)
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
@@ -171,9 +172,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // ✅ Step 2: Ab Firestore mein manager record check karo.
-            // Agar yahan na mile, matlab email/password sahi tha lekin
-            // admin ne account delete kar diya hai.
             const managerSnapshot = await db.collection("users")
                 .where("email", "==", user.email)
                 .where("roleId",  "==", "R003")
@@ -191,14 +189,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 let dynamicBranchName = "";
                 let managerDocId      = "";
                 let managerName       = "";
-                let managerStatus     = "active"; // 👈 ADDED
+                let managerStatus     = "active"; 
 
                 managerSnapshot.forEach(doc => {
                     managerDocId      = doc.id;
                     dynamicBranchId   = doc.data().branchId;
                     dynamicBranchName = doc.data().branch || doc.data().branchName || "Assigned Branch";
                     managerName       = doc.data().name   || 'Manager';
-                    managerStatus     = doc.data().status || 'active'; // 👈 ADDED
+                    managerStatus     = doc.data().status || 'active';  
                 });
 
                 if (dynamicBranchId) {
@@ -212,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     localStorage.setItem("manager_name",      managerName);
                     localStorage.setItem("user_role",         "Manager");
 
-                    // ✅ Login log
+                    // Login log
                     const loginLog = {
                         action:       "Manager Login",
                         performedBy: managerName,
@@ -236,7 +234,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             console.error("Login Error:", error);
 
-            let msg = "Incorrect password. Please try again.";
+            let msg = "Login failed. Please try again.";
+            if (error.code === 'permission-denied') {
+                msg = "Permission denied by database rules. Please contact admin.";
+            } else if (error.code === 'unavailable') {
+                msg = "Network error. Please check your connection.";
+            } else if (error.code === 'auth/wrong-password') {
+                msg = "Incorrect password. Please try again.";
+            } else if (error.code === 'auth/invalid-login-credentials') {
+                msg = "Invalid email or password.";
+            }
 
             if (error.code === 'auth/user-not-found') {
                 msg = "No account found with this email address.";

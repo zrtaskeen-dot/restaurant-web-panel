@@ -1,4 +1,3 @@
-// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
     appId: '1:848662087857:web:0c1349bc37248181a0fa90',
@@ -15,7 +14,6 @@ const db = firebase.firestore();
 
 let editOwnerId = null;
 
-// --- ACTIVITY LOG HELPER ---
 function logActivity(action, details) {
     try {
         const logData = {
@@ -36,7 +34,7 @@ function logActivity(action, details) {
     }
 }
 
-// --- MODAL CONTROLS ---
+// MODAL CONTROLS
 window.openownerModal = function() {
     editOwnerId = null;
     document.querySelector('.modal-header').innerText = "Add Owner";
@@ -52,13 +50,11 @@ window.closeownerModal = function() {
     const passwordGroup = document.getElementById('ownerPassword').closest('.input-group');
     if (emailGroup)    emailGroup.style.display    = 'block';
     if (passwordGroup) passwordGroup.style.display = 'block';
-
-    // Add Owner ke liye required wapas
     document.getElementById('ownerEmail').required    = true;
     document.getElementById('ownerPassword').required = true;
 };
 
-// --- READ / REAL-TIME FETCH DATA ---
+// DATA FETCH
 db.collection("users")
     .where("roleId", "==", "R004")
     .onSnapshot((snapshot) => {
@@ -95,7 +91,7 @@ db.collection("users")
     console.error("Firestore read error:", error);
 });
 
-// --- CREATE & UPDATE FUNCTION ---
+// CREATE & UPDATE 
 document.getElementById('ownerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -125,7 +121,6 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         }
     }
 
-    // Phone 11 digit check
     if (!/^\+92\d{10}$/.test(oPhone)) {
         alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
@@ -150,7 +145,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         }
 
         if (editOwnerId) {
-            // --- EDIT MODE ---
+            // --- EDIT 
             await db.collection("users").doc(editOwnerId).update({
                 name: oName,
                 email: oEmail,
@@ -163,7 +158,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
             closeownerModal();
 
         } else {
-            // --- NEW ENTRY MODE ---
+            // --- NEW ENTRY MODE
 
             // Account
             const userCredential = await auth.createUserWithEmailAndPassword(oEmail, oPassword);
@@ -181,7 +176,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
                 phone: oPhone,
                 roleId: "R004",
                 emailVerified: false,
-                createdAt: Date.now()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             logActivity("Owner Added", `New owner "${oName}" registered`, adminPerformer);
@@ -220,7 +215,6 @@ window.editOwner = async (id) => {
             if (emailGroup)    emailGroup.style.display    = 'none';
             if (passwordGroup) passwordGroup.style.display = 'none';
 
-            // Hidden fields se "required" hatao, warna browser submit rok deta hai
             document.getElementById('ownerEmail').required    = false;
             document.getElementById('ownerPassword').required = false;
             document.querySelector('.modal-header').innerText = "Update Owner Details";
@@ -231,7 +225,7 @@ window.editOwner = async (id) => {
     }
 };
 
-// --- DELETE FUNCTION --- 
+// DELETE FUNCTION 
 window.deleteOwner = async (id) => {
     const agreed = await confirm("Are you sure you want to remove this owner?");
     if (agreed) {
@@ -252,7 +246,7 @@ window.addEventListener('click', function(e) {
     const modal = document.getElementById('ownerModal');
     if (e.target === modal) closeownerModal();
 });
-// Phone: +92 hamesha rahe, sirf digits likhe jayein
+
 document.getElementById('ownerPhone').addEventListener('input', function (e) {
     let raw = e.target.value;
     if (raw.startsWith('+92')) raw = raw.slice(3);

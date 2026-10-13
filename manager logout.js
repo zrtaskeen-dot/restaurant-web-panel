@@ -1,4 +1,3 @@
-// --- Manager Logout Function ---
 document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.querySelector('.logout-btn');
     if (logoutBtn) {

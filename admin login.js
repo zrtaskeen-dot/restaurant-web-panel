@@ -14,7 +14,7 @@ const db   = firebase.firestore();
 
 const ADMIN_ROLE_ID = "R005";
 
-//  Toast 
+//  Toast
 function showToast(message, type = 'error') {
     const toast = document.getElementById('adminToast');
     toast.innerText = message;
@@ -53,24 +53,29 @@ document.getElementById('sendResetBtn').addEventListener('click', async function
         return;
     }
 
-    const adminCheck = await db.collection("users")
-        .where("email",  "==", email)
-        .where("roleId", "==", ADMIN_ROLE_ID)
-        .get();
-
-    if (adminCheck.empty) {
-        showToast("No admin account found with this email address.");
-        return;
-    }
-
     resetBtn.innerText = "Sending...";
     resetBtn.disabled  = true;
 
     try {
+        try {
+            const adminCheck = await db.collection("users")
+                .where("email",  "==", email)
+                .where("roleId", "==", ADMIN_ROLE_ID)
+                .get();
+
+            if (adminCheck.empty) {
+                showToast("No admin account found with this email address.");
+                return;
+            }
+        } catch (checkErr) {
+            console.warn("Admin pre-check skipped:", checkErr.code, checkErr.message);
+        }
+
         await auth.sendPasswordResetEmail(email);
         closeForgotModal();
         showToast("Password reset link sent! Please check your email inbox.", "success");
     } catch (error) {
+        console.error("Reset Error:", error);
         let msg = "Failed to send reset link. Please try again.";
         if (error.code === 'auth/user-not-found')         msg = "No account found with this email address.";
         if (error.code === 'auth/invalid-email')          msg = "Invalid email format.";
@@ -82,7 +87,7 @@ document.getElementById('sendResetBtn').addEventListener('click', async function
     }
 });
 
-//  Eye Button 
+//  Eye Button
 document.getElementById('eyeBtn').addEventListener('click', function() {
     const input    = document.getElementById('adminPassword');
     const isHidden = input.type === 'password';
@@ -95,7 +100,7 @@ document.getElementById('eyeBtn').addEventListener('click', function() {
            <circle cx="12" cy="12" r="3"/>`;
 });
 
-// Login 
+// Login
 document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -103,37 +108,40 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
     const password = document.getElementById('adminPassword').value;
     const loginBtn = document.getElementById('btnAdminLogin');
 
+    const resetBtnState = () => {
+        loginBtn.innerText = "Login";
+        loginBtn.disabled  = false;
+    };
+
     loginBtn.innerText = "Signing in...";
     loginBtn.disabled  = true;
 
-    // ✅ Step 1: Pehle email Firestore mein check karo (ab roleId se)
+    // Firebase Auth login 
+    let user;
     try {
-        const emailCheck = await db.collection("users")
-            .where("email",  "==", email)
-            .where("roleId", "==", ADMIN_ROLE_ID)
-            .get();
+        await auth.signOut().catch(() => {});
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        user = userCredential.user;
+    } catch (error) {
+        console.error("Login Error:", error.code, error.message);
 
-        if (emailCheck.empty) {
-            showToast("No admin account found with this email address.");
-            loginBtn.innerText = "Login";
-            loginBtn.disabled  = false;
-            return;
-        }
-    } catch (e) {
-        showToast("Network error. Please check your connection.");
-        loginBtn.innerText = "Login";
-        loginBtn.disabled  = false;
+        let msg = "Login failed. Please try again.";
+        if (error.code === 'auth/user-not-found')         msg = "No account found with this email address.";
+        if (error.code === 'auth/wrong-password')         msg = "Incorrect password. Please try again.";
+        if (error.code === 'auth/invalid-credential')     msg = "Incorrect email or password.";
+        if (error.code === 'auth/invalid-login-credentials') msg = "Incorrect email or password.";
+        if (error.code === 'auth/invalid-email')          msg = "Invalid email format.";
+        if (error.code === 'auth/too-many-requests')      msg = "Too many attempts. Please wait and try again.";
+        if (error.code === 'auth/network-request-failed') msg = "Network error. Please check your connection.";
+        if (error.code === 'auth/user-disabled')          msg = "This account has been disabled.";
+
+        showToast(msg);
+        resetBtnState();
         return;
     }
 
-    // ✅ Step 2: Firebase Auth se login karo
+    //  admin role check 
     try {
-        await auth.signOut().catch(() => {});
-
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-
-        // ✅ CHANGED: "role" ki jagah "roleId" se admin check hota hai
         const adminSnap = await db.collection("users")
             .where("email",  "==", user.email)
             .where("roleId", "==", ADMIN_ROLE_ID)
@@ -142,34 +150,33 @@ document.getElementById('adminLoginForm').addEventListener('submit', async funct
         if (adminSnap.empty) {
             await auth.signOut();
             showToast("Access denied. This portal is for admins only.");
-            loginBtn.innerText = "Login";
-            loginBtn.disabled  = false;
+            resetBtnState();
             return;
         }
+    } catch (err) {
+        console.error("Admin role check error:", err.code, err.message);
+        await auth.signOut().catch(() => {});
 
-        // ✅ Login log
-        const loginLog = {
-            action:       "Admin Login",
-            performedBy: "Admin",
-            details:      "Admin logged in to the system",
-            createdAt:   firebase.firestore.FieldValue.serverTimestamp()
-        };
-        db.collection("system_log").add(loginLog).catch(err => console.error(err));
-
-        showToast("Login successful! Redirecting...", "success");
-        setTimeout(() => { window.location.href = "admin.html"; }, 1000);
-
-    } catch (error) {
-        console.error("Login Error:", error);
-
-        let msg = "Incorrect password. Please try again.";
-        if (error.code === 'auth/invalid-email')          msg = "Invalid email format.";
-        if (error.code === 'auth/too-many-requests')      msg = "Too many attempts. Please wait and try again.";
-        if (error.code === 'auth/network-request-failed') msg = "Network error. Please check your connection.";
-        if (error.code === 'auth/user-disabled')          msg = "This account has been disabled.";
-
-        showToast(msg);
-        loginBtn.innerText = "Login";
-        loginBtn.disabled  = false;
+        if (err.code === 'permission-denied') {
+            showToast("Permission denied by Firestore rules. Please check the database rules.");
+        } else if (err.code === 'unavailable') {
+            showToast("Network error. Please check your connection.");
+        } else {
+            showToast("Could not verify admin account: " + (err.code || err.message));
+        }
+        resetBtnState();
+        return;
     }
+
+    // Login log
+    const loginLog = {
+        action:       "Admin Login",
+        performedBy: "Admin",
+        details:      "Admin logged in to the system",
+        createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection("system_log").add(loginLog).catch(err => console.error(err));
+
+    showToast("Login successful! Redirecting...", "success");
+    setTimeout(() => { window.location.href = "admin.html"; }, 1000);
 });

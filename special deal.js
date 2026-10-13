@@ -26,7 +26,32 @@ function formatDate(dateStr) {
     return `${parseInt(d)} ${months[parseInt(m)-1]}`;
 }
 
-// --- CHECKBOX TOGGLE ---
+function logActivity(action, details) {
+    try {
+        const performedBy = localStorage.getItem('manager_name')
+            || localStorage.getItem('user_name')
+            || (firebase.auth().currentUser ? firebase.auth().currentUser.email : null)
+            || 'Manager';
+        const branch = localStorage.getItem('managerBranchName') || '';
+
+        const logData = {
+            action,
+            performedBy,
+            branch,
+            details,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        db.collection("system_log").add(logData)
+            .catch((err) => console.error("System log write failed:", err));
+        db.collection("activity_logs").add(logData)
+            .catch((err) => console.error("Activity log write failed:", err));
+    } catch (err) {
+        console.error("Log error:", err);
+    }
+}
+
+//  CHECKBOX TOGGLE 
 window.toggleSizeSelection = function(checkbox) {
     const fullName = checkbox.getAttribute('data-fullname');
     if (checkbox.checked) {
@@ -42,7 +67,7 @@ window.toggleSizeSelection = function(checkbox) {
     }
 };
 
-// --- LOAD MENU ITEMS ---
+//  LOAD MENU ITEMS 
 function loadMenuItems() {
     if (!BRANCH_DOC_ID) return;
     db.collection("menu").where("branchId", "==", BRANCH_DOC_ID).onSnapshot((snapshot) => {
@@ -57,8 +82,7 @@ function loadMenuItems() {
         renderMenuGridFiltered();
     });
 }
-
-// --- CATEGORY FILTER ---
+// CATEGORY FILTER
 window.filterDealMenu = function(category) {
     currentActiveCategory = category.toUpperCase().trim();
     document.querySelectorAll('.cat-tab').forEach(tab => {
@@ -67,7 +91,7 @@ window.filterDealMenu = function(category) {
     renderMenuGridFiltered();
 };
 
-// --- RENDER MENU GRID ---
+// RENDER MENU GRID 
 function renderMenuGridFiltered() {
     const menuGridList = document.getElementById('menu-items-list');
     if (!menuGridList) return;
@@ -107,7 +131,7 @@ function renderMenuGridFiltered() {
     });
 }
 
-// --- SAVE SPECIAL OFFER ---
+// SAVE SPECIAL OFFER 
 document.getElementById('dealForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const eventName = document.getElementById('eventName').value.trim();
@@ -124,17 +148,19 @@ document.getElementById('dealForm').addEventListener('submit', async (e) => {
     if (startDate > endDate)                  { alert("End date must be after start date!"); return; }
     if (selectedItems.length === 0)           { alert("Please select at least one item!"); return; }
     if (!BRANCH_DOC_ID)                       { alert("Branch ID missing. Please login again!"); return; }
-    const offerData = { eventName, name: dealName, prices: { simple: Number(dealPrice) }, startDate, endDate, description: dealDesc, branchId: BRANCH_DOC_ID, isActive: true, createdAt: Date.now(), updatedAt: Date.now() };
-    try {
-        if (editDealId) {
-            await db.collection("special_offers").doc(editDealId).update({ ...offerData, updatedAt: Date.now() });
-            alert("Special Offer Updated Successfully!");
-            editDealId = null;
-            document.querySelector('.btn-create-deal').innerText = "Create & Save Offer";
-        } else {
-            await db.collection("special_offers").add(offerData);
-            alert(`"${eventName}" Offer Created Successfully!`);
-        }
+    const offerData = { eventName, name: dealName, prices: { simple: Number(dealPrice) }, startDate, endDate, description: dealDesc, branchId: BRANCH_DOC_ID, isActive: true,  };
+   try {
+    if (editDealId) {
+        await db.collection("special_offers").doc(editDealId).update(offerData);
+        alert("Special Offer Updated Successfully!");
+        logActivity("Special Offer Updated", `Updated "${dealName}" (${eventName}) - Rs. ${dealPrice}`);
+        editDealId = null;
+        document.querySelector('.btn-create-deal').innerText = "Create & Save Offer";
+    } else {
+        await db.collection("special_offers").add(offerData);
+        alert(`"${eventName}" Offer Created Successfully!`);
+        logActivity("Special Offer Added", `Created "${dealName}" (${eventName}) - Rs. ${dealPrice}`);
+    }
         document.getElementById('dealForm').reset();
         selectedItems = [];
         renderMenuGridFiltered();
@@ -143,7 +169,6 @@ document.getElementById('dealForm').addEventListener('submit', async (e) => {
     }
 });
 
-// --- LOAD ACTIVE SPECIAL OFFERS ---
 function loadActiveDeals() {
     const dealsContainer = document.getElementById('active-deals-list');
     if (!dealsContainer || !BRANCH_DOC_ID) return;
@@ -162,7 +187,7 @@ function loadActiveDeals() {
                     <span style="font-weight:bold; color:#b52a00;">
                         <span style="background:#f9a03f; color:black; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:bold;">${data.eventName}</span><br>
                         ${data.name}<br>
-                        <span style="font-size:11px; color:#666;">📅 ${formatDate(data.startDate)} — ${formatDate(data.endDate)}</span>
+                        <span style="font-size:11px; color:#666;">${formatDate(data.startDate)} — ${formatDate(data.endDate)}</span>
                     </span>
                     <span>Rs. ${priceDisplay}</span>
                     <span style="font-size:13px; color:#555; white-space:pre-line;">${data.description || ''}</span>
@@ -175,7 +200,7 @@ function loadActiveDeals() {
     });
 }
 
-// --- EDIT OFFER ---
+// --- EDIT 
 window.editDeal = async (id) => {
     try {
         const doc = await db.collection("special_offers").doc(id).get();
@@ -196,26 +221,26 @@ window.editDeal = async (id) => {
     }
 };
 
-// --- DELETE OFFER ---
+// --- DELETE 
 window.deleteDeal = async (id) => {
     const agreed = await confirm("Delete this special offer?");
     if (agreed) {
         try {
+            const doc = await db.collection("special_offers").doc(id).get();
+            const dData = doc.exists ? doc.data() : {};
             await db.collection("special_offers").doc(id).delete();
             alert("Special Offer Deleted!");
+            logActivity("Special Offer Removed", `Removed "${dData.name || id}" (${dData.eventName || '-'})`);
         } catch (error) {
             alert("Error: " + error.message);
         }
     }
 };
 
-// 🟢 Sidebar Badge
-// ✅ Helper: Order ka status — teeno possible field names check karta hai
+// Sidebar Badge
 function getOrderStatus(data) {
     return data.order_status || data.orderStatus || data.status || '';
 }
-
-// 🟢 Sidebar Badge
 function updateOrdersBadge() {
     if (!BRANCH_DOC_ID) return;
     db.collection("orders").where("branchId", "==", BRANCH_DOC_ID).onSnapshot(snap => {
@@ -240,7 +265,7 @@ function updateOrdersBadge() {
         });
     });
 }
-// 🟢 Sidebar Reviews Badge
+// Sidebar Reviews Badge
 function updateReviewsBadge() {
     if (!BRANCH_DOC_ID) return;
 
@@ -277,7 +302,7 @@ function updateReviewsBadge() {
                 });
         });
 }
-// --- LOGOUT --- 🟢 async confirm fix
+// --- LOGOUT 
 window.confirmLogout = async function() {
     const agreed = await confirm("Are you sure you want to logout?");
     if (agreed) {
@@ -286,8 +311,6 @@ window.confirmLogout = async function() {
     }
 };
 
-
-// --- START ---
 document.addEventListener('DOMContentLoaded', () => {
     updateOrdersBadge();
     updateReviewsBadge();   

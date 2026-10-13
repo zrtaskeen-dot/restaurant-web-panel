@@ -1,4 +1,3 @@
-// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
     appId: '1:848662087857:web:0c1349bc37248181a0fa90',
@@ -85,21 +84,12 @@ function checkIsScheduled(data) {
         && parseDeliveryTime(data.deliveryTime) !== null;
 }
 
-// ---------------------------------------------------------------------
-// INCOMPLETE ORDERS
-//  1) Har order 45 minute mein deliver hona chahiye. Jo order abhi tak
-//     Pending ya Assigned hai aur uski deadline guzar chuki hai:
-//       - Scheduled order  => deadline = uska delivery time
-//       - Baaki sab orders => deadline = order place hone ke 45 minute baad
-//  (Cancelled orders Incomplete mein nahi aate, unka alag "Cancelled" filter hai)
-// ---------------------------------------------------------------------
 const DELIVERY_WINDOW_MINUTES = 45;
 
 function isCancelledStatus(statusLower) {
     return statusLower === 'cancelled' || statusLower === 'canceled';
 }
 
-// Order ki deadline (milliseconds mein), na mile to null
 function getDeliveryDeadlineMs(data) {
     if (checkIsScheduled(data)) {
         const t = parseDeliveryTime(data.deliveryTime);
@@ -118,7 +108,7 @@ function isOverdueIncomplete(data) {
     return deadline !== null && deadline < Date.now();
 }
 
-// Cancelled order ki wajah (Cancelled filter / row mein dikhane ke liye)
+// Cancelled order reason
 function getCancelReason(data) {
     const by  = data.cancelledBy ? `Cancelled by ${data.cancelledBy}` : 'Order was cancelled';
     const why = data.cancellationReason || 'No reason given';
@@ -130,16 +120,13 @@ function isUndeliveredStatus(statusLower) {
     return statusLower === 'undelivered';
 }
 
-// Undelivered order ki wajah (rider ne jo reason diya)
+// Undelivered order Reason
 function getUndeliveredReason(data) {
     const riderName = data.riderId ? (riderNameCache[data.riderId] || 'Rider') : 'Rider';
     const why = data.undeliveredReason || 'No reason given';
     return `Undelivered by ${riderName} — ${why}`;
 }
 
-// Pending/Assigned order ki deadline guzarne ki wajah (text)
-// statusOverride: jab order ka status pehle hi "Incomplete" ho chuka ho to
-// riderId dekh kar batate hain ke woh pehle Pending tha ya Assigned
 function getOverdueReason(data, statusOverride) {
     const st = (statusOverride || getOrderStatus(data)).toString().trim().toLowerCase();
     const missed = checkIsScheduled(data)
@@ -152,11 +139,9 @@ function getOverdueReason(data, statusOverride) {
     return `${missed} No rider was assigned to this order.`;
 }
 
-// null => order incomplete nahi hai, warna { type, reason } wapas aata hai
 function getIncompleteInfo(data) {
     const st = getOrderStatus(data).toString().trim().toLowerCase();
 
-    // Firestore mein status "Incomplete" likha ja chuka hai => wahan se wajah parho
     if (st === 'incomplete') {
         return {
             type: 'overdue',
@@ -165,7 +150,6 @@ function getIncompleteInfo(data) {
         };
     }
 
-    // Deadline guzar chuki hai, lekin Firestore mein status abhi update hona baqi hai
     if (isOverdueIncomplete(data)) {
         return { type: 'overdue', reason: getOverdueReason(data) };
     }
@@ -173,18 +157,11 @@ function getIncompleteInfo(data) {
     return null;
 }
 
-// ---------------------------------------------------------------------
-// Overdue order ka status Firestore mein "Incomplete" likhna.
-// Transaction use hoti hai: agar usi lamhe rider ne order accept kar liya
-// ya manager ne cancel kar diya ho to uska status overwrite nahi hota.
-// Firestore mein sirf orderStatus aur incompleteReason likhe jate hain.
-// ---------------------------------------------------------------------
 const incompleteFlagged = new Set();
 
 async function markOrderIncomplete(id) {
     const ref = db.collection("orders").doc(id);
 
-    // Rider ka naam pehle cache mein la lo taake wajah mein naam likha ja sake
     const cached = allOrdersCache.find(o => o.id === id);
     if (cached && cached.data.riderId) await getRiderName(cached.data.riderId);
 
@@ -192,7 +169,7 @@ async function markOrderIncomplete(id) {
         const snap = await tx.get(ref);
         if (!snap.exists) return;
         const cur = snap.data();
-        if (!isOverdueIncomplete(cur)) return;   // beech mein status badal chuka hai
+        if (!isOverdueIncomplete(cur)) return;   
         tx.update(ref, {
             orderStatus:      'Incomplete',
             incompleteReason: getOverdueReason(cur)
@@ -200,9 +177,6 @@ async function markOrderIncomplete(id) {
     });
 }
 
-// Jin orders ka status pehle se "Incomplete" hai (kisi aur jagah se likha gaya)
-// lekin Firestore mein incompleteReason nahi hai, unmein reason likhna,
-// aur purani previousStatus / incompleteAt fields hata dena.
 const incompleteBackfilled = new Set();
 
 async function backfillIncompleteOrder(id, data) {
@@ -227,7 +201,6 @@ function flagOverdueOrders() {
     allOrdersCache.forEach(({ id, data }) => {
         const st = getOrderStatus(data).toString().trim().toLowerCase();
 
-        // Pehle se Incomplete order: reason missing ho ya previousStatus ho to theek karo
         if (st === 'incomplete') {
             const needsFix = !data.incompleteReason
                 || data.previousStatus !== undefined
@@ -242,12 +215,11 @@ function flagOverdueOrders() {
             return;
         }
 
-        // Naya overdue order: status Incomplete likho
         if (!isOverdueIncomplete(data) || incompleteFlagged.has(id)) return;
         incompleteFlagged.add(id);
         markOrderIncomplete(id).catch(err => {
             console.error("Incomplete mark error:", id, err);
-            incompleteFlagged.delete(id);   // agli dafa dobara koshish hogi
+            incompleteFlagged.delete(id);   
         });
     });
 }
@@ -324,7 +296,7 @@ const SMALL_BTN_STYLE = 'padding:4px 9px;font-size:11px;white-space:nowrap;';
 let highlightedOrderId = null;
 let highlightTimer     = null;
 
-// --- Sorting (Incomplete orders Pending/Assigned ke upar nahi, neeche jate hain) ---
+// Sorting 
 const statusOrder = {
     'pending'    : 1,
     'assigned'   : 2,
@@ -332,7 +304,8 @@ const statusOrder = {
     'undelivered': 4,
     'delivered'  : 5,
     'cancelled'  : 6,
-    'incomplete' : 7
+    'Cancelled'  : 7,
+    'incomplete' : 8
 };
 
 function getSortRank(data) {
@@ -351,16 +324,12 @@ function sortOrdersCache() {
     });
 }
 
-// Sidebar badge mein sirf woh Pending orders gine jate hain jo Incomplete nahi hain
 function getPendingCount() {
     return allOrdersCache.filter(({ data }) =>
         getOrderStatus(data).toLowerCase() === 'pending' && !isOverdueIncomplete(data)
     ).length;
 }
 
-// Deadline waqt ke sath guzarti hai (Firestore mein koi change nahi hota),
-// isliye har 30 second baad check hota hai ke koi naya order Incomplete to nahi hua,
-// aur aisa order mile to uska status Firestore mein "Incomplete" kar diya jata hai.
 let lastIncompleteSignature = '';
 function computeIncompleteSignature() {
     return allOrdersCache
@@ -439,7 +408,6 @@ function renderOrders() {
         if (incompleteInfo)                          { statusColor = '#ffffff'; statusBg = '#a70000'; }
 
         let assignBtnHtml = '';
-        // Incomplete order par sirf View aur Delete dikhte hain (Assign/Reassign/Cancel nahi)
         if (showAssignBtn && !incompleteInfo) {
             if (ns === 'pending') {
                 assignBtnHtml = `<button class="btn-action update-btn" onclick="openAssignModal('${id}')" style="${SMALL_BTN_STYLE}">Assign Rider</button>`;
@@ -452,7 +420,6 @@ function renderOrders() {
         if (isPaidOnline && ns === 'pending' && !incompleteInfo) {
             cancelBtnHtml = `<button class="btn-action delete-btn" onclick="cancelOnlineOrder(event, '${id}')" style="${SMALL_BTN_STYLE}background-color:#b52a00;color:white;">Cancel</button>`;
         }
-        // Delete sirf Delivered, Cancelled, Undelivered ya Incomplete orders par dikhao
         let deleteBtnHtml = '';
         if (ns === 'delivered' || ns === 'cancelled' || ns === 'undelivered' || incompleteInfo) {
             deleteBtnHtml = `<button class="btn-action delete-btn" onclick="removeOrder('${id}')" style="${SMALL_BTN_STYLE}">Delete</button>`;
@@ -484,7 +451,6 @@ function renderOrders() {
                 Rider: ${riderLiveName}
             </div>` : '';
 
-        // Incomplete / Cancelled / Undelivered order ki wajah
         const reasonText = incompleteInfo
             ? incompleteInfo.reason
             : (isCancelledStatus(ns) ? getCancelReason(data)
@@ -494,7 +460,6 @@ function renderOrders() {
                 Reason: ${reasonText}
             </div>` : '';
 
-        // Incomplete order par "Assigned ... ago" timer nahi dikhate (reason mein wajah likhi hoti hai)
         let timerHtml = '';
         if (ns === 'assigned' && data.assignedAt && !incompleteInfo) {
             const assignedAt = typeof data.assignedAt === 'number'
@@ -509,7 +474,7 @@ function renderOrders() {
 
         const isPending     = ns === 'pending' && !incompleteInfo;
 
-        // --- Highlight orders
+        // Highlight orders
         const isHighlighted = (id === highlightedOrderId);
 
         let rowStyle = '';
@@ -601,7 +566,7 @@ function loadOrders() {
 
             snap.forEach(doc => {
                 const data = doc.data();
-                if (data.deletedByManager === true) return;   // manager ne delete kiya hua order skip
+                if (data.deletedByManager === true) return;   
                 allOrdersCache.push({ id: doc.id, data });
                 if (data.riderId) watchRiderDoc(data.riderId);
             });
@@ -682,14 +647,12 @@ async function openOrderDetails(id) {
                 Order Cancelled by Manager — Reason: ${order.cancellationReason || 'Invalid receipt'}
             </p>` : '';
 
-        // Delivery time guzarne wale Pending/Assigned orders ki wajah
         const incompleteInfo = getIncompleteInfo(order);
         const incompleteHtml = (incompleteInfo && incompleteInfo.type === 'overdue') ? `
             <p style="background:#e2e3e5;padding:8px 12px;border-radius:8px;border-left:4px solid  #dc3545;color:#dc3545;font-weight:600;">
                 Incomplete Order — ${incompleteInfo.reason}
             </p>` : '';
 
-        // Rider ne order undeliver kiya to uski wajah
         const undeliveredHtml = (orderStatusText.toString().toLowerCase() === 'undelivered') ? `
             <p style="background:#f8d7da;padding:8px 12px;border-radius:8px;border-left:4px solid #dc3545;color:#dc3545;font-weight:600;">
                 Order Undelivered by ${liveRiderName || 'Rider'} — Reason: ${order.undeliveredReason || 'No reason given'}
@@ -734,8 +697,7 @@ async function openOrderDetails(id) {
     }
 }
 
-// mirrors RiderController.isRiderOnline() on the Flutter side.
-const ONLINE_MAX_AGE_MS = 2500;
+const ONLINE_MAX_AGE_MS = 45000;
 function isRiderReallyOnline(r) {
     if (r.isAvailable !== true) return false;
     const seen = r.lastSeen;
@@ -831,7 +793,7 @@ async function assignRiderToOrder(riderId, riderName) {
             riderId,
             riderName:    firebase.firestore.FieldValue.delete(),
             orderStatus:  "Assigned",
-            assignedAt:   Date.now()
+            assignedAt:   firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
         alert(`Order assigned to ${riderName} successfully!`);
@@ -856,7 +818,6 @@ async function removeOrder(id) {
                 alert("Only Delivered, Cancelled, Undelivered or Incomplete orders can be deleted.");
                 return;
             }
-            // Soft delete: Firestore se nahi mitta, sirf manager se chhup jata hai
             await db.collection("orders").doc(id).update({
                 deletedByManager: true,
                 deletedByManagerAt: firebase.firestore.FieldValue.serverTimestamp()

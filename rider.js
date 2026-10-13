@@ -13,8 +13,6 @@ const db = firebase.firestore();
 
 const FIREBASE_API_KEY = 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE';
 
-// ✅ NEW: Rider role ab sirf roleId se pehchana jata hai — user_role collection
-// mein R002 = "rider" hai, isliye "role" field ki zaroorat nahi.
 const RIDER_ROLE_ID = "R002";
 
 let editId = null;
@@ -38,7 +36,6 @@ function logActivity(action, details) {
         console.error("Log error:", err);
     }
 }
-// --- CREATE USER IN FIREBASE AUTHENTICATION ---
 async function createAuthUser(email, password) {
     const res = await fetch(
         `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${FIREBASE_API_KEY}`,
@@ -64,7 +61,7 @@ async function createAuthUser(email, password) {
     return data.localId;
 }
 
-// --- DYNAMIC BRANCHES LOADER FOR DROPDOWN ---
+//  DYNAMIC BRANCHES LOADER FOR DROPDOWN 
 async function loadBranchDropdown(selectedBranchId = null) {
     const branchDropdown = document.getElementById('riderBranchSelect');
     if (!branchDropdown) return;
@@ -94,7 +91,7 @@ async function loadBranchDropdown(selectedBranchId = null) {
     }
 }
 
-// --- MODAL FUNCTIONS ---
+// MODAL FUNCTIONS 
 window.openModal = async function () {
     document.getElementById('riderModal').style.display = 'block';
     document.querySelector('.modal-header').innerText = "Register New Rider";
@@ -106,19 +103,16 @@ window.closeModal = function () {
     document.getElementById('riderModal').style.display = 'none';
     document.getElementById('riderForm').reset();
     editId = null;
-
-    // 🟢 Fields wapas dikhao next Add Rider ke liye
     const emailGroup    = document.getElementById('riderEmail').closest('.input-group');
     const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
        if (emailGroup)    emailGroup.style.display    = 'block';
     if (passwordGroup) passwordGroup.style.display = 'block';
 
-    // 🟢 Add Rider ke liye required wapas
     document.getElementById('riderEmail').required    = true;
     document.getElementById('riderPassword').required = true;
 };
 
-// --- SAVE / UPDATE RIDER ---
+// SAVE and UPDATE RIDER 
 document.getElementById('riderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -133,13 +127,13 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     const selectedOption = branchSelect ? branchSelect.options[branchSelect.selectedIndex] : null;
     const branchName     = selectedOption ? selectedOption.getAttribute('data-name') : "";
 
-        // 🟢 Email format check
+        // Email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
         alert("Please enter a valid email address.\nExample: user@gmail.com");
         return;
     }
 
-    // 🟢 Password strength (skip in edit mode if empty)
+    // Password 
     if (!editId || password) {
         const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
         if (!passRegex.test(password)) {
@@ -148,13 +142,13 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
         }
     }
 
-       // 🟢 Phone validation — +92 format
+       // Phone 
     if (!/^\+92\d{10}$/.test(phone)) {
         alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
     }
 
-    // 🟢 CNIC validation — XXXXX-XXXXXXX-X format
+    //CNIC validation 
     if (!/^\d{5}-\d{7}-\d{1}$/.test(cnic)) {
         alert("CNIC format must be: XXXXX-XXXXXXX-X");
         return;
@@ -185,18 +179,17 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
         }
 
         if (editId) {
-            // --- EDIT MODE ---
             const updateData = {
                 name, email, phone, cnic,
                 branchId, branchName,
-                updatedAt: Date.now()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             await db.collection("users").doc(editId).update(updateData);
             alert("Rider Updated Successfully!");
 
         } else {
-            // --- ADD MODE ---
+            // --- ADD 
             let uid = null;
             try {
                 uid = await createAuthUser(email, password);
@@ -205,11 +198,6 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
                 return;
             }
 
-            // ✅ CHANGED: "role" field hata diya — ab sirf roleId (R002) se
-            // rider ki pehchaan hoti hai, jo user_role collection mein defined hai.
-            // ✅ CHANGED: "password" field Firestore mein save nahi hota —
-            // password sirf Firebase Auth mein (createAuthUser ke zariye)
-            // save hota hai, plaintext Firestore mein nahi hona chahiye.
             const riderData = {
                  name, email,
                 phone, cnic,
@@ -220,8 +208,8 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
                 totalOrders: 0,
                 delivered: 0,
                 pending: 0,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
 
             await db.collection("users").doc(uid).set(riderData);
@@ -237,8 +225,6 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     }
 });
 
-// --- REAL-TIME RIDERS LIST ---
-// ✅ CHANGED: "role" ki jagah "roleId" se query hota hai
 db.collection("users")
     .where("roleId", "==", RIDER_ROLE_ID)
     .onSnapshot((snapshot) => {
@@ -279,7 +265,7 @@ db.collection("users")
         if (list) list.innerHTML = '<p style="padding: 20px; text-align: center; color:red;">Error: ' + err.message + '</p>';
     });
 
-// --- EDIT RIDER ---
+// --- EDIT RIDER 
 window.editRider = async (id) => {
     try {
         const doc = await db.collection("users").doc(id).get();
@@ -291,19 +277,17 @@ window.editRider = async (id) => {
             document.getElementById('riderEmail').value    = r.email    || "";
             document.getElementById('riderPassword').value = "";
                         let ph = r.phone || "";
-            if (/^0\d{10}$/.test(ph)) ph = "+92" + ph.slice(1);   // purana 03... format convert
+            if (/^0\d{10}$/.test(ph)) ph = "+92" + ph.slice(1);   
             document.getElementById('riderPhone').value    = ph || "+92";
             document.getElementById('riderCnic').value     = r.cnic     || "";
 
             await loadBranchDropdown(r.branchId);
 
-            // 🟢 Edit mode mein email aur password fields hide karo
             const emailGroup    = document.getElementById('riderEmail').closest('.input-group');
             const passwordGroup = document.getElementById('riderPassword').closest('.input-group');
             if (emailGroup)    emailGroup.style.display    = 'none';
             if (passwordGroup) passwordGroup.style.display = 'none';
 
-            // 🟢 Hidden fields se "required" hatao, warna browser submit rok deta hai
             document.getElementById('riderEmail').required    = false;
             document.getElementById('riderPassword').required = false;
 
@@ -315,7 +299,7 @@ window.editRider = async (id) => {
     }
 };
 
-// --- DELETE RIDER ---
+// --- DELETE RIDER
 window.deleteRider = async (id) => {
     const agreed = await confirm("Are you sure you want to delete this rider?");
     if (agreed) {
@@ -331,7 +315,7 @@ window.deleteRider = async (id) => {
         }
     }
 };
-// 🟢 CNIC auto format — XXXXX-XXXXXXX-X
+
 document.getElementById('riderCnic').addEventListener('input', function(e) {
     let val = e.target.value.replace(/[^0-9]/g, '');
     if (val.length > 5) val = val.slice(0,5) + '-' + val.slice(5);
@@ -340,7 +324,6 @@ document.getElementById('riderCnic').addEventListener('input', function(e) {
     e.target.value = val;
 });
 
-// 🟢 Phone: +92 hamesha rahe, user sirf aage ke 10 digits likhe
 document.getElementById('riderPhone').addEventListener('input', function (e) {
     let raw = e.target.value;
     if (raw.startsWith('+92')) raw = raw.slice(3);

@@ -1,4 +1,3 @@
-// --- Admin Logout Function --- 🟢 async confirm fix
 document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.querySelector('.logout-btn');
     if (logoutBtn) {

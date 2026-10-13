@@ -11,7 +11,7 @@ body {
     align-items: stretch; 
 }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar { 
     width: 220px; 
     background-color: #b52a00; 
@@ -68,7 +68,7 @@ body {
     background-color: #5c0000;
 }
 
-/* --- Main Content Area --- */
+/* Main Content Area */
 .main-content { 
     flex: 1; 
     padding: 30px; 
@@ -82,7 +82,7 @@ body {
     color: #1a1a1a;
 }
 
-/* --- Table Container --- */
+/* Table Container */
 .table-container {
     background: white;
     border-radius: 16px;
@@ -91,7 +91,7 @@ body {
     overflow: hidden;
 }
 
-/* --- Order Grid --- */
+/*  Order Grid */
 .order-grid {
     display: grid;
     grid-template-columns: 110px 1fr 160px 280px;
@@ -100,7 +100,7 @@ body {
     gap: 10px;
 }
 
-/* --- Table Header --- */
+/* Table Header */
 .table-header {
     background-color: #b52a00; 
     color: white; 
@@ -108,7 +108,7 @@ body {
     font-size: 13px;
 }
 
-/* --- Rows --- */
+/* Rows */
 .row { 
     background: white; 
     border-bottom: 1.5px solid #bbb;
@@ -124,7 +124,7 @@ body {
     border-bottom: none;
 }
 
-/* --- Action Buttons --- */
+/* Action Buttons */
 .btn-action {
     border: none; 
     padding: 7px 16px; 
@@ -142,7 +142,6 @@ body {
 .update-btn { background-color: #f9a03f; color: black; }
 .delete-btn { background-color: #8e2100; }
 
-/* --- Modal & Overlay --- */
 .modal-overlay { 
     display: none; 
     position: fixed; 

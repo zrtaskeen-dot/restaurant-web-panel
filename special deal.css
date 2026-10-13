@@ -1,4 +1,3 @@
-/* --- Global & Container Rules --- */
 body { 
     margin: 0; 
     font-family: 'Segoe UI', Arial, sans-serif; 
@@ -9,22 +8,18 @@ body {
 .admin-container { 
     display: flex; 
     min-height: 100vh; 
-    align-items: stretch; /* Both sidebar and content stay aligned */
+    align-items: stretch; 
 }
-
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar { 
     width: 220px; 
     background-color: #b52a00; 
     color: white; 
     padding: 20px; 
     font-size: 14px;
-    
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    
-    /* 🟢 Sidebar ki position ko screen par fix karne ke liye */
     height: 100vh;
     position: sticky;
     top: 0;
@@ -40,7 +35,7 @@ body {
 .sidebar nav {
     display: flex;
     flex-direction: column;
-    height: 100%; /* Nav ko full available space dega */
+    height: 100%; 
 }
 
 .sidebar nav a { 
@@ -58,9 +53,8 @@ body {
     font-weight: bold; 
 }
 
-/* 🟢 Logout Button - Bilkul Bottom par Shift karega */
 .sidebar nav a.logout-btn {
-    margin-top: auto; /* Clean push to bottom */
+    margin-top: auto; 
     background-color: #800000;
     text-align: center;
     font-weight: bold;
@@ -73,11 +67,10 @@ body {
     background-color: #5c0000;
 }
 
-/* --- Main Content Area Fixes --- */
 .main-content { 
     flex: 1; 
     padding: 25px; 
-    width: calc(100vw - 240px); /* Ensuring right border doesn't break */
+    width: calc(100vw - 240px); 
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -90,15 +83,14 @@ body {
     font-weight: bold;
 }
 
-/* Two-column Layout for Deal Creation */
 .deal-layout {
     display: flex;
     gap: 40px;
     margin-bottom: 40px; 
-    align-items: flex-start; /* Ensures columns stretch naturally */
+    align-items: flex-start; 
 }
 
-/* --- Left Side: Deal Info Form Card --- */
+/* Left Side: Deal */
 .deal-form {
     flex: 1;
     background: white;
@@ -154,7 +146,7 @@ body {
     opacity: 0.9;
 }
 
-/* --- Right Side Menu Selection Box --- */
+/* Right Side Menu Selection Box */
 .menu-selection-box {
     flex: 1;
     background: white;
@@ -164,26 +156,23 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     display: flex;
     flex-direction: column;
-    min-width: 400px; /* Fixing squeeze issue */
+    min-width: 400px; 
 }
-
 .menu-selection-box h3 {
     margin-top: 0;
     margin-bottom: 15px;
     color: #b52a00;
 }
 
-/* --- Upgraded Category Tabs Styling --- */
 .category-tabs-container {
     display: flex;
     gap: 8px;
-    overflow-x: auto; /* Enable smooth scrolling */
+    overflow-x: auto; 
     padding-bottom: 10px;
     margin-bottom: 15px;
     border-bottom: 1.5px solid #bbb;
 }
 
-/* Custom Scrollbar for Tabs Container */
 .category-tabs-container::-webkit-scrollbar {
     height: 5px;
 }
@@ -206,7 +195,7 @@ body {
 }
 
 .cat-tab.active, .cat-tab:hover {
-    background-color: #f9a03f; /* Orange Active Context */
+    background-color: #f9a03f; 
     border-color: #f9a03f;
     color: black;
 }
@@ -217,30 +206,27 @@ body {
     margin-bottom: 15px;
 }
 
-/* --- MAJOR FIX: Menu Items Grid Container --- */
 .menu-items-grid-container {
     overflow-y: auto;
-    max-height: 450px; /* Balanced height context */
+    max-height: 450px; 
     padding-right: 5px;
-    display: flex; /* Changed from plain block for proper spacing */
+    display: flex; 
     flex-direction: column;
-    gap: 15px; /* Consistent gap between blocks */
+    gap: 15px; 
 }
 
-/* --- MAJOR FIX: Menu Item Block (Correcting layout failure) --- */
 .menu-item-block {
     background: #ffffff;
-    padding: 15px 20px; /* Better padded area */
+    padding: 15px 20px; 
     border-radius: 12px;
     border: 1.5px solid #bbb;
-    border-left: 6px solid #b52a00; /* Distinct dark red badge */
+    border-left: 6px solid #b52a00; 
     display: flex;
     flex-direction: column;
-    width: 100%; /* Covers full container width without squeeze */
+    width: 100%; 
     box-sizing: border-box;
 }
 
-/* Inline category context badge inside the card */
 .deal-item-category {
     background-color: #b52a00;
     color: white;
@@ -259,27 +245,25 @@ body {
     color: #b52a00;
 }
 
-/* MAJOR FIX: Sizes Inner Checkboxes Rows - NOW FULLY VISIBLE --- */
 .size-row {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 0;
     border-top: 1px dashed rgba(0,0,0,0.1);
-    font-size: 13px; /* Larger, readable font */
+    font-size: 13px; 
     color: black;
     font-weight: 500;
 }
 
 .size-row input[type="checkbox"] {
-    width: 20px; /* Proper clickable checkbox size */
+    width: 20px; 
     height: 20px;
-    accent-color: #b52a00; /* Dark Red Accent context */
+    accent-color: #b52a00; 
     cursor: pointer;
     margin: 0;
 }
 
-/* --- BOTTOM ACTIVE DEALS DISPLAY TABLE (Styles mirrored from Rider management uniformity) --- */
 .created-deals-section {
     margin-top: 40px;
     background: white;
@@ -302,10 +286,9 @@ body {
 }
 
 .deals-header {
-    background-color: #b52a00; /* Theme uniformity */
+    background-color: #b52a00; 
     color: white;
     display: grid;
-    /* Balanced alignment based on content context */
     grid-template-columns: 2fr 1fr 3fr 1fr; 
     padding: 15px 20px;
     border-radius: 12px;
@@ -330,7 +313,6 @@ body {
     padding-right: 10px;
 }
 
-/* Delete Button Specific Styling context mirroring 'Maroon Red' uniformly */
 .btn-delete-deal {
     background-color: #800000; 
     color: white;

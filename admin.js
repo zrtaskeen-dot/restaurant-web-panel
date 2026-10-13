@@ -16,7 +16,7 @@ let isFirstLogLoad = true;
 
 const LAST_SEEN_KEY = 'admin_notif_last_seen'; 
 
-// ── DATE BADGE ──
+//  DATE Bagde
 function setDateBadge() {
     const now     = new Date();
     const options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
@@ -59,14 +59,13 @@ function showLog(id, textId, timeId, text) {
     if (tm) tm.innerText = nowTime();
 }
 
-// ── COUNT HELPER ──
+// COUNT HELPER 
 function animateCount(elementId, target) {
     const el = document.getElementById(elementId);
     if (el) el.innerText = target;
 }
 
 //  NOTIFICATION BELL SYSTEM
-
 function getLastSeenTime() {
     const val = localStorage.getItem(LAST_SEEN_KEY);
     if (val === null) {
@@ -170,15 +169,15 @@ function showBrowserNotification(log) {
     if ("Notification" in window && Notification.permission === "granted") {
         new Notification(log.action || "New Activity", {
             body: log.details || "",
-            icon: "/favicon.ico" // apna icon path daal dein
+            icon: "/favicon.ico" 
         });
     }
 }
 
-// ── NOTIFICATION SOUND (optional) ──
+//  NOTIFICATION SOUND 
 function playNotificationSound() {
-    const audio = new Audio('assets/notification.mp3'); // apna sound file path daal dein
-    audio.play().catch(() => {}); // agar browser block kare to silently ignore
+    const audio = new Audio('assets/notification.mp3'); 
+    audio.play().catch(() => {}); 
 }
 
 // System Log 
@@ -231,8 +230,8 @@ function loadActivityLog() {
                 let timeStr = '—';
                 let createdAtMs = 0;
                 if (log.createdAt) {
-    const raw  = log.createdAt;
-    const date = raw.toDate ? raw.toDate() : new Date(raw);
+                   const raw  = log.createdAt;
+                   const date = raw.toDate ? raw.toDate() : new Date(raw);
                     createdAtMs = date.getTime();
                     timeStr = date.toLocaleString('en-US', {
                         day:    '2-digit',
@@ -244,7 +243,6 @@ function loadActivityLog() {
                     });
                 }
 
-                // ✅ Role + By ek line, branch agar ho
                 const metaLine = `${log.performedBy ||  ''}${log.branch ? ` | ${log.branch}` : ''}`;
 
                 container.innerHTML += `
@@ -329,7 +327,7 @@ function syncStats() {
     });
 }
 
-// ── LOGOUT ──
+//  LOGOUT 
 window.openLogout = function(e) {
     if (e) e.preventDefault();
     const modal = document.getElementById('logoutModal');
@@ -352,7 +350,6 @@ document.addEventListener('click', function(e) {
     if (modal && e.target === modal) closeLogout();
 });
 
-// ── INIT ──
 document.addEventListener("DOMContentLoaded", () => {
     setDateBadge();
     startLiveClock();

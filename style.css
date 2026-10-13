@@ -11,7 +11,7 @@ body {
     align-items: stretch; 
 }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar { 
     width: 220px; 
     background-color: #b52a00; 
@@ -68,7 +68,6 @@ body {
     background-color: #5c0000;
 }
 
-/* --- Main Content Area --- */
 .main-content { 
     flex: 1; 
     padding: 25px; 
@@ -80,8 +79,7 @@ body {
     margin-bottom: 15px; 
     font-weight: bold;
 }
-
-/* --- Buttons --- */
+/* Buttons */
 .add-new-btn { 
     background-color: #7a1c00; 
     color: white; 
@@ -93,8 +91,7 @@ body {
     font-weight: bold; 
     margin-bottom: 20px;
 }
-
-/* --- Tabs --- */
+/* Tabs */
 .tabs { 
     display: flex; 
     gap: 8px; 
@@ -116,7 +113,7 @@ body {
     border-color: black; 
 }
 
-/* --- Table Grid --- */
+/* Table Grid */
 .table-header, .row { 
     display: grid; 
     grid-template-columns: 60px 150px 1fr 100px 130px; 
@@ -193,7 +190,7 @@ body {
 
 .btn-edit:hover { background-color: #122f3b !important; }
 .btn-delete:hover { background-color: #8e2100 !important; }
-/* --- Modal Background Overlay --- */
+
 .modal-overlay { 
     display: none; 
     position: fixed; 
@@ -278,7 +275,7 @@ body {
     font-size: 13px;
 }
 
-/* --- Size Container --- */
+/* Size Container */
 .size-container { 
     background-color: #7a1c00;
     padding: 15px; 
@@ -320,7 +317,7 @@ body {
     cursor: pointer;
 }
 
-/* --- Price Inputs --- */
+/*  Price Inputs */
 .orange-price-input { 
     width: 100%;
     background-color: #f9a03f; 
@@ -379,7 +376,6 @@ body {
     letter-spacing: 0.3px;
 }
 
-/*  Mini Tabs (Sub-categories inside Deals/Combo) */
 .mini-tab {
     padding: 6px 14px; 
     background: #fdfdfd; 

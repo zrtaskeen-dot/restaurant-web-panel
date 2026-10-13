@@ -1,4 +1,3 @@
-// --- Firebase Configuration ---
 const firebaseConfig = {
     apiKey: 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE',
     appId: '1:848662087857:web:0c1349bc37248181a0fa90',
@@ -15,7 +14,7 @@ const db = firebase.firestore();
 
 let editManagerId = null;
 
-// --- ACTIVITY LOG HELPER ---
+// ACTIVITY LOG HELPER 
 function logActivity(action, details) {
     try {
         const logData = {
@@ -36,7 +35,7 @@ function logActivity(action, details) {
     }
 }
 
-// --- MODAL CONTROLS ---
+// MODAL CONTROLS
 window.openManagerModal = function() {
     editManagerId = null;
     document.querySelector('.modal-header').innerText = "Add Manager";
@@ -54,12 +53,11 @@ window.closeManagerModal = function() {
     if (emailGroup) emailGroup.style.display = 'block';
     if (passwordGroup) passwordGroup.style.display = 'block';
 
-    // 🟢 Hidden fields dobara required bana do (Add Manager ke liye)
     document.getElementById('managerEmail').required = true;
     document.getElementById('managerPassword').required = true;
 };
 
-// --- READ / REAL-TIME FETCH DATA ---
+// DATA FETCH  
 db.collection("users")
     .where("roleId", "==", "R003")
     .onSnapshot((snapshot) => {
@@ -99,7 +97,7 @@ db.collection("users")
         console.error("Firestore read error:", error);
     });
 
-// --- CREATE & UPDATE FUNCTION ---
+// CREATE & UPDATE FUNCTION
 document.getElementById('managerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -110,19 +108,19 @@ document.getElementById('managerForm').addEventListener('submit', async function
     const mCnic = document.getElementById('managerCnic').value.trim();
     const mBranch = document.getElementById('managerBranch').value.trim();
 
-    // 🟢 Name check
+    // Name check
     if (!mName || mName.length < 2) {
         alert("Please enter a valid name (at least 2 characters).");
         return;
     }
 
-    // 🟢 Email format check
+    // Email format check
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
         alert("Please enter a valid email address.\nExample: user@example.com");
         return;
     }
 
-    // 🟢 Password strength check (skip in edit mode if empty)
+    //Password strength check 
     if (!editManagerId || mPassword) {
         const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^])[A-Za-z\d@$!%*?&_#^]{8,}$/;
         if (!passRegex.test(mPassword)) {
@@ -131,13 +129,13 @@ document.getElementById('managerForm').addEventListener('submit', async function
         }
     }
 
-        // 🟢 Phone +92 format check
+        // Phone +92 format check
     if (!/^\+92\d{10}$/.test(mPhone)) {
         alert("Phone number must be in +92 format!\nExample: +923001234567");
         return;
     }
 
-    // 🟢 CNIC format check
+    // CNIC format check
     if (!/^\d{5}-\d{7}-\d{1}$/.test(mCnic)) {
         alert("CNIC format must be: XXXXX-XXXXXXX-X");
         return;
@@ -157,7 +155,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
         || 'Admin';
 
     try {
-        // 🟢 Phone uniqueness check
+        // Phone uniqueness check
         const phoneSnap = await db.collection("users").where("phone", "==", mPhone).get();
         const phoneDuplicate = phoneSnap.docs.some(doc => doc.id !== editManagerId);
         if (phoneDuplicate) {
@@ -166,7 +164,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
             return;
         }
 
-        // 🟢 CNIC uniqueness check
+        // CNIC uniqueness check
         const cnicSnap = await db.collection("users").where("cnic", "==", mCnic).get();
         const cnicDuplicate = cnicSnap.docs.some(doc => doc.id !== editManagerId);
         if (cnicDuplicate) {
@@ -176,31 +174,26 @@ document.getElementById('managerForm').addEventListener('submit', async function
         }
 
         if (editManagerId) {
-            // --- EDIT MODE ---
+            // EDIT MODE
             const updatedData = {
                 name: mName,
                 email: mEmail,
                 phone: mPhone,
                 cnic: mCnic,
                 branchName: mBranch,
-                updatedAt: Date.now()
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection("users").doc(editManagerId).update(updatedData);
 
-            // 🟢 Is manager ki asal branchId nikal lo, taake branch ka
-            // naya naam sirf is manager tak mahdood na rahe
             const managerSnap = await db.collection("users").doc(editManagerId).get();
             const managerBranchId = managerSnap.exists ? managerSnap.data().branchId : null;
 
             if (managerBranchId) {
-                // 🟢 restaurant_info (asal branch record) mein naam sync karo
                 await db.collection("restaurant_info").doc(managerBranchId).set({
                     branchName: mBranch,
-                    updatedAt: Date.now()
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
 
-                // 🟢 Isi branchId se linked SAARE users (doosre managers,
-                // riders) mein bhi branchName update kar do
                 const linkedUsersSnap = await db.collection("users")
                     .where("branchId", "==", managerBranchId)
                     .get();
@@ -218,7 +211,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
             logActivity("Manager Updated", `Updated details for manager "${mName}" (branch: ${mBranch})`, adminPerformer);
             closeManagerModal();
         } else {
-            // ✅ Case-insensitive branch check
+            // Case-insensitive branch check
             const branchSnap = await db.collection("users")
                 .where("roleId", "==", "R003")
                 .get();
@@ -233,7 +226,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
                 return;
             }
 
-            // Firebase Auth account banao
+            // Firebase Auth account 
             const userCredential = await auth.createUserWithEmailAndPassword(mEmail, mPassword);
             const newUser = userCredential.user;
             const userUid = newUser.uid;
@@ -241,7 +234,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
             // Verification email
             await newUser.sendEmailVerification();
 
-            // Branch check/create
+            // Branch create
             const existingBranch = await db.collection("restaurant_info")
                 .where("branchName", "==", mBranch)
                 .get();
@@ -253,7 +246,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
             } else {
                 const branchDocRef = await db.collection("restaurant_info").add({
                     branchName: mBranch,
-                    createdAt: Date.now()
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 automaticBranchId = branchDocRef.id;
                 branchWasCreated = true;
@@ -269,7 +262,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
                 branchId: automaticBranchId,
                 roleId: "R003",
                 emailVerified: false,
-                createdAt: Date.now()
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection("users").doc(userUid).set(managerData);
 
@@ -311,9 +304,6 @@ window.editManager = function(id) {
                 const passwordGroup = document.getElementById('managerPassword').closest('.input-group');
                 if (emailGroup) emailGroup.style.display = 'none';
                 if (passwordGroup) passwordGroup.style.display = 'none';
-
-                // 🟢 Hidden fields ko required se hata do, warna hidden required
-                // field ki wajah se form silently submit hona band ho jata hai
                 document.getElementById('managerEmail').required = false;
                 document.getElementById('managerPassword').required = false;
 
@@ -326,7 +316,7 @@ window.editManager = function(id) {
         });
 };
 
-// --- DELETE FUNCTION --- 🟢 async confirm fix
+// DELETE FUNCTION 
 window.deleteManager = async function(id) {
     const agreed = await confirm("Are you sure you want to remove this manager?");
     if (agreed) {
@@ -360,7 +350,6 @@ function togglePass(id, icon) {
     }
 }
 
-// 🟢 Phone: +92 hamesha rahe, sirf digits likhe jayein
 document.getElementById('managerPhone').addEventListener('input', function (e) {
     let raw = e.target.value;
     if (raw.startsWith('+92')) raw = raw.slice(3);
@@ -370,20 +359,9 @@ document.getElementById('managerPhone').addEventListener('input', function (e) {
     val = val.slice(0, 10);
     e.target.value = '+92' + val;
 });
-// =====================================================================
-// --- DELIVERY AREA FROM BRANCH ADDRESS ---
-// Branch ka address save hote hi Google Geocoding se location nikalti hai
-// aur us ke gird ka box restaurant_info/{branchId}.deliveryBounds mein
-// likhti hai. Customer app (checkout.dart) yehi deliveryBounds parhti hai.
-// =====================================================================
-
-// Geocoding API enabled wali key yahan lagayen, aur usay HTTP referrer se
-// admin site tak restrict karein.
+// DELIVERY AREA FROM BRANCH ADDRESS
 const GEOCODING_API_KEY = 'AIzaSyDDTpx9ZaDEsDzGIOnrsWLQL3vHKz7DZU4';
 
-// Branch ke address se har taraf itne km tak delivery (box ka aadha size).
-// Sab branches ke liye yahi default hai. Kisi ek branch ka radius alag
-// karna ho to uske document mein 'deliveryRadiusKm' field (km) daal dein.
 const DEFAULT_DELIVERY_RADIUS_KM = 5;
 
 function buildBoundsAround(lat, lng, radiusKm) {
@@ -398,11 +376,6 @@ function buildBoundsAround(lat, lng, radiusKm) {
     };
 }
 
-// NOTE: Google ki Geocoding REST web service (maps/api/geocode/json) browser
-// se HTTP-referrer-restricted key ke sath REQUEST_DENIED deti hai. Isliye
-// yahan Maps JavaScript API ka Geocoder use hota hai, jo referrer-restricted
-// key ke sath browser mein theek chalta hai. Script khud load ho jati hai,
-// HTML mein kuch add nahi karna.
 let _mapsLoadPromise = null;
 let _mapsAuthFailed = false;
 window.gm_authFailure = function() { _mapsAuthFailed = true; };
@@ -485,8 +458,7 @@ async function applyDeliveryAreaFromAddress(branchId, branchName, address, radiu
     return { formatted, lat, lng, bounds, km };
 }
 
-// Branch ka address save hote hi (ya jab area abhi set na ho) khud lagta hai.
-const _areaAttempted = new Set(); // aik session mein aik address par aik hi koshish
+const _areaAttempted = new Set(); 
 function maybeAutoApplyDeliveryArea(id, b) {
     const address = (b.address || '').trim();
     if (!address) return;
@@ -502,25 +474,7 @@ function maybeAutoApplyDeliveryArea(id, b) {
         .catch(err => console.warn('Auto delivery area failed for', b.branchName, err.message));
 }
 
-// Manual button: "Set Area"
-window.setDeliveryArea = async function(branchId) {
-    try {
-        const doc = await db.collection("restaurant_info").doc(branchId).get();
-        const b = doc.data() || {};
-        const address = (b.address || '').trim();
-        if (!address) { alert("Pehle branch ka address enter karein."); return; }
-
-        const r = await applyDeliveryAreaFromAddress(
-            branchId, b.branchName || '', address, b.deliveryRadiusKm
-        );
-        alert(`Delivery area set (${r.km} km around):\n${r.formatted}\n\n` +
-              `Agar ye jagah ghalat hai to address ko mazeed saaf likhein aur dobara try karein.`);
-    } catch (err) {
-        alert("Delivery area set nahi ho saka: " + err.message);
-    }
-};
-
-// --- BRANCH MANAGEMENT MODULE ---
+// BRANCH MANAGEMENT
 const BRANCH_LINKED_COLLECTIONS = [
     "menu",
     "users",
@@ -531,7 +485,7 @@ const BRANCH_LINKED_COLLECTIONS = [
     "toppings"
 ];
 
-// --- READ / REAL-TIME FETCH BRANCHES ---
+// FETCH BRANCHES 
 db.collection("restaurant_info")
     .onSnapshot((snapshot) => {
         const listContainer = document.getElementById('branch-list');
@@ -548,7 +502,6 @@ db.collection("restaurant_info")
             const b = doc.data();
             const id = doc.id;
 
-            // Address hai magar delivery area nahi (ya address badal gaya) to khud lagao
             maybeAutoApplyDeliveryArea(id, b);
 
             listContainer.innerHTML += `
@@ -567,7 +520,6 @@ db.collection("restaurant_info")
         console.error("Firestore branch read error:", error);
     });
 
-// --- CASCADE DELETE A BRANCH + EVERYTHING LINKED TO IT ---
 window.deleteBranch = async function(branchId, branchName) {
     const agreed = await confirm(
         `Are you sure you want to delete branch "${branchName}"?\n\n` +
@@ -578,7 +530,6 @@ window.deleteBranch = async function(branchId, branchName) {
     try {
         let totalDeleted = 0;
 
-        // Collect every doc ref linked to this branch, across all linked collections
         for (const colName of BRANCH_LINKED_COLLECTIONS) {
             const snap = await db.collection(colName)
                 .where("branchId", "==", branchId)
@@ -586,7 +537,6 @@ window.deleteBranch = async function(branchId, branchName) {
 
             if (snap.empty) continue;
 
-            // Firestore batches are capped at 500 writes; chunk defensively at 450
             const docs = snap.docs;
             for (let i = 0; i < docs.length; i += 450) {
                 const chunk = docs.slice(i, i + 450);
@@ -597,7 +547,7 @@ window.deleteBranch = async function(branchId, branchName) {
             }
         }
 
-        // Finally delete the branch document itself
+        //  delete the branch document 
         await db.collection("restaurant_info").doc(branchId).delete();
 
         logActivity(

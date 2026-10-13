@@ -11,7 +11,7 @@ body {
     align-items: stretch; 
 }
 
-/* --- Sidebar --- */
+/* Sidebar */
 .sidebar { 
     width: 220px; 
     background-color: #b52a00; 
@@ -68,7 +68,7 @@ body {
     background-color: #5c0000;
 }
 
-/* --- Main Content area --- */
+/* Main Content area */
 .main-content { 
     flex: 1; 
     padding: 25px; 
@@ -171,7 +171,7 @@ body {
 .btn-edit-t:hover { opacity: 0.9; }
 .btn-delete-t:hover { opacity: 0.9; }
 
-/* --- Modal --- */
+/* Modal */
 .modal {
     display: none; 
     position: fixed; 
