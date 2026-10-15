@@ -14,6 +14,7 @@ const db = firebase.firestore();
 
 let editManagerId = null;
 
+const ALLOWED_EMAIL_DOMAINS = ['gmail.com', 'hotmail.com', 'live.com', 'yahoo.com'];
 // ACTIVITY LOG HELPER 
 function logActivity(action, details) {
     try {
@@ -102,7 +103,7 @@ document.getElementById('managerForm').addEventListener('submit', async function
     e.preventDefault();
 
     const mName = document.getElementById('managerName').value.trim();
-    const mEmail = document.getElementById('managerEmail').value.trim();
+    const mEmail = document.getElementById('managerEmail').value.trim().toLowerCase();
     const mPassword = document.getElementById('managerPassword').value;
     const mPhone = document.getElementById('managerPhone').value.trim();
     const mCnic = document.getElementById('managerCnic').value.trim();
@@ -114,11 +115,18 @@ document.getElementById('managerForm').addEventListener('submit', async function
         return;
     }
 
-    // Email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
-        alert("Please enter a valid email address.\nExample: user@example.com");
-        return;
-    }
+   // Email format check
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
+    alert("Please enter a valid email address.");
+    return;
+}
+
+// Email domain check
+const emailDomain = mEmail.split('@')[1].toLowerCase();
+if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+    alert("Only these email providers are allowed:\n• @gmail.com\n• @hotmail.com\n• @live.com\n• @yahoo.com");
+    return;
+}
 
     //Password strength check 
     if (!editManagerId || mPassword) {

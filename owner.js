@@ -11,9 +11,8 @@ if (!firebase.apps.length) {
 }
 const auth = firebase.auth();
 const db = firebase.firestore();
-
 let editOwnerId = null;
-
+const ALLOWED_EMAIL_DOMAINS = ['gmail.com', 'hotmail.com', 'live.com', 'yahoo.com'];
 function logActivity(action, details) {
     try {
         const logData = {
@@ -96,7 +95,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
     e.preventDefault();
 
     const oName     = document.getElementById('ownerName').value.trim();
-    const oEmail    = document.getElementById('ownerEmail').value.trim();
+    const mEmail = document.getElementById('managerEmail').value.trim().toLowerCase();
     const oPassword = document.getElementById('ownerPassword').value;
     const oPhone    = document.getElementById('ownerPhone').value.trim();
 
@@ -106,11 +105,17 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
         return;
     }
 
-    // Email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(oEmail)) {
-        alert("Please enter a valid email address.\nExample: user@example.com");
-        return;
-    }
+// Email format check
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
+    alert("Please enter a valid email address.");
+    return;
+}
+// Email domain check
+const emailDomain = mEmail.split('@')[1].toLowerCase();
+if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+    alert("Only these email providers are allowed:\n• @gmail.com\n• @hotmail.com\n• @live.com\n• @yahoo.com");
+    return;
+}
 
     // Password strength check 
     if (!editOwnerId || oPassword) {
@@ -158,8 +163,7 @@ document.getElementById('ownerForm').addEventListener('submit', async function(e
             closeownerModal();
 
         } else {
-            // --- NEW ENTRY MODE
-
+            // --- NEW ENTRY 
             // Account
             const userCredential = await auth.createUserWithEmailAndPassword(oEmail, oPassword);
             const newUser = userCredential.user;

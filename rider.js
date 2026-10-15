@@ -10,13 +10,10 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
-
 const FIREBASE_API_KEY = 'AIzaSyCwstpeM4MkOs9aNkh9faJQm-1jggbMZZE';
-
 const RIDER_ROLE_ID = "R002";
-
 let editId = null;
-
+const ALLOWED_EMAIL_DOMAINS = ['gmail.com', 'hotmail.com', 'live.com', 'yahoo.com'];
 function logActivity(action, details) {
     try {
         const logData = {
@@ -117,7 +114,7 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const name     = document.getElementById('riderName').value.trim();
-    const email    = document.getElementById('riderEmail').value.trim();
+    const mEmail = document.getElementById('managerEmail').value.trim().toLowerCase();
     const password = document.getElementById('riderPassword').value.trim();
     const phone    = document.getElementById('riderPhone').value.trim();
     const cnic     = document.getElementById('riderCnic').value.trim();
@@ -127,11 +124,17 @@ document.getElementById('riderForm').addEventListener('submit', async (e) => {
     const selectedOption = branchSelect ? branchSelect.options[branchSelect.selectedIndex] : null;
     const branchName     = selectedOption ? selectedOption.getAttribute('data-name') : "";
 
-        // Email format check
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-        alert("Please enter a valid email address.\nExample: user@gmail.com");
-        return;
-    }
+    // Email format check
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mEmail)) {
+    alert("Please enter a valid email address.");
+    return;
+}
+// Email domain check
+const emailDomain = mEmail.split('@')[1].toLowerCase();
+if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+    alert("Only these email providers are allowed:\n• @gmail.com\n• @hotmail.com\n• @live.com\n• @yahoo.com");
+    return;
+}
 
     // Password 
     if (!editId || password) {

@@ -72,9 +72,6 @@ function logActivity(action, details) {
           
         };
 
-        db.collection("system_log").add(logData)
-            .catch((err) => console.error("System log write failed:", err));
-
         db.collection("activity_logs").add(logData)
             .catch((err) => console.error("Activity log write failed:", err));
 
